@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="custom_rules" default="debug">
+    <target name="-pre-build">
+        <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
+    </target>
+    <target name="clean" depends="android_rules.clean">
+        <exec executable="${ndk.dir}/ndk-build" failonerror="true">
+            <arg value="clean"/>
+        </exec>
+    </target>
+    <target name="-post-compile">
+        <copy todir="libs" overwrite="true" encoding="utf-8">
+            <fileset dir="libs">
+                <include name="**/anjarootinstaller"/>
+            </fileset>
+            <mapper type="regexp" from="(.*)/(.*)" to="\1/lib\2.so"/>
+        </copy>
+        <chmod perm="ugo+x" file="libs/mips/libanjarootinstaller.so"/>
+        <chmod perm="ugo+x" file="libs/armeabi/libanjarootinstaller.so"/>
+        <chmod perm="ugo+x" file="libs/x86/libanjarootinstaller.so"/>
+    </target>
+</project>
