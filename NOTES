@@ -1,0 +1,9 @@
+ - The hook targets setcap() because we are using LD_PRELOAD for our business
+   and LD_PRELOAD can only overwrite external library symbols for obvious
+   reasons. This leads to the problem that a function we want to hook needs to
+   be resolved at runtime and we can't use any inlined function. In my tests
+   setresuid() and friends are all inlined, so bad luck here. A hookable
+   function must a) be resolved by libdvm.so (you may verify that with the
+   strings/objdump tool on your system) and b) needs to be run by the Zygote
+   BEFORE setcap() has run (see vm/native/dalvik_system_Zygote.cpp, method
+   forkAndSpecializeCommon()).
