@@ -22,16 +22,8 @@
 
 #include <string>
 #include <utility>
+#include "modes.h"
 
-enum OperationMode {
-    InvalidMode,
-    InstallMode,
-    UninstallMode,
-    CheckMode,
-    RepairMode,
-    HelpMode
-};
-
-typedef std::pair<std::string, OperationMode> ModeSpec;
+typedef std::pair<std::string, modes::OperationMode> ModeSpec;
 
 #endif

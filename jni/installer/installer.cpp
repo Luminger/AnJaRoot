@@ -86,7 +86,7 @@ const struct option longopts[] = {
 ModeSpec processArguments(int argc, char** argv)
 {
     std::string sourcelib;
-    OperationMode mode = InvalidMode;
+    modes::OperationMode mode = modes::InvalidMode;
 
     int c, option_index = 0;
     while(true)
@@ -105,23 +105,23 @@ ModeSpec processArguments(int argc, char** argv)
                 break;
             case 'i':
                 util::logVerbose("Opt: -i");
-                mode = InstallMode;
+                mode = modes::InstallMode;
                 break;
             case 'c':
                 util::logVerbose("Opt: -c");
-                mode = CheckMode;
+                mode = modes::CheckMode;
                 break;
             case 'u':
                 util::logVerbose("Opt: -u");
-                mode = UninstallMode;
+                mode = modes::UninstallMode;
                 break;
             case 'r':
                 util::logVerbose("opt: -r");
-                mode = RepairMode;
+                mode = modes::RepairMode;
                 break;
             case 'h':
             default:
-                return std::make_pair("", HelpMode);
+                return std::make_pair("", modes::InvalidMode);
         }
     }
 
@@ -146,35 +146,37 @@ int main(int argc, char** argv)
     util::logVerbose("Installer started");
 
     ModeSpec spec = processArguments(argc, argv);
-    if(spec.second == HelpMode)
+    if(spec.second == modes::InvalidMode)
     {
         printUsage(argv[0]);
         util::logError("Called with wrong/insufficient arguments");
         return -1;
     }
 
+    modes::ReturnCode ret = modes::FAIL;
     try
     {
-        if(spec.second == InstallMode)
+        if(spec.second == modes::InstallMode)
         {
             util::logVerbose("Running install mode");
-            modes::install(spec.first);
+            ret = modes::install(spec.first);
         }
-        else if(spec.second == UninstallMode)
+        else if(spec.second == modes::UninstallMode)
         {
             util::logVerbose("Running uninstall mode");
-            modes::uninstall();
+            ret = modes::uninstall();
         }
-        else if(spec.second == CheckMode)
+        else if(spec.second == modes::CheckMode)
         {
             util::logVerbose("Running check mode");
-            modes::check();
+            ret = modes::check();
         }
-        else if(spec.second == RepairMode)
+        else if(spec.second == modes::RepairMode)
         {
             util::logVerbose("Running repair mode");
-            modes::repair();
+            ret = modes::repair();
         }
+
     }
     catch(std::exception& e)
     {
@@ -183,6 +185,17 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    if(ret == modes::OK)
+    {
+        const char* msg = "Positive status returned from execution";
+        std::cout << msg << std::endl;
+        util::logVerbose(msg);
+    } else {
+        const char* msg = "Negativ status returned from execution";
+        std::cerr << msg << std::endl;
+        util::logError(msg);
+    }
+
     util::logVerbose("Installer finished");
-    return 0;
+    return ret == modes::OK ? 0 : 1;
 }

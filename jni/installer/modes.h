@@ -23,10 +23,23 @@
 #include <string>
 
 namespace modes {
-    void install(const std::string& libpath);
-    void uninstall();
-    void repair();
-    void check();
+    enum OperationMode {
+        InvalidMode,
+        InstallMode,
+        UninstallMode,
+        CheckMode,
+        RepairMode
+    };
+
+    enum ReturnCode {
+        OK,
+        FAIL
+    };
+
+    ReturnCode install(const std::string& libpath);
+    ReturnCode uninstall();
+    ReturnCode check();
+    ReturnCode repair();
 }
 
 #endif

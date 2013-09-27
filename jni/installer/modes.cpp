@@ -26,20 +26,24 @@
 
 namespace modes {
 
-void install(const std::string& libpath)
+ReturnCode install(const std::string& libpath)
 {
+    return OK;
 }
 
-void uninstall()
+ReturnCode uninstall()
 {
+    return OK;
 }
 
-void repair()
+ReturnCode repair()
 {
+    return OK;
 }
 
-void check()
+ReturnCode check()
 {
+    return OK;
 }
 
 }
