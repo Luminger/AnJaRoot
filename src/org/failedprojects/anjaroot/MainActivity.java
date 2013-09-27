@@ -82,7 +82,7 @@ public class MainActivity extends FragmentActivity {
 		
 		try {
 			NativeWrapper.getUserIds();
-			Log.v(LOGTAG, String.format("Version: %s", NativeWrapper.getVersion().asString()));
+			Log.v(LOGTAG, String.format("Version: %s", NativeWrapper.getVersion().toString()));
 		} catch (NativeException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
