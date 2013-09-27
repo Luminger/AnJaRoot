@@ -17,31 +17,25 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _ANJAROOT_INSTALLER_MODES_H_
-#define _ANJAROOT_INSTALLER_MODES_H_
+#ifndef _ANJAROOT_VERSION_H_
+#define _ANJAROOT_VERSION_H_
 
 #include <string>
+#include <sstream>
 
-namespace modes {
-    enum OperationMode {
-        InvalidMode,
-        InstallMode,
-        UninstallMode,
-        CheckMode,
-        RepairMode,
-        HelpMode,    // doesn't belong here, but I don't want to special
-        VersionMode  // special case them even more than I did already...
-    };
+namespace version {
 
-    enum ReturnCode {
-        OK,
-        FAIL
-    };
+static const int Major = 0;
+static const int Minor = 1;
+static const int Patch = 0;
 
-    ReturnCode install(const std::string& libpath);
-    ReturnCode uninstall();
-    ReturnCode check();
-    ReturnCode repair();
+std::string asString()
+{
+    std::stringstream ss;
+    ss << Major << "." << Minor << "." << Patch;
+    return ss.str();
+}
+
 }
 
 #endif

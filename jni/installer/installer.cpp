@@ -70,14 +70,16 @@
 #include "installer.h"
 #include "modes.h"
 #include "util.h"
+#include "version.h"
 
-const char* shortopts = "s:icurh";
+const char* shortopts = "s:icurvh";
 const struct option longopts[] = {
     {"srclibpath",   required_argument, 0, 's'},
     {"install",      no_argument,       0, 'i'},
     {"check",        no_argument,       0, 'c'},
     {"uninstall",    no_argument,       0, 'u'},
     {"repair",       no_argument,       0, 'r'},
+    {"version",      no_argument,       0, 'v'},
     {"help",         no_argument,       0, 'h'},
     {0, 0, 0, 0},
 };
@@ -87,6 +89,7 @@ void printUsage(const char* progname)
     std::cerr << "Usage: " << progname << " [OPTIONS] [MODE]" << std::endl;
     std::cerr << std::endl << "Valid Options:" << std::endl;
     std::cerr << "\t-h, --help\t\t\tprint this usage message" << std::endl;
+    std::cerr << "\t-v, --version\t\t\tprint version" << std::endl;
     std::cerr << "\t-s, --srclibpath [PATH] \tset source lib path" << std::endl;
     std::cerr << std::endl << "Valid Modes:" << std::endl;
     std::cerr << "\t-i, --install\t\t\tdo install (needs -s to be set)" << std::endl;
@@ -131,7 +134,13 @@ ModeSpec processArguments(int argc, char** argv)
                 util::logVerbose("opt: -r");
                 mode = modes::RepairMode;
                 break;
+            case 'v':
+                util::logVerbose("opt: -v");
+                mode = modes::VersionMode;
+                return std::make_pair("", modes::VersionMode);
             case 'h':
+                util::logVerbose("opt: -h");
+                return std::make_pair("", modes::HelpMode);
             default:
                 return std::make_pair("", modes::InvalidMode);
         }
@@ -142,14 +151,25 @@ ModeSpec processArguments(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-    util::logVerbose("Installer started");
+    util::logVerbose("Installer (version %s) started",
+            version::asString().c_str());
 
     ModeSpec spec = processArguments(argc, argv);
-    if(spec.second == modes::InvalidMode)
+
+    switch(spec.second)
     {
-        printUsage(argv[0]);
-        util::logError("Called with wrong/insufficient arguments");
-        return -1;
+        case modes::VersionMode:
+            std::cout << "Version: " << version::asString() << std::endl;
+            return 0;
+        case modes::HelpMode:
+            printUsage(argv[0]);
+            return 0;
+        case modes::InvalidMode:
+            printUsage(argv[0]);
+            util::logError("Called with wrong/insufficient arguments");
+            return -1;
+        default:
+            break;
     }
 
     modes::ReturnCode ret = modes::FAIL;

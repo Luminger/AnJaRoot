@@ -27,6 +27,7 @@
 #include "exceptions.h"
 #include "helper.h"
 #include "util.h"
+#include "version.h"
 
 static const char* className = "org/failedprojects/anjaroot/library/internal/NativeMethods";
 
@@ -245,6 +246,24 @@ void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
     }
 }
 
+jintArray jni_getversion(JNIEnv* env, jclass cls)
+{
+    jintArray retval;
+    retval = env->NewIntArray(3);
+    if(retval == NULL) {
+        // OOM exception thrown
+        return NULL;
+    }
+
+    jint buf[3];
+    buf[0] = version::Major;
+    buf[1] = version::Minor;
+    buf[2] = version::Patch;
+
+    env->SetIntArrayRegion(retval, 0, 3, buf);
+    return retval;
+}
+
 static JNINativeMethod methods[] = {
     {"capget", "(I)[J", (void *) jni_capget},
     {"capset", "(JJJ)V", (void *) jni_capset},
@@ -252,6 +271,7 @@ static JNINativeMethod methods[] = {
     {"setresuid", "(JJJ)V", (void *) jni_setresuid},
     {"getresgid", "()[J", (void *) jni_getresgid},
     {"setresgid", "(JJJ)V", (void *) jni_setresgid},
+    {"getversion", "()[I", (void *) jni_getversion},
 };
 
 extern "C"

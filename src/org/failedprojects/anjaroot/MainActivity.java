@@ -18,12 +18,16 @@
  */
 package org.failedprojects.anjaroot;
 
+import org.failedprojects.anjaroot.library.exceptions.NativeException;
+import org.failedprojects.anjaroot.library.internal.NativeWrapper;
+
 import android.os.Bundle;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.Menu;
 
 public class MainActivity extends FragmentActivity {
@@ -75,6 +79,14 @@ public class MainActivity extends FragmentActivity {
 		});
 		builder.setNegativeButton("Cancel", null);
 		builder.create().show();
+		
+		try {
+			NativeWrapper.getUserIds();
+			Log.v(LOGTAG, String.format("Version: %s", NativeWrapper.getVersion().asString()));
+		} catch (NativeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		};
 	}
 
 	@Override
