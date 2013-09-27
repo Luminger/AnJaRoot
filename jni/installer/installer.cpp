@@ -82,6 +82,18 @@ const struct option longopts[] = {
     {0, 0, 0, 0},
 };
 
+void printUsage(const char* progname)
+{
+    std::cerr << "Usage: " << progname << " [OPTIONS] [MODE]" << std::endl;
+    std::cerr << std::endl << "Valid Options:" << std::endl;
+    std::cerr << "\t-h, --help\t\t\tprint this usage message" << std::endl;
+    std::cerr << "\t-s, --srclibpath [PATH] \tset source lib path" << std::endl;
+    std::cerr << std::endl << "Valid Modes:" << std::endl;
+    std::cerr << "\t-i, --install\t\t\tdo install (needs -s to be set)" << std::endl;
+    std::cerr << "\t-u, --uninstall\t\t\tdo uninstall" << std::endl;
+    std::cerr << "\t-r, --repair\t\t\tdo repair" << std::endl;
+    std::cerr << "\t-c, --check\t\t\tdo an installation ckeck" << std::endl;
+}
 
 ModeSpec processArguments(int argc, char** argv)
 {
@@ -126,19 +138,6 @@ ModeSpec processArguments(int argc, char** argv)
     }
 
     return std::make_pair(sourcelib, mode);
-}
-
-void printUsage(const char* progname)
-{
-    std::cerr << "Usage: " << progname << " [OPTIONS] [MODE]" << std::endl;
-    std::cerr << std::endl << "Valid Options:" << std::endl;
-    std::cerr << "\t-h, --help\t\t\tprint this usage message" << std::endl;
-    std::cerr << "\t-s, --srclibpath [PATH] \tset source lib path" << std::endl;
-    std::cerr << std::endl << "Valid Modes:" << std::endl;
-    std::cerr << "\t-i, --install\t\t\tdo install (needs -s to be set)" << std::endl;
-    std::cerr << "\t-u, --uninstall\t\t\tdo uninstall" << std::endl;
-    std::cerr << "\t-r, --repair\t\t\tdo repair" << std::endl;
-    std::cerr << "\t-c, --check\t\t\tdo an installation ckeck" << std::endl;
 }
 
 int main(int argc, char** argv)
