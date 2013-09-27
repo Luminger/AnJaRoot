@@ -25,6 +25,7 @@
 #include <sys/types.h>
 
 namespace operations {
+    void writeFile(const std::string& target, const std::string& content);
     void move(const std::string& src, const std::string& dst);
     void copy(const std::string& src, const std::string& dst);
     void unlink(const std::string& src);

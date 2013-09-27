@@ -28,6 +28,23 @@
 
 namespace operations {
 
+void writeFile(const std::string& target, const std::string& content)
+{
+    util::logVerbose("Op: writeFile '%s'", target.c_str());
+
+    try
+    {
+        std::ofstream stream(target, std::ios::trunc);
+        stream << content;
+        stream.close();
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Op: writeFile failed: %s", e.what());
+        throw;
+    }
+}
+
 void move(const std::string& src, const std::string& dst)
 {
     util::logVerbose("Op: rename '%s' to '%s'", src.c_str(), dst.c_str());
@@ -44,10 +61,18 @@ void copy(const std::string& src, const std::string& dst)
 {
     util::logVerbose("Op: copy '%s' to '%s'", src.c_str(), dst.c_str());
 
-    std::ifstream srcStream(src, std::ios::binary);
-    std::ofstream dstStream(src, std::ios::binary | std::ios::trunc);
+    try
+    {
+        std::ifstream srcStream(src, std::ios::binary);
+        std::ofstream dstStream(src, std::ios::binary | std::ios::trunc);
 
-    dstStream << srcStream.rdbuf();
+        dstStream << srcStream.rdbuf();
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Op: copy failed: %s", e.what());
+        throw;
+    }
 }
 
 void unlink(const std::string& target)
