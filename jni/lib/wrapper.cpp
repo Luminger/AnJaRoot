@@ -28,13 +28,13 @@
 #include "helper.h"
 #include "util.h"
 #include "version.h"
+#include "hook.h"
 
 static const char* className = "org/failedprojects/anjaroot/library/internal/NativeMethods";
 
 jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
 {
-    jlongArray retval;
-    retval = env->NewLongArray(3);
+    jlongArray retval = env->NewLongArray(3);
     if(retval == NULL) {
         // OOM exception thrown
         return NULL;
@@ -110,8 +110,7 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
 
 jlongArray jni_getresuid(JNIEnv* env, jclass cls)
 {
-    jlongArray retval;
-    retval = env->NewLongArray(3);
+    jlongArray retval = env->NewLongArray(3);
     if(retval == NULL) {
         // OOM exception thrown
         return NULL;
@@ -179,8 +178,7 @@ void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid, jlong suid)
 
 jlongArray jni_getresgid(JNIEnv* env, jclass cls)
 {
-    jlongArray retval;
-    retval = env->NewLongArray(3);
+    jlongArray retval = env->NewLongArray(3);
     if(retval == NULL) {
         // OOM exception thrown
         return NULL;
@@ -248,19 +246,36 @@ void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
 
 jintArray jni_getversion(JNIEnv* env, jclass cls)
 {
-    jintArray retval;
-    retval = env->NewIntArray(3);
+    jintArray retval = env->NewIntArray(3);
     if(retval == NULL) {
         // OOM exception thrown
         return NULL;
     }
 
-    jint buf[3];
-    buf[0] = version::Major;
-    buf[1] = version::Minor;
-    buf[2] = version::Patch;
+    jint buf[3] = {
+        version::Major,
+        version::Minor,
+        version::Patch,
+    };
 
     env->SetIntArrayRegion(retval, 0, 3, buf);
+    return retval;
+}
+
+jbooleanArray jni_getstatus(JNIEnv* env, jclass cls)
+{
+    jbooleanArray retval = env->NewBooleanArray(2);
+    if(retval == NULL) {
+        // OOM exception thrown
+        return NULL;
+    }
+
+    jboolean buf[2] = {
+        hook::Hooked,
+        hook::AlreadyRun,
+    };
+
+    env->SetBooleanArrayRegion(retval, 0, 2, buf);
     return retval;
 }
 
@@ -272,6 +287,7 @@ static JNINativeMethod methods[] = {
     {"getresgid", "()[J", (void *) jni_getresgid},
     {"setresgid", "(JJJ)V", (void *) jni_setresgid},
     {"getversion", "()[I", (void *) jni_getversion},
+    {"getstatus", "()[Z", (void *) jni_getstatus},
 };
 
 extern "C"

@@ -21,6 +21,7 @@
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "hook.h"
 #include "packages.h"
 #include "helper.h"
 #include "util.h"
@@ -31,8 +32,8 @@ static const helper::GroupIds rootGids(0, 0, 0);
 
 typedef int (*capset_type)(cap_user_header_t, const cap_user_data_t);
 static capset_type orig_capset;
-static bool hooked = false;
-static bool alreadyRun = false;
+bool hook::Hooked= false;
+bool hook::AlreadyRun = false;
 
 
  __attribute__((constructor))
@@ -41,7 +42,7 @@ static void constructor()
     orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_NEXT, "capset"));
     if(orig_capset != NULL)
     {
-        hooked = true;
+        hook::Hooked = true;
         util::logVerbose("Installed hook for capset()");
         return;
     }
@@ -82,12 +83,12 @@ bool isGranted(uid_t uid)
 
 int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
 {
-    if(hooked && alreadyRun)
+    if(hook::Hooked && hook::AlreadyRun)
     {
         util::logVerbose("hooked capset() called");
 
         // Set alreadyRun to false to prefent later abuse of our hook
-        alreadyRun = false;
+        hook::AlreadyRun = false;
     } else {
         util::logVerbose("unhooked capset() called");
         return orig_capset(hdrp, datap);

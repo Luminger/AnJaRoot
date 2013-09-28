@@ -20,9 +20,9 @@
 #ifndef _ANJAROOT_LIB_HOOK_H_
 #define _ANJAROOT_LIB_HOOK_H_
 
-namespace hook {
+struct hook {
     static bool Hooked;
     static bool AlreadyRun;
-}
+};
 
 #endif
