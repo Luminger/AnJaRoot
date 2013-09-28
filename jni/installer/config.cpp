@@ -19,7 +19,7 @@
 
 #include "config.h"
 
-const std::string config::installMark = "/system/bin/anjaroot.mark";
+const std::string config::installMark = "/system/etc/_anjaroot.mark";
 const std::string config::libandroid = "/system/lib/libandroid.so";
 const std::string config::library = "/system/lib/libanjaroot.so";
 const std::string config::tmpBinary = "/system/bin/app_process_tmp";
