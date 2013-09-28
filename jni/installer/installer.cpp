@@ -30,32 +30,6 @@
  * problems solved at once.
  */
 
-/* How it would look like as a shellscript (without error handling):
- *
- * #!/bin/sh
- *
- * # pre install
- * mount -o rw,remount /system/
- *
- * # install library
- * cp libanjaroothook.so /system/lib/
- * # would be better to get perms and owner from an library like libc.so
- * chown 0:0 /system/lib/libanjaroothook.so
- * chmod 644 /system/lib/libanjaroothook.so
- *
- * # install app_process wrapper
- * cp app_process_wrapper.sh /system/bin/app_process_wrapper
- * # would be better to just copy perms and owner from orig binary
- * chown 0:0 /system/bin/app_process_wrapper
- * chmod 755 /system/bin/app_process_wrapper
- * mv /system/bin/app_process /system/bin/app_process.orig
- * mv /system/bin/app_process_wrapper /system/bin/app_process
- *
- * # cleanup
- * mount -o ro,remount /system/
- * sync
- */
-
 /* Assumptions:
  *  - The caller takes care of calling "mount -o rw,remount /system"
  *    and its inversion after we have finished here
@@ -78,7 +52,6 @@ const struct option longopts[] = {
     {"install",      no_argument,       0, 'i'},
     {"check",        no_argument,       0, 'c'},
     {"uninstall",    no_argument,       0, 'u'},
-    {"repair",       no_argument,       0, 'r'},
     {"version",      no_argument,       0, 'v'},
     {"help",         no_argument,       0, 'h'},
     {0, 0, 0, 0},
@@ -94,7 +67,6 @@ void printUsage(const char* progname)
     std::cerr << std::endl << "Valid Modes:" << std::endl;
     std::cerr << "\t-i, --install\t\t\tdo install (needs -s to be set)" << std::endl;
     std::cerr << "\t-u, --uninstall\t\t\tdo uninstall" << std::endl;
-    std::cerr << "\t-r, --repair\t\t\tdo repair" << std::endl;
     std::cerr << "\t-c, --check\t\t\tdo an installation ckeck" << std::endl;
 }
 
@@ -129,10 +101,6 @@ ModeSpec processArguments(int argc, char** argv)
             case 'u':
                 util::logVerbose("Opt: -u");
                 mode = modes::UninstallMode;
-                break;
-            case 'r':
-                util::logVerbose("opt: -r");
-                mode = modes::RepairMode;
                 break;
             case 'v':
                 util::logVerbose("opt: -v");
@@ -190,18 +158,12 @@ int main(int argc, char** argv)
             util::logVerbose("Running check mode");
             ret = modes::check();
         }
-        else if(spec.second == modes::RepairMode)
-        {
-            util::logVerbose("Running repair mode");
-            ret = modes::repair();
-        }
-
     }
     catch(std::exception& e)
     {
         // TODO log a stacktrace (with backtrace from <execinfo.h>?)
         util::logError("Failed while executing mode: %s", e.what());
-        return -1;
+        ret = modes::FAIL;
     }
 
     if(ret == modes::OK)

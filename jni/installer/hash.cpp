@@ -17,15 +17,22 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <fstream>
 #include <sstream>
 
 #include "hash.h"
+#include "util.h"
 
 namespace hash {
 
 CRC32::CRC32()
 {
     initialize();
+}
+
+CRC32::CRC32(const std::string& in) : CRC32()
+{
+    add(in);
 }
 
 CRC32::CRC32(std::istream& in) : CRC32()
@@ -41,6 +48,13 @@ void CRC32::initialize()
 void CRC32::reset()
 {
     initialize();
+}
+
+void CRC32::add(const std::string& in)
+{
+    std::stringstream stream;
+    stream << in;
+    add(stream);
 }
 
 void CRC32::add(std::istream& in)
@@ -69,6 +83,44 @@ std::string CRC32::toString() const
     std::stringstream ss;
     ss << crc;
     return ss.str();
+}
+
+bool CRC32::compare(const std::string& left, const std::string& right)
+{
+    try
+    {
+        std::ifstream leftStream(left, std::ios::binary);
+        std::ifstream rightStream(right, std::ios::binary);
+
+        hash::CRC32 leftHash(leftStream);
+        hash::CRC32 rightHash(rightStream);
+
+        if(leftHash != rightHash)
+        {
+            util::logError("CRC32 sums of %s and %s differ", left.c_str(),
+                    right.c_str());
+            return false;
+        }
+
+        util::logVerbose("CRC32 sums of %s and %s are equal", left.c_str(),
+                right.c_str());
+        return true;
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Couldn't calc CRC32 sums: %s", e.what());
+        return false;
+    }
+}
+
+bool CRC32::operator==(const CRC32& other) const
+{
+    return crc == other.crc;
+}
+
+bool CRC32::operator!=(const CRC32& other) const
+{
+    return crc != other.crc;
 }
 
 }

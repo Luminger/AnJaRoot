@@ -28,12 +28,18 @@ namespace hash {
     class CRC32 {
         public:
             CRC32();
+            CRC32(const std::string& in);
             CRC32(std::istream& in);
 
             void reset();
+            void add(const std::string& in);
             void add(std::istream& in);
             std::string toString() const;
 
+            static bool compare(const std::string& left, const std::string& right);
+
+            bool operator==(const CRC32& other) const;
+            bool operator!=(const CRC32& other) const;
 
         private:
             void initialize();

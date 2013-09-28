@@ -18,12 +18,15 @@
  */
 package org.failedprojects.anjaroot;
 
+import java.io.IOException;
+
 import org.failedprojects.anjaroot.library.exceptions.NativeException;
 import org.failedprojects.anjaroot.library.internal.NativeWrapper;
 
 import android.os.Bundle;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.support.v4.app.FragmentActivity;
@@ -45,9 +48,33 @@ public class MainActivity extends FragmentActivity {
 	}
 	
 	void doSystemInstall() {
+		final Context ctx = this;
 		final ProgressDialog dial = createProgessDialog();
 		new Thread() {
 			public void run() {
+
+				final String basepath = ctx.getApplicationInfo().dataDir + "/lib/";
+				final String library = basepath + "libanjaroot.so";
+				final String installer = basepath + "libanjarootinstaller.so";
+				final String command = 
+						"mount -orw,remount /system\n" +
+						String.format("%s -i -s '%s'\n", installer, library) +
+						"mount -oro,remount /system\n";
+				
+				try {
+					Process p = Runtime.getRuntime().exec("su");
+					p.getOutputStream().write(command.getBytes());
+					p.getOutputStream().close();
+					
+					if(p.waitFor() != 0)
+					{
+						Log.e(LOGTAG, "Non zero result");
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.e(LOGTAG, "Failed to install", e);
+				}
+				
 				dial.dismiss();
 			}
 		}.run();

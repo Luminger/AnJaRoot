@@ -41,7 +41,6 @@ namespace modes {
     ReturnCode install(const std::string& libpath);
     ReturnCode uninstall();
     ReturnCode check();
-    ReturnCode repair();
 }
 
 #endif

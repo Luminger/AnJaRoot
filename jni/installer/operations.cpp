@@ -18,6 +18,7 @@
  */
 
 #include <fstream>
+#include <sstream>
 #include <system_error>
 #include <errno.h>
 #include <sys/stat.h>
@@ -27,6 +28,25 @@
 #include "util.h"
 
 namespace operations {
+
+std::string readFile(const std::string& target)
+{
+    util::logVerbose("Op: readFile '%s'", target.c_str());
+
+    try
+    {
+        std::stringstream out;
+        std::ifstream stream(target);
+        out << stream.rdbuf();
+
+        return out.str();
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Op: readFile failed: %s", e.what());
+        throw;
+    }
+}
 
 void writeFile(const std::string& target, const std::string& content)
 {
@@ -64,7 +84,7 @@ void copy(const std::string& src, const std::string& dst)
     try
     {
         std::ifstream srcStream(src, std::ios::binary);
-        std::ofstream dstStream(src, std::ios::binary | std::ios::trunc);
+        std::ofstream dstStream(dst, std::ios::binary | std::ios::trunc);
 
         dstStream << srcStream.rdbuf();
     }

@@ -17,24 +17,15 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _ANJAROOT_INSTALLER_OPERATIONS_H
-#define _ANJAROOT_INSTALLER_OPERATIONS_H
+#include "config.h"
 
-#include <istream>
-#include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-namespace operations {
-    std::string readFile(const std::string& target);
-    void writeFile(const std::string& target, const std::string& content);
-    void move(const std::string& src, const std::string& dst);
-    void copy(const std::string& src, const std::string& dst);
-    void unlink(const std::string& src);
-    void stat(const std::string& target, struct stat& out);
-    void chown(const std::string& target, uid_t uid, gid_t gid);
-    void chmod(const std::string& target, mode_t mode);
-    void sync();
-}
-
-#endif
+const std::string config::installMark = "/system/bin/anjaroot.mark";
+const std::string config::libandroid = "/system/lib/libandroid.so";
+const std::string config::library = "/system/lib/libanjaroot.so";
+const std::string config::tmpBinary = "/system/bin/app_process_tmp";
+const std::string config::newBinary = "/system/bin/app_process_orig";
+const std::string config::backupBinary = "/system/bin/app_process_backup";
+const std::string config::origBinary = "/system/bin/app_process";
+const std::string config::content =
+        "#!/system/bin/sh\n\n"
+        "LD_PRELOAD=/system/lib/libanjaroot.so /system/bin/app_process_orig $@";

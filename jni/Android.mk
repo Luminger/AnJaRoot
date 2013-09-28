@@ -24,6 +24,8 @@ LOCAL_SRC_FILES := installer/installer.cpp \
 				   installer/operations.cpp \
 				   installer/hash.cpp \
 				   installer/modes.cpp \
+				   installer/mark.cpp \
+				   installer/config.cpp \
 				   util.cpp
 LOCAL_LDLIBS := -llog -lz
 LOCAL_CPP_FEATURES := exceptions

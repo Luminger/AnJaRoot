@@ -17,24 +17,15 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _ANJAROOT_INSTALLER_OPERATIONS_H
-#define _ANJAROOT_INSTALLER_OPERATIONS_H
+#ifndef _ANJAROOT_INSTALLER_MARK_H_
+#define _ANJAROOT_INSTALLER_MARK_H_
 
-#include <istream>
 #include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
 
-namespace operations {
-    std::string readFile(const std::string& target);
-    void writeFile(const std::string& target, const std::string& content);
-    void move(const std::string& src, const std::string& dst);
-    void copy(const std::string& src, const std::string& dst);
-    void unlink(const std::string& src);
-    void stat(const std::string& target, struct stat& out);
-    void chown(const std::string& target, uid_t uid, gid_t gid);
-    void chmod(const std::string& target, mode_t mode);
-    void sync();
+namespace mark {
+    bool write();
+    bool verify();
+    bool exists();
 }
 
 #endif
