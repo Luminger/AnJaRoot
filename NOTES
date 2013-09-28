@@ -7,3 +7,6 @@
    strings/objdump tool on your system) and b) needs to be run by the Zygote
    BEFORE setcap() has run (see vm/native/dalvik_system_Zygote.cpp, method
    forkAndSpecializeCommon()).
+
+ - Looks like we are lucky enough that the dalvic vm doesn't reload local
+   libraries when it tries to access them.

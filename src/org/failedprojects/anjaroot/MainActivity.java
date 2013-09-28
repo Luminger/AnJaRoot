@@ -32,6 +32,8 @@ import android.content.DialogInterface.OnClickListener;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.widget.Button;
 
 public class MainActivity extends FragmentActivity {
 	
@@ -59,6 +61,42 @@ public class MainActivity extends FragmentActivity {
 				final String command = 
 						"mount -orw,remount /system\n" +
 						String.format("%s -i -s '%s'\n", installer, library) +
+						"/system/bin/setprop ctl.stop zygote\n" + 
+						"/system/bin/setprop ctl.start zygote\n" + 
+						"mount -oro,remount /system\n";
+				
+				try {
+					Process p = Runtime.getRuntime().exec("su");
+					p.getOutputStream().write(command.getBytes());
+					p.getOutputStream().close();
+					
+					if(p.waitFor() != 0)
+					{
+						Log.e(LOGTAG, "Non zero result");
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.e(LOGTAG, "Failed to install", e);
+				}
+				
+				dial.dismiss();
+			}
+		}.run();
+	}
+
+	void doSystemUninstall() {
+		final Context ctx = this;
+		final ProgressDialog dial = createProgessDialog();
+		new Thread() {
+			public void run() {
+
+				final String basepath = ctx.getApplicationInfo().dataDir + "/lib/";
+				final String installer = basepath + "libanjarootinstaller.so";
+				final String command = 
+						"mount -orw,remount /system\n" +
+						String.format("%s --uninstall\n", installer) +
+						"/system/bin/setprop ctl.stop zygote\n" + 
+						"/system/bin/setprop ctl.start zygote\n" + 
 						"mount -oro,remount /system\n";
 				
 				try {
@@ -83,12 +121,8 @@ public class MainActivity extends FragmentActivity {
 	void doRecoveryInstall() {
 		
 	}
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-		
+	
+	void createInstallDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("AnJaRoot");
 		builder.setMessage("Do you want to install AnJaRoot?");
@@ -106,14 +140,42 @@ public class MainActivity extends FragmentActivity {
 		});
 		builder.setNegativeButton("Cancel", null);
 		builder.create().show();
+	}
+	
+	void createUninstallDialog() {
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle("AnJaRoot");
+		builder.setMessage("Do you want to uninstall AnJaRoot?");
+		builder.setPositiveButton("Uninstall", new OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				doSystemUninstall();
+			}
+		});
+		builder.setNegativeButton("Cancel", null);
+		builder.create().show();
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
 		
-		try {
-			NativeWrapper.getUserIds();
-			Log.v(LOGTAG, String.format("Version: %s", NativeWrapper.getVersion().toString()));
-		} catch (NativeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		};
+		Button install = (Button)findViewById(R.id.installBtn);
+		install.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				createInstallDialog();
+			}
+		});
+		
+		Button uninstall = (Button)findViewById(R.id.uninstallBtn);
+		uninstall.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				createUninstallDialog();
+			}
+		});
 	}
 
 	@Override
