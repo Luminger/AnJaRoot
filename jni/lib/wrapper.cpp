@@ -24,10 +24,12 @@
 #include <jni.h>
 #include <string.h>
 #include <unistd.h>
+
+#include "shared/util.h"
+#include "shared/version.h"
+
 #include "exceptions.h"
 #include "helper.h"
-#include "util.h"
-#include "version.h"
 #include "hook.h"
 
 static const char* className = "org/failedprojects/anjaroot/library/internal/NativeMethods";

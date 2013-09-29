@@ -20,6 +20,7 @@
 #ifndef _ANJAROOT_LIB_HELPER_H_
 #define _ANJAROOT_LIB_HELPER_H_
 
+#include <errno.h>
 #include <android/log.h>
 #include <unistd.h>
 

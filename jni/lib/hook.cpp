@@ -17,14 +17,17 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "hook.h"
+
 #include <system_error>
 #include <dlfcn.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "hook.h"
+
+#include "shared/util.h"
+
 #include "packages.h"
 #include "helper.h"
-#include "util.h"
 
 static const helper::Capabilities rootCapabilities(0xFFFFFFFF, 0xFFFFFFFF, 0);
 static const helper::UserIds rootUids(0, 0, 0);

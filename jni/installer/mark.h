@@ -20,8 +20,6 @@
 #ifndef _ANJAROOT_INSTALLER_MARK_H_
 #define _ANJAROOT_INSTALLER_MARK_H_
 
-#include <string>
-
 namespace mark {
     bool write();
     bool verify();

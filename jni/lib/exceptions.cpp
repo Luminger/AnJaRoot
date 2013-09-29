@@ -18,7 +18,8 @@
  */
 
 #include "exceptions.h"
-#include "util.h"
+
+#include "shared/util.h"
 
 namespace exceptions {
 

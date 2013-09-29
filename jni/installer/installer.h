@@ -22,6 +22,7 @@
 
 #include <string>
 #include <utility>
+
 #include "modes.h"
 
 typedef std::pair<std::string, modes::OperationMode> ModeSpec;

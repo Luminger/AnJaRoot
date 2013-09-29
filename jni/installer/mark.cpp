@@ -18,10 +18,12 @@
  */
 
 #include <ctime>
+
+#include "shared/util.h"
+
 #include "mark.h"
 #include "config.h"
 #include "hash.h"
-#include "util.h"
 #include "operations.h"
 
 namespace mark {

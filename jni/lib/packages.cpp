@@ -18,13 +18,15 @@
  */
 
 #include "packages.h"
-#include "util.h"
 
 #include <stdlib.h>
 #include <exception>
 #include <iostream>
 #include <sstream>
 #include <fstream>
+
+#include "shared/util.h"
+
 
 namespace packages {
 

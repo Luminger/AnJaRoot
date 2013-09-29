@@ -11,7 +11,7 @@ LOCAL_SRC_FILES :=	lib/wrapper.cpp \
 					lib/hook.cpp \
 					lib/packages.cpp \
 					lib/helper.cpp \
-					util.cpp
+					shared/util.cpp
 LOCAL_LDLIBS := -llog -ldl
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_CPPFLAGS := -DANJAROOT_LOGTAG="\"$(ANJAROOTNATIVE_LOGTAG)\"" \
@@ -26,7 +26,7 @@ LOCAL_SRC_FILES := installer/installer.cpp \
 				   installer/modes.cpp \
 				   installer/mark.cpp \
 				   installer/config.cpp \
-				   util.cpp
+				   shared/util.cpp
 LOCAL_LDLIBS := -llog -lz
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_CPPFLAGS := -DANJAROOT_LOGTAG="\"$(ANJAROOTINSTALLER_LOGTAG)\"" \

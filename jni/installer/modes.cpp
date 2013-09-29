@@ -17,12 +17,13 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "modes.h"
+
 #include <fstream>
 
-#include "modes.h"
+#include "shared/util.h"
 #include "hash.h"
 #include "operations.h"
-#include "util.h"
 #include "mark.h"
 #include "config.h"
 

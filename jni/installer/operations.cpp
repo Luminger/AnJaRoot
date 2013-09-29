@@ -17,6 +17,8 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
+#include "operations.h"
+
 #include <fstream>
 #include <sstream>
 #include <system_error>
@@ -24,8 +26,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "operations.h"
-#include "util.h"
+#include "shared/util.h"
 
 namespace operations {
 

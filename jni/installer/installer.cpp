@@ -41,10 +41,11 @@
 #include <getopt.h>
 #include <stdlib.h>
 
+#include "shared/util.h"
+#include "shared/version.h"
+
 #include "installer.h"
 #include "modes.h"
-#include "util.h"
-#include "version.h"
 
 const char* shortopts = "s:icurvh";
 const struct option longopts[] = {

@@ -20,8 +20,9 @@
 #include <fstream>
 #include <sstream>
 
+#include "shared/util.h"
+
 #include "hash.h"
-#include "util.h"
 
 namespace hash {
 
