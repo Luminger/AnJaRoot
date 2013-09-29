@@ -270,7 +270,7 @@ ReturnCode killZygote()
 {
     // So... we could iterate through /proc/ to find a process name zygote and
     // read one of the status files where format is not guaranteed for specifig
-    // Linux version... Or we could grap the zygote socket in
+    // Linux version... Or we could grab the zygote socket in
     // /dev/socket/zygote and ask the socket for the remote pid!
     //
     // I would say that's a clever (portable!) hack
