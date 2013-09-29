@@ -21,3 +21,7 @@ local.properties
 .classpath
 .project
 .settings
+
+# vim swap file
+*.swp
+*.swo

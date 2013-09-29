@@ -49,6 +49,8 @@ ReturnCode install(const std::string& libpath)
 
     try
     {
+        // stat app_process to recreate files with correct rights
+        // as they may differ from system (depends on version/vendor)
         operations::stat(config::origBinary, origst);
         // stat libandroid.so to have mode,uid,gid to set on our lib
         operations::stat(config::libandroid, libst);
@@ -64,6 +66,10 @@ ReturnCode install(const std::string& libpath)
     {
         try
         {
+            // We have to unlink the library before we overwrite it. The chance
+            // to overwrite it here is very low but when it happens it will
+            // break the whole device as everything will crash and we can't
+            // recover from that (did that multiple times to my phone)...
             operations::unlink(config::library);
         }
         catch(std::exception& e)
@@ -141,6 +147,18 @@ ReturnCode install(const std::string& libpath)
         util::logError("Failed to move wrapper in place, reverting");
         uninstall();
         throw;
+    }
+
+    // final CRC32 checks, again we may have failed hard. While that's pretty
+    // unlikely, we are fiddeling with the system core here. It's worth to have
+    // another safety check to be sure we don't mess the device up.
+    // TODO: a CRC32 check for our wrapper script would be nice also
+    bool newEqual = hash::CRC32::compare(config::origBinary, config::newBinary);
+    if(!newEqual)
+    {
+        util::logError("CRC32 sums differ, reverting");
+        uninstall();
+        return FAIL;
     }
 
     // place the install mark
@@ -230,6 +248,16 @@ ReturnCode uninstall()
 
 ReturnCode check()
 {
+    // We are just checking for the install mark here. This is more or less a
+    // good source for checking if we are in a good state but otherwise we
+    // would have to verify every binary and the wrapper script and it may be
+    // quite hard to do so, think of version updates etc.
+
+    if(!mark::verify())
+    {
+        util::logError("Failed to verify install mark, we may be broken!");
+        return FAIL;
+    }
     return OK;
 }
 

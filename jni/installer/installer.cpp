@@ -162,7 +162,7 @@ int main(int argc, char** argv)
     }
     catch(std::exception& e)
     {
-        // TODO log a stacktrace (with backtrace from <execinfo.h>?)
+        // TODO: use google-breakpad to create a dump here
         util::logError("Failed while executing mode: %s", e.what());
         ret = modes::FAIL;
     }
