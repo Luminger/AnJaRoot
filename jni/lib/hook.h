@@ -23,6 +23,7 @@
 struct hook {
     static bool Hooked;
     static bool AlreadyRun;
+    static bool Granted;
 };
 
 #endif

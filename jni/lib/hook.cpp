@@ -25,6 +25,7 @@
 #include <unistd.h>
 
 #include "shared/util.h"
+#include "shared/version.h"
 
 #include "packages.h"
 #include "helper.h"
@@ -33,15 +34,18 @@ static const helper::Capabilities rootCapabilities(0xFFFFFFFF, 0xFFFFFFFF, 0);
 static const helper::UserIds rootUids(0, 0, 0);
 static const helper::GroupIds rootGids(0, 0, 0);
 
-typedef int (*capset_type)(cap_user_header_t, const cap_user_data_t);
-static capset_type orig_capset;
 bool hook::Hooked= false;
 bool hook::AlreadyRun = false;
+bool hook::Granted = false;
 
+typedef int (*capset_type)(cap_user_header_t, const cap_user_data_t);
+static capset_type orig_capset;
 
  __attribute__((constructor))
 static void constructor()
 {
+    util::logVerbose("AnJaRoot %s loaded", version::asString().c_str());
+
     orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_NEXT, "capset"));
     if(orig_capset != NULL)
     {
@@ -107,8 +111,8 @@ int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
         helper::setUserIds(rootUids);
         helper::setGroupIds(rootGids);
 
-        bool granted = isGranted(origUids.ruid);
-        if(!granted)
+        hook::Granted = isGranted(origUids.ruid);
+        if(!hook::Granted)
         {
             util::logVerbose("Process is not a target");
             helper::setGroupIds(origGids);

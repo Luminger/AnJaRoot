@@ -21,20 +21,15 @@
 #define _ANJAROOT_VERSION_H_
 
 #include <string>
-#include <sstream>
 
 namespace version {
 
-static const int Major = 0;
-static const int Minor = 1;
+static const int Major = 1;
+static const int Minor = 0;
 static const int Patch = 0;
+static const int Api = 1;
 
-std::string asString()
-{
-    std::stringstream ss;
-    ss << Major << "." << Minor << "." << Patch;
-    return ss.str();
-}
+std::string asString();
 
 }
 

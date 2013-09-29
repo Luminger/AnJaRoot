@@ -18,17 +18,12 @@
  */
 package org.failedprojects.anjaroot;
 
-import java.io.IOException;
-
-import org.failedprojects.anjaroot.library.exceptions.NativeException;
-import org.failedprojects.anjaroot.library.internal.NativeWrapper;
-
-import android.os.Bundle;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -36,49 +31,70 @@ import android.view.View;
 import android.widget.Button;
 
 public class MainActivity extends FragmentActivity {
-	
+
+	// TODO: upgrade needs a reboot! On first install this is not a problem,
+	// but whenever we upgrade/reinstall the zygote
 	static final String LOGTAG = "AnjaRoot";
-	
+
 	ProgressDialog createProgessDialog() {
 		ProgressDialog dial = new ProgressDialog(this);
 		dial.setTitle("AnJaRoot");
 		dial.setMessage("Testing root access...");
 		dial.setIndeterminate(true);
 		dial.show();
-		
+
 		return dial;
 	}
-	
+
+	void restartZygote() {
+		final String basepath = this.getApplicationInfo().dataDir + "/lib/";
+		final String installer = basepath + "libanjarootinstaller.so";
+		final String command = String.format("%s --killzygote\n", installer);
+		try {
+			Process p = Runtime.getRuntime().exec("su");
+			p.getOutputStream().write(command.getBytes());
+			p.getOutputStream().close();
+
+			if (p.waitFor() != 0) {
+				Log.e(LOGTAG, "Non zero result");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			Log.e(LOGTAG, "Failed to install", e);
+		}
+
+	}
+
 	void doSystemInstall() {
 		final Context ctx = this;
 		final ProgressDialog dial = createProgessDialog();
 		new Thread() {
+			@Override
 			public void run() {
 
-				final String basepath = ctx.getApplicationInfo().dataDir + "/lib/";
+				final String basepath = ctx.getApplicationInfo().dataDir
+						+ "/lib/";
 				final String library = basepath + "libanjaroot.so";
 				final String installer = basepath + "libanjarootinstaller.so";
-				final String command = 
-						"mount -orw,remount /system\n" +
-						String.format("%s -i -s '%s'\n", installer, library) +
-						"/system/bin/setprop ctl.stop zygote\n" + 
-						"/system/bin/setprop ctl.start zygote\n" + 
-						"mount -oro,remount /system\n";
-				
+				final String command = "mount -orw,remount /system\n"
+						+ String.format("%s -i -s '%s'\n", installer, library)
+						+ "mount -oro,remount /system\n";
+
 				try {
 					Process p = Runtime.getRuntime().exec("su");
 					p.getOutputStream().write(command.getBytes());
 					p.getOutputStream().close();
-					
-					if(p.waitFor() != 0)
-					{
+
+					if (p.waitFor() != 0) {
 						Log.e(LOGTAG, "Non zero result");
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					Log.e(LOGTAG, "Failed to install", e);
 				}
-				
+
+				restartZygote();
+
 				dial.dismiss();
 			}
 		}.run();
@@ -88,40 +104,40 @@ public class MainActivity extends FragmentActivity {
 		final Context ctx = this;
 		final ProgressDialog dial = createProgessDialog();
 		new Thread() {
+			@Override
 			public void run() {
 
-				final String basepath = ctx.getApplicationInfo().dataDir + "/lib/";
+				final String basepath = ctx.getApplicationInfo().dataDir
+						+ "/lib/";
 				final String installer = basepath + "libanjarootinstaller.so";
-				final String command = 
-						"mount -orw,remount /system\n" +
-						String.format("%s --uninstall\n", installer) +
-						"/system/bin/setprop ctl.stop zygote\n" + 
-						"/system/bin/setprop ctl.start zygote\n" + 
-						"mount -oro,remount /system\n";
-				
+				final String command = "mount -orw,remount /system\n"
+						+ String.format("%s --uninstall\n", installer)
+						+ "mount -oro,remount /system\n";
+
 				try {
 					Process p = Runtime.getRuntime().exec("su");
 					p.getOutputStream().write(command.getBytes());
 					p.getOutputStream().close();
-					
-					if(p.waitFor() != 0)
-					{
+
+					if (p.waitFor() != 0) {
 						Log.e(LOGTAG, "Non zero result");
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
 					Log.e(LOGTAG, "Failed to install", e);
 				}
-				
+
+				restartZygote();
+
 				dial.dismiss();
 			}
 		}.run();
 	}
-	
+
 	void doRecoveryInstall() {
-		
+
 	}
-	
+
 	void createInstallDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("AnJaRoot");
@@ -141,7 +157,7 @@ public class MainActivity extends FragmentActivity {
 		builder.setNegativeButton("Cancel", null);
 		builder.create().show();
 	}
-	
+
 	void createUninstallDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("AnJaRoot");
@@ -160,16 +176,16 @@ public class MainActivity extends FragmentActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		
-		Button install = (Button)findViewById(R.id.installBtn);
+
+		Button install = (Button) findViewById(R.id.installBtn);
 		install.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				createInstallDialog();
 			}
 		});
-		
-		Button uninstall = (Button)findViewById(R.id.uninstallBtn);
+
+		Button uninstall = (Button) findViewById(R.id.uninstallBtn);
 		uninstall.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {

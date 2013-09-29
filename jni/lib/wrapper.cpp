@@ -248,37 +248,45 @@ void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
 
 jintArray jni_getversion(JNIEnv* env, jclass cls)
 {
-    jintArray retval = env->NewIntArray(3);
+    jintArray retval = env->NewIntArray(4);
     if(retval == NULL) {
         // OOM exception thrown
         return NULL;
     }
 
-    jint buf[3] = {
+    jint buf[4] = {
         version::Major,
         version::Minor,
         version::Patch,
+        version::Api,
     };
 
-    env->SetIntArrayRegion(retval, 0, 3, buf);
+    env->SetIntArrayRegion(retval, 0, 4, buf);
     return retval;
 }
 
 jbooleanArray jni_getstatus(JNIEnv* env, jclass cls)
 {
-    jbooleanArray retval = env->NewBooleanArray(2);
+    jbooleanArray retval = env->NewBooleanArray(3);
     if(retval == NULL) {
         // OOM exception thrown
         return NULL;
     }
 
-    jboolean buf[2] = {
+    jboolean buf[3] = {
         hook::Hooked,
         hook::AlreadyRun,
+        hook::Granted
     };
 
-    env->SetBooleanArrayRegion(retval, 0, 2, buf);
+    env->SetBooleanArrayRegion(retval, 0, 3, buf);
     return retval;
+}
+
+void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl)
+{
+    // We are at apilvl 1, nothing to do here =)
+    util::logVerbose("Library API level: %d", apilvl);
 }
 
 static JNINativeMethod methods[] = {
@@ -290,6 +298,7 @@ static JNINativeMethod methods[] = {
     {"setresgid", "(JJJ)V", (void *) jni_setresgid},
     {"getversion", "()[I", (void *) jni_getversion},
     {"getstatus", "()[Z", (void *) jni_getstatus},
+    {"setcompatmode", "(I)V", (void *) jni_setcompatmode},
 };
 
 extern "C"

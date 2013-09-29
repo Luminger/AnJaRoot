@@ -54,6 +54,7 @@ const struct option longopts[] = {
     {"check",        no_argument,       0, 'c'},
     {"uninstall",    no_argument,       0, 'u'},
     {"version",      no_argument,       0, 'v'},
+    {"killzygote",   no_argument,       0, 'k'},
     {"help",         no_argument,       0, 'h'},
     {0, 0, 0, 0},
 };
@@ -69,6 +70,7 @@ void printUsage(const char* progname)
     std::cerr << "\t-i, --install\t\t\tdo install (needs -s to be set)" << std::endl;
     std::cerr << "\t-u, --uninstall\t\t\tdo uninstall" << std::endl;
     std::cerr << "\t-c, --check\t\t\tdo an installation ckeck" << std::endl;
+    std::cerr << "\t-k, --killzygote\t\t\tkill zygote process" << std::endl;
 }
 
 ModeSpec processArguments(int argc, char** argv)
@@ -102,6 +104,10 @@ ModeSpec processArguments(int argc, char** argv)
             case 'u':
                 util::logVerbose("Opt: -u");
                 mode = modes::UninstallMode;
+                break;
+            case 'k':
+                util::logVerbose("opt: -k");
+                mode = modes::KillZygoteMode;
                 break;
             case 'v':
                 util::logVerbose("opt: -v");
@@ -158,6 +164,11 @@ int main(int argc, char** argv)
         {
             util::logVerbose("Running check mode");
             ret = modes::check();
+        }
+        else if(spec.second == modes::KillZygoteMode)
+        {
+            util::logVerbose("Running killZygote mode");
+            ret = modes::killZygote();
         }
     }
     catch(std::exception& e)
