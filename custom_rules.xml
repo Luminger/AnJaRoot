@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="custom_rules" default="debug">
+<project name="custom_rules_anjaroot" default="debug">
+    <xmlproperty file="AndroidManifest.xml" prefix="manifest" collapseAttributes="true"/>
+    <property name="version.code" value="${manifest.manifest.android:versionName}"/>
     <target name="-pre-build">
         <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
     </target>
     <target name="clean" depends="android_rules.clean">
+        <delete dir="release"/>
         <exec executable="${ndk.dir}/ndk-build" failonerror="true">
             <arg value="clean"/>
         </exec>
@@ -18,5 +21,24 @@
         <chmod perm="ugo+x" file="libs/mips/libanjarootinstaller.so"/>
         <chmod perm="ugo+x" file="libs/armeabi/libanjarootinstaller.so"/>
         <chmod perm="ugo+x" file="libs/x86/libanjarootinstaller.so"/>
+    </target>
+    <target name="release" depends="android_rules.release, updatezip"/>
+    <target name="updatezip">
+        <copy todir="updatezip" overwrite="true" encoding="utf-8">
+            <fileset dir="libs">
+                <include name="**/anjarootinstaller"/>
+                <include name="**/libanjaroot.so"/>
+            </fileset>
+        </copy>
+        <copy tofile="updatezip/AnJaRoot.apk" overwrite="true"
+            file="bin/AnJaRoot-release.apk"/>
+        <mkdir dir="release"/>
+        <copy tofile="release/AnJaRoot-${version.code}.apk" overwrite="true"
+            file="bin/AnJaRoot-release.apk"/>
+        <exec executable="zip" failonerror="true" dir="updatezip">
+            <arg value="-ru"/>
+            <arg value="../release/AnJaRoot-${version.code}-update.zip"/>
+            <arg value="."/>
+        </exec>
     </target>
 </project>
