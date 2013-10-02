@@ -41,7 +41,7 @@
 # //
 
 # GLOBAL VARIABLES
-DEBUG=1
+DEBUG=0
 
 SELF=$0
 RECOVERY_VERSION=$1
@@ -50,7 +50,10 @@ UPDATEZIP_PATH=$3
 
 CPU_ABI=''
 TMPDIR=/tmp/AnJaRoot
-APK=$TMPDIR/AnJaRoot.apk
+APK_TARGET=/system/app/AnJaRoot.apk
+APK_ZIP=$TMPDIR/AnJaRoot.apk
+APK_SYS='/data/app/org.failedprojects.anjaroot-*.apk'
+
 
 # UTILITY FUNCTIONS
 printnl(){
@@ -59,7 +62,7 @@ printnl(){
 }
 
 debug(){
-    if [ "$DEBUG" -ne '0' ]
+    if [ "$DEBUG" -eq '1' ]
     then
         printnl "DEBUG: $1"
     fi
@@ -72,7 +75,9 @@ cleanup(){
 
 abort(){
     cleanup
-    printnl 'Install failed! See logcat for more information!'
+    printnl '************************'
+    printnl ' ERROR: Install failed!'
+    printnl '************************'
     exit 1
 }
 
@@ -104,6 +109,9 @@ debug "SELF: $SELF"
 debug "RECOVERY_VERSION: $RECOVERY_VERSION"
 debug "UPDATEZIP_PATH: $UPDATEZIP_PATH"
 debug "TMPDIR: $TMPDIR"
+debug "APK_TARGET: $APK_TARGET"
+debug "APK_ZIP: $APK_ZIP"
+debug "APK_SYS: $APK_SYS"
 
 printnl 'Getting device ABI...'
 discoverArch
@@ -129,11 +137,29 @@ printnl 'Cleaning away (possible) previous installation...'
 printnl 'Running installer...'
 "$INSTALLER" -i -s "$LIBRARY" || abort
 
-if [ -f "$APK" ]
+
+if [ -f "$APK_ZIP" ]
 then
-    printnl 'Copying AnJaRoot.apk to /system/app/...'
-    cp $APK /system/app/ || abort
-    chmod 644 $APK || abort
+    printnl 'Copying AnJaRoot.apk from update.zip to /system/app/...'
+    cp $APK_ZIP $APK_TARGET || abort
+    chmod 644 $APK_TARGET || abort
+else
+    prinnl 'Mounting /data...'
+    mount /data
+
+    APK_SYS_FILE=$(ls $APK_SYS 2> /dev/null )
+    debug "APK_SYS_FILE: $APK_SYS_FILE"
+    if [ ! -z "$APK_SYS_FILE" ]
+    then
+        printnl 'Copying AnJaRoot.apk from /data/app/ to /system/app/...'
+        cp $APK_SYS_FILE $APK_TARGET || abort
+        chmod 644 $APK_TARGET || abort
+    else
+        printnl '******************************************'
+        printnl ' WARNING: Unable to install AnJaRoot.apk.'
+        printnl ' Install it manually from Play Store!'
+        printnl '******************************************'
+    fi
 fi
 
 cleanup
