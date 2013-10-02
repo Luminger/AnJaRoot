@@ -7,7 +7,7 @@
     </target>
     <target name="-pre-clean">
         <delete dir="release"/>
-        <delete dir="assets/update.zip"/>
+        <delete file="assets/AnJaRoot.zip"/>
         <delete dir="updatezip"/>
         <exec executable="${ndk.dir}/ndk-build" failonerror="true">
             <arg value="clean"/>
@@ -41,7 +41,7 @@
         <mkdir dir="assets"/>
         <exec executable="zip" failonerror="true" dir="updatezip">
             <arg value="-ru"/>
-            <arg value="../assets/update.zip"/>
+            <arg value="../assets/AnJaRoot.zip"/>
             <arg value="."/>
         </exec>
     </target>
