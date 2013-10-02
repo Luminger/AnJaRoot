@@ -5,7 +5,7 @@
 # $2: communication fd (see comment below)
 # $3: path to the update.zip
 
-# Documentation for $2 from the calling install.c:
+# Documentation from the calling install.c:
 # // When executing the update binary contained in the package, the
 # // arguments passed are:
 # //
@@ -59,7 +59,7 @@ printnl(){
 }
 
 debug(){
-    if [ ! "$DEBUG" -eq '0' ]
+    if [ "$DEBUG" -ne '0' ]
     then
         printnl "DEBUG: $1"
     fi
@@ -129,9 +129,12 @@ printnl 'Cleaning away (possible) previous installation...'
 printnl 'Running installer...'
 "$INSTALLER" -i -s "$LIBRARY" || abort
 
-printnl 'Copying AnJaRoot app...'
-cp $APK /system/app/ || abort
-chmod 644 $APK || abort
+if [ -f "$APK" ]
+then
+    printnl 'Copying AnJaRoot.apk to /system/app/...'
+    cp $APK /system/app/ || abort
+    chmod 644 $APK || abort
+fi
 
 cleanup
 
