@@ -46,25 +46,6 @@ public class MainActivity extends FragmentActivity {
 		return dial;
 	}
 
-	void restartZygote() {
-		final String basepath = this.getApplicationInfo().dataDir + "/lib/";
-		final String installer = basepath + "libanjarootinstaller.so";
-		final String command = String.format("%s --killzygote\n", installer);
-		try {
-			Process p = Runtime.getRuntime().exec("su");
-			p.getOutputStream().write(command.getBytes());
-			p.getOutputStream().close();
-
-			if (p.waitFor() != 0) {
-				Log.e(LOGTAG, "Non zero result");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			Log.e(LOGTAG, "Failed to install", e);
-		}
-
-	}
-
 	void doSystemInstall() {
 		final Context ctx = this;
 		final ProgressDialog dial = createProgessDialog();
@@ -76,6 +57,7 @@ public class MainActivity extends FragmentActivity {
 						+ "/lib/";
 				final String library = basepath + "libanjaroot.so";
 				final String installer = basepath + "libanjarootinstaller.so";
+				Log.v(LOGTAG, "Installer Path: " + installer);
 				final String command = "mount -orw,remount /system\n"
 						+ String.format("%s -i -s '%s'\n", installer, library)
 						+ "mount -oro,remount /system\n";
@@ -92,8 +74,6 @@ public class MainActivity extends FragmentActivity {
 					e.printStackTrace();
 					Log.e(LOGTAG, "Failed to install", e);
 				}
-
-				restartZygote();
 
 				dial.dismiss();
 			}
@@ -127,14 +107,41 @@ public class MainActivity extends FragmentActivity {
 					Log.e(LOGTAG, "Failed to install", e);
 				}
 
-				restartZygote();
-
 				dial.dismiss();
 			}
 		}.run();
 	}
 
 	void doRecoveryInstall() {
+		final Context ctx = this;
+		final ProgressDialog dial = createProgessDialog();
+		new Thread() {
+			@Override
+			public void run() {
+
+				final String basepath = ctx.getApplicationInfo().dataDir
+						+ "/lib/";
+				final String installer = basepath + "libanjarootinstaller.so";
+				Log.v(LOGTAG, "Installer Path: " + installer);
+				final String command = String.format("%s -r -a %s\n",
+						installer, ctx.getPackageCodePath());
+
+				try {
+					Process p = Runtime.getRuntime().exec("su");
+					p.getOutputStream().write(command.getBytes());
+					p.getOutputStream().close();
+
+					if (p.waitFor() != 0) {
+						Log.e(LOGTAG, "Non zero result");
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					Log.e(LOGTAG, "Failed to install", e);
+				}
+
+				dial.dismiss();
+			}
+		}.run();
 
 	}
 

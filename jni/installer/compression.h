@@ -17,31 +17,26 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _ANJAROOT_INSTALLER_MODES_H_
-#define _ANJAROOT_INSTALLER_MODES_H_
+#ifndef _ANJAROOT_INSTALLER_COMPRESSION_H
+#define _ANJAROOT_INSTALLER_COMPRESSION_H
 
 #include <string>
+#include "minizip/unzip.h"
 
-namespace modes {
-    enum OperationMode {
-        InvalidMode,
-        InstallMode,
-        UninstallMode,
-        CheckMode,
-        RecoveryInstallMode,
-        HelpMode,    // doesn't belong here, but I don't want to special
-        VersionMode  // special case them even more than I did already...
+namespace compression {
+    class Unzip
+    {
+        public:
+            Unzip(const std::string& file);
+            ~Unzip();
+
+            void extractFileTo(const std::string& file, const std::string& to);
+
+        private:
+            static const size_t BufferSize = 256; // That's a wild guess,
+                                                  // but should work for now
+            unzFile zip;
     };
-
-    enum ReturnCode {
-        OK,
-        FAIL
-    };
-
-    ReturnCode install(const std::string& libpath);
-    ReturnCode uninstall();
-    ReturnCode check();
-    ReturnCode recoveryInstall(const std::string& apkpath);
 }
 
 #endif

@@ -24,7 +24,10 @@
 #include <system_error>
 #include <errno.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include "shared/util.h"
 
@@ -120,6 +123,29 @@ void stat(const std::string& target, struct stat& out)
     }
 }
 
+void chown(const std::string& target, const std::string& user,
+        const std::string& group)
+{
+    util::logVerbose("Op: chown on '%s' with user='%s', group='%s'",
+            target.c_str(), user.c_str(), group.c_str());
+
+    struct passwd* pwd = getpwnam(user.c_str());
+    if(pwd == NULL)
+    {
+        util::logError("Op: getpwnam failed: %s", strerror(errno));
+        throw std::system_error(errno, std::system_category());
+    }
+
+    struct group* grp = getgrnam(group.c_str());
+    if(grp == NULL)
+    {
+        util::logError("Op: getgrnam failed: %s", strerror(errno));
+        throw std::system_error(errno, std::system_category());
+    }
+
+    chown(target, pwd->pw_uid,  grp->gr_gid);
+}
+
 void chown(const std::string& target, uid_t uid, gid_t gid)
 {
     util::logVerbose("Op: chown on '%s' with uid=%d, gid=%d", target.c_str(),
@@ -142,6 +168,21 @@ void chmod(const std::string& target, mode_t mode)
     {
         util::logError("Op: chmod failed: %s", strerror(errno));
         throw std::system_error(errno, std::system_category());
+    }
+}
+
+void mkdir(const std::string& dir, mode_t mode)
+{
+    util::logVerbose("Op: mkdir '%s' with mode=%o", dir.c_str(), mode);
+
+    int ret = ::mkdir(dir.c_str(), mode);
+    if(ret == -1)
+    {
+        if(errno != EEXIST)
+        {
+            util::logError("Op: mkdir failed: %s", strerror(errno));
+            throw std::system_error(errno, std::system_category());
+        }
     }
 }
 

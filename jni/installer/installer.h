@@ -22,9 +22,10 @@
 
 #include <string>
 #include <utility>
+#include <tuple>
 
 #include "modes.h"
 
-typedef std::pair<std::string, modes::OperationMode> ModeSpec;
+typedef std::tuple<modes::OperationMode, std::string, std::string> ModeSpec;
 
 #endif

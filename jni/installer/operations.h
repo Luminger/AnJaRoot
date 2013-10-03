@@ -32,8 +32,11 @@ namespace operations {
     void copy(const std::string& src, const std::string& dst);
     void unlink(const std::string& src);
     void stat(const std::string& target, struct stat& out);
+    void chown(const std::string& target, const std::string& user,
+            const std::string& group);
     void chown(const std::string& target, uid_t uid, gid_t gid);
     void chmod(const std::string& target, mode_t mode);
+    void mkdir(const std::string& dir, mode_t mode);
     void sync();
 }
 

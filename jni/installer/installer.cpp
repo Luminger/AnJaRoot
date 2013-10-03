@@ -47,14 +47,15 @@
 #include "installer.h"
 #include "modes.h"
 
-const char* shortopts = "s:icurvh";
+const char* shortopts = "s:a:icurvh";
 const struct option longopts[] = {
     {"srclibpath",   required_argument, 0, 's'},
+    {"apkpath",      required_argument, 0, 'a'},
     {"install",      no_argument,       0, 'i'},
     {"check",        no_argument,       0, 'c'},
     {"uninstall",    no_argument,       0, 'u'},
+    {"recovery",     no_argument,       0, 'r'},
     {"version",      no_argument,       0, 'v'},
-    {"killzygote",   no_argument,       0, 'k'},
     {"help",         no_argument,       0, 'h'},
     {0, 0, 0, 0},
 };
@@ -66,16 +67,18 @@ void printUsage(const char* progname)
     std::cerr << "\t-h, --help\t\t\tprint this usage message" << std::endl;
     std::cerr << "\t-v, --version\t\t\tprint version" << std::endl;
     std::cerr << "\t-s, --srclibpath [PATH] \tset source lib path" << std::endl;
+    std::cerr << "\t-a, --apkpath [PATH] \tset apk path" << std::endl;
     std::cerr << std::endl << "Valid Modes:" << std::endl;
     std::cerr << "\t-i, --install\t\t\tdo install (needs -s to be set)" << std::endl;
     std::cerr << "\t-u, --uninstall\t\t\tdo uninstall" << std::endl;
+    std::cerr << "\t-r, --recovery\t\t\tdo recovery install" << std::endl;
     std::cerr << "\t-c, --check\t\t\tdo an installation ckeck" << std::endl;
-    std::cerr << "\t-k, --killzygote\t\t\tkill zygote process" << std::endl;
 }
 
 ModeSpec processArguments(int argc, char** argv)
 {
     std::string sourcelib;
+    std::string apkpath;
     modes::OperationMode mode = modes::InvalidMode;
 
     int c, option_index = 0;
@@ -93,6 +96,10 @@ ModeSpec processArguments(int argc, char** argv)
                 util::logVerbose("Opt: -s set to '%s'", optarg);
                 sourcelib = optarg;
                 break;
+            case 'a':
+                util::logVerbose("Opt: -a set to '%s'", optarg);
+                apkpath = optarg;
+                break;
             case 'i':
                 util::logVerbose("Opt: -i");
                 mode = modes::InstallMode;
@@ -105,23 +112,23 @@ ModeSpec processArguments(int argc, char** argv)
                 util::logVerbose("Opt: -u");
                 mode = modes::UninstallMode;
                 break;
-            case 'k':
-                util::logVerbose("opt: -k");
-                mode = modes::KillZygoteMode;
+            case 'r':
+                util::logVerbose("Opt: -r");
+                mode = modes::RecoveryInstallMode;
                 break;
             case 'v':
                 util::logVerbose("opt: -v");
                 mode = modes::VersionMode;
-                return std::make_pair("", modes::VersionMode);
+                return std::make_tuple(modes::VersionMode, "", "");
             case 'h':
                 util::logVerbose("opt: -h");
-                return std::make_pair("", modes::HelpMode);
+                return std::make_tuple(modes::HelpMode, "", "");
             default:
-                return std::make_pair("", modes::InvalidMode);
+                return std::make_tuple(modes::InvalidMode, "", "");
         }
     }
 
-    return std::make_pair(sourcelib, mode);
+    return std::make_tuple(mode, sourcelib, apkpath);
 }
 
 int main(int argc, char** argv)
@@ -130,8 +137,9 @@ int main(int argc, char** argv)
             version::asString().c_str());
 
     ModeSpec spec = processArguments(argc, argv);
+    modes::OperationMode mode = std::get<0>(spec);
 
-    switch(spec.second)
+    switch(mode)
     {
         case modes::VersionMode:
             std::cout << "Version: " << version::asString() << std::endl;
@@ -150,25 +158,25 @@ int main(int argc, char** argv)
     modes::ReturnCode ret = modes::FAIL;
     try
     {
-        if(spec.second == modes::InstallMode)
+        if(mode == modes::InstallMode)
         {
             util::logVerbose("Running install mode");
-            ret = modes::install(spec.first);
+            ret = modes::install(std::get<1>(spec));
         }
-        else if(spec.second == modes::UninstallMode)
+        else if(mode == modes::UninstallMode)
         {
             util::logVerbose("Running uninstall mode");
             ret = modes::uninstall();
         }
-        else if(spec.second == modes::CheckMode)
+        else if(mode == modes::RecoveryInstallMode)
+        {
+            util::logVerbose("Running recovery install mode");
+            ret = modes::recoveryInstall(std::get<2>(spec));
+        }
+        else if(mode == modes::CheckMode)
         {
             util::logVerbose("Running check mode");
             ret = modes::check();
-        }
-        else if(spec.second == modes::KillZygoteMode)
-        {
-            util::logVerbose("Running killZygote mode");
-            ret = modes::killZygote();
         }
     }
     catch(std::exception& e)

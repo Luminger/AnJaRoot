@@ -19,18 +19,18 @@
 
 #include "modes.h"
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <fstream>
 #include <system_error>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <unistd.h>
+#include <sys/reboot.h>
 
 #include "shared/util.h"
 #include "hash.h"
 #include "operations.h"
 #include "mark.h"
 #include "config.h"
+#include "compression.h"
 
 namespace modes {
 
@@ -266,56 +266,78 @@ ReturnCode check()
     return OK;
 }
 
-ReturnCode killZygote()
+
+ReturnCode recoveryInstall(const std::string& apkpath)
 {
-    // So... we could iterate through /proc/ to find a process name zygote and
-    // read one of the status files where format is not guaranteed for specifig
-    // Linux version... Or we could grab the zygote socket in
-    // /dev/socket/zygote and ask the socket for the remote pid!
-    //
-    // I would say that's a clever (portable!) hack
-
-    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if(fd == -1)
+    try
     {
-        util::logError("Failed to create zygote socket: %s", strerror(errno));
-        throw std::system_error(errno, std::system_category());
+        operations::mkdir("/cache/recovery/", 0770);
+        operations::chmod("/cache/recovery/", 0770); // dir may already be existing
+        operations::chown("/cache/recovery/", "system", "cache");
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Failed to create or alter '/cache/recovery'");
+        return FAIL;
     }
 
-    struct sockaddr_un addr = {0, };
-    addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, "/dev/socket/zygote");
-
-    int ret = connect(fd, reinterpret_cast<struct sockaddr *>(&addr),
-            sizeof(addr.sun_family) + sizeof(addr.sun_path));
-    if(ret == -1)
+    try
     {
-        util::logError("Failed to connect to zygote socket: %s", strerror(errno));
-        close(fd);
-        throw std::system_error(errno, std::system_category());
+        compression::Unzip zip(apkpath);
+        zip.extractFileTo("assets/AnJaRoot.zip", "/cache/AnJaRoot.zip");
+        zip.extractFileTo("assets/command", "/cache/recovery/command");
+
+        operations::chmod("/cache/AnJaRoot.zip", 0644);
+        operations::chmod("/cache/recovery/command", 0644);
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Failed to prepare recovery install: %s", e.what());
+        return FAIL;
     }
 
-    struct ucred creds = {0, };
-    socklen_t len = sizeof(creds);
-    ret = getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &creds, &len);
+    operations::sync();
 
-    if(ret == -1)
+    // Now the hack: libcutils.so has a function (android_reboot.c) to reboot
+    // the device into recovery mode. Unfortunately this is not part of the ndk
+    // to we try a manual load here. If that failed (Gingerbread doesn't know
+    // this function) we fall back to __reboot() which does what it should BUT
+    // I'm lazy so we skip the "wait till every mount is ro" phase. Shouldn't
+    // do that much harm as we have done a sync() anyway here.
+    void* libcutils = dlopen("libcutils.so", RTLD_LAZY);
+    if(!libcutils)
     {
-        util::logError("Failed to get socket credentials: %s", strerror(errno));
-        close(fd);
-        throw std::system_error(errno, std::system_category());
+        util::logError("Failed to open libcutils.so via dlopen()!");
+        return FAIL;
     }
 
-    util::logVerbose("Zygote pid: %d", creds.pid);
-    ret = kill(creds.pid, SIGKILL);
-    if(ret == -1)
+    typedef int (*android_reboot_type)(int cmd, int flags, char* arg);
+    android_reboot_type android_reboot = reinterpret_cast<android_reboot_type>(
+            dlsym(libcutils, "android_reboot"));
+
+    int ret;
+    char cmd[] = "recovery";
+    if(!android_reboot)
     {
-        util::logError("Failed to kill zygote: %s", strerror(errno));
-        close(fd);
-        throw std::system_error(errno, std::system_category());
+        util::logError("Failed to resolve symbol, doing legacy reboot.");
+        // Direct copy from JB's libcutils/android_reboot.c
+        ret = __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
+                LINUX_REBOOT_CMD_RESTART2, cmd);
+    }
+    else
+    {
+        // Value stolen from: include/cutils/android_reboot.h
+        int ANDROID_RB_RESTART2 = 0xDEAD0003;
+        ret = android_reboot(ANDROID_RB_RESTART2, 0, cmd);
+
     }
 
-    close(fd);
+    dlclose(libcutils);
+    if(ret)
+    {
+        util::logError("Failed to reboot into recovery!");
+        return FAIL;
+    }
 
     return OK;
 }
