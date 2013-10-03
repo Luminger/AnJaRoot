@@ -28,6 +28,8 @@
 #include <unistd.h>
 #include <pwd.h>
 #include <grp.h>
+#include <dlfcn.h>
+#include <sys/reboot.h>
 
 #include "shared/util.h"
 
@@ -184,6 +186,67 @@ void mkdir(const std::string& dir, mode_t mode)
             throw std::system_error(errno, std::system_category());
         }
     }
+}
+
+int reboot(bool bootRecovery)
+{
+    // Now the hack: libcutils.so has a function (android_reboot.c) to reboot
+    // the device into recovery mode. Unfortunately this is not part of the ndk
+    // to we try a manual load here. If that failed (Gingerbread doesn't know
+    // this function) we fall back to __reboot() which does what it should BUT
+    // I'm lazy so we skip the "wait till every mount is ro" phase. Shouldn't
+    // do that much harm as we have done a sync() anyway here.
+    void* libcutils = dlopen("libcutils.so", RTLD_LAZY);
+    if(!libcutils)
+    {
+        util::logError("Failed to open libcutils.so via dlopen()!");
+        return -1;
+    }
+
+    typedef int (*android_reboot_type)(int cmd, int flags, char* arg);
+    android_reboot_type android_reboot = reinterpret_cast<android_reboot_type>(
+            dlsym(libcutils, "android_reboot"));
+
+    int ret;
+    char cmd[] = "recovery";
+    if(!android_reboot)
+    {
+        util::logError("Failed to resolve symbol, doing legacy reboot.");
+
+        if(bootRecovery)
+        {
+            // Direct copy from JB's libcutils/android_reboot.c
+            ret = __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
+                    LINUX_REBOOT_CMD_RESTART2, cmd);
+        }
+        else
+        {
+            ret = reboot(RB_AUTOBOOT);
+        }
+    }
+    else
+    {
+        if(bootRecovery)
+        {
+            // Value stolen from: include/cutils/android_reboot.h
+            int ANDROID_RB_RESTART2 = 0xDEAD0003;
+            ret = android_reboot(ANDROID_RB_RESTART2, 0, cmd);
+        }
+        else
+        {
+           int ANDROID_RB_RESTART = 0xDEAD0001;
+           ret = android_reboot(ANDROID_RB_RESTART, 0, NULL);
+        }
+
+    }
+
+    dlclose(libcutils);
+    if(ret)
+    {
+        util::logError("Failed to reboot into recovery!");
+    }
+
+    return ret;
 }
 
 void sync()

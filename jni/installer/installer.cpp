@@ -78,7 +78,7 @@ void printUsage(const char* progname)
 ModeSpec processArguments(int argc, char** argv)
 {
     std::string sourcelib;
-    std::string apkpath;
+    std::string apk;
     modes::OperationMode mode = modes::InvalidMode;
 
     int c, option_index = 0;
@@ -98,7 +98,7 @@ ModeSpec processArguments(int argc, char** argv)
                 break;
             case 'a':
                 util::logVerbose("Opt: -a set to '%s'", optarg);
-                apkpath = optarg;
+                apk = optarg;
                 break;
             case 'i':
                 util::logVerbose("Opt: -i");
@@ -128,7 +128,17 @@ ModeSpec processArguments(int argc, char** argv)
         }
     }
 
-    return std::make_tuple(mode, sourcelib, apkpath);
+    if(mode == modes::InstallMode && (sourcelib.empty() || apk.empty()))
+    {
+        mode = modes::InvalidMode;
+    }
+
+    if(mode == modes::RecoveryInstallMode &&  apk.empty())
+    {
+        mode = modes::InvalidMode;
+    }
+
+    return std::make_tuple(mode, sourcelib, apk);
 }
 
 int main(int argc, char** argv)
@@ -161,7 +171,7 @@ int main(int argc, char** argv)
         if(mode == modes::InstallMode)
         {
             util::logVerbose("Running install mode");
-            ret = modes::install(std::get<1>(spec));
+            ret = modes::install(std::get<1>(spec), std::get<2>(spec));
         }
         else if(mode == modes::UninstallMode)
         {

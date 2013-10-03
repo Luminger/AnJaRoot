@@ -38,7 +38,7 @@ namespace modes {
         FAIL
     };
 
-    ReturnCode install(const std::string& libpath);
+    ReturnCode install(const std::string& libpath, const std::string& apkpath);
     ReturnCode uninstall();
     ReturnCode check();
     ReturnCode recoveryInstall(const std::string& apkpath);

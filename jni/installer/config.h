@@ -31,6 +31,8 @@ struct config {
     static const std::string newBinary;
     static const std::string backupBinary;
     static const std::string origBinary;
+    static const std::string installerBinary;
+    static const std::string apkSystemPath;
     static const std::string content;
 };
 

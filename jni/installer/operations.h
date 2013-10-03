@@ -37,6 +37,7 @@ namespace operations {
     void chown(const std::string& target, uid_t uid, gid_t gid);
     void chmod(const std::string& target, mode_t mode);
     void mkdir(const std::string& dir, mode_t mode);
+    int reboot(bool bootRecovery);
     void sync();
 }
 

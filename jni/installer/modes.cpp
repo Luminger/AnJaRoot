@@ -19,11 +19,9 @@
 
 #include "modes.h"
 
-#include <dlfcn.h>
 #include <errno.h>
 #include <fstream>
 #include <system_error>
-#include <sys/reboot.h>
 
 #include "shared/util.h"
 #include "hash.h"
@@ -34,7 +32,7 @@
 
 namespace modes {
 
-ReturnCode install(const std::string& libpath)
+ReturnCode install(const std::string& libpath, const std::string& apkpath)
 {
     // BEWARE This operation is damn critical - if we overwrite the library
     //        with the our copy operation it will truncate the file and this
@@ -154,6 +152,51 @@ ReturnCode install(const std::string& libpath)
         throw;
     }
 
+    // copy apk to /system/apk/
+    try
+    {
+        operations::copy(apkpath, config::apkSystemPath);
+        operations::chmod(config::apkSystemPath, 0644);
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Failed to install AnJaRoot.apk, reverting");
+        uninstall();
+        throw;
+    }
+
+    bool apkEqual = hash::CRC32::compare(apkpath, config::apkSystemPath);
+    if(!apkEqual)
+    {
+        util::logError("CRC32 sums differ, reverting");
+        uninstall();
+        return FAIL;
+    }
+
+    // copy installer to /system/bin/
+    try
+    {
+        operations::copy("/proc/self/exe", config::installerBinary);
+        operations::chown(config::installerBinary, origst.st_uid,
+                origst.st_gid);
+        operations::chmod(config::installerBinary, origst.st_mode);
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Failed to install anjarootinstaller, reverting");
+        uninstall();
+        throw;
+    }
+
+    bool installerEqual = hash::CRC32::compare(config::installerBinary,
+            "/proc/self/exe");
+    if(!installerEqual)
+    {
+        util::logError("CRC32 sums differ, reverting");
+        uninstall();
+        return FAIL;
+    }
+
     // final CRC32 checks, again we may have failed hard. While that's pretty
     // unlikely, we are fiddeling with the system core here. It's worth to have
     // another safety check to be sure we don't mess the device up.
@@ -197,26 +240,6 @@ ReturnCode uninstall()
 
     try
     {
-        operations::move(config::backupBinary, config::origBinary);
-        util::logVerbose("Moved %s back to %s", config::backupBinary.c_str(),
-                config::origBinary.c_str());
-    }
-    catch(std::exception& e)
-    {
-        util::logError("Failed to restore app_process backup: %s", e.what());
-        try
-        {
-            operations::unlink(config::backupBinary);
-            util::logVerbose("Removed %s", config::backupBinary.c_str());
-        }
-        catch(std::exception& e)
-        {
-            util::logError("Failed to remove app_process backup: %s", e.what());
-        }
-    }
-
-    try
-    {
         operations::unlink(config::tmpBinary);
         util::logVerbose("Removed %s", config::tmpBinary.c_str());
     }
@@ -227,12 +250,33 @@ ReturnCode uninstall()
 
     try
     {
-        operations::unlink(config::newBinary);
-        util::logVerbose("Removed %s", config::newBinary.c_str());
+        operations::move(config::newBinary, config::origBinary);
+        util::logVerbose("Moved %s back to %s", config::newBinary.c_str(),
+                config::origBinary.c_str());
     }
     catch(std::exception& e)
     {
         util::logError("Failed to remove new binary: %s", e.what());
+    }
+
+    try
+    {
+        operations::unlink(config::apkSystemPath);
+        util::logVerbose("Removed %s", config::apkSystemPath.c_str());
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Failed to remove system apk: %s", e.what());
+    }
+
+    try
+    {
+        operations::unlink(config::installerBinary);
+        util::logVerbose("Removed %s", config::installerBinary.c_str());
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Failed to remove installer: %s", e.what());
     }
 
     try
@@ -266,7 +310,6 @@ ReturnCode check()
     return OK;
 }
 
-
 ReturnCode recoveryInstall(const std::string& apkpath)
 {
     try
@@ -297,49 +340,9 @@ ReturnCode recoveryInstall(const std::string& apkpath)
     }
 
     operations::sync();
+    int ret = operations::reboot(true);
 
-    // Now the hack: libcutils.so has a function (android_reboot.c) to reboot
-    // the device into recovery mode. Unfortunately this is not part of the ndk
-    // to we try a manual load here. If that failed (Gingerbread doesn't know
-    // this function) we fall back to __reboot() which does what it should BUT
-    // I'm lazy so we skip the "wait till every mount is ro" phase. Shouldn't
-    // do that much harm as we have done a sync() anyway here.
-    void* libcutils = dlopen("libcutils.so", RTLD_LAZY);
-    if(!libcutils)
-    {
-        util::logError("Failed to open libcutils.so via dlopen()!");
-        return FAIL;
-    }
-
-    typedef int (*android_reboot_type)(int cmd, int flags, char* arg);
-    android_reboot_type android_reboot = reinterpret_cast<android_reboot_type>(
-            dlsym(libcutils, "android_reboot"));
-
-    int ret;
-    char cmd[] = "recovery";
-    if(!android_reboot)
-    {
-        util::logError("Failed to resolve symbol, doing legacy reboot.");
-        // Direct copy from JB's libcutils/android_reboot.c
-        ret = __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
-                LINUX_REBOOT_CMD_RESTART2, cmd);
-    }
-    else
-    {
-        // Value stolen from: include/cutils/android_reboot.h
-        int ANDROID_RB_RESTART2 = 0xDEAD0003;
-        ret = android_reboot(ANDROID_RB_RESTART2, 0, cmd);
-
-    }
-
-    dlclose(libcutils);
-    if(ret)
-    {
-        util::logError("Failed to reboot into recovery!");
-        return FAIL;
-    }
-
-    return OK;
+    return ret != 0 ? FAIL : OK;
 }
 
 }

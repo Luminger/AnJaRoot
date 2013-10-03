@@ -18,6 +18,8 @@
  */
 package org.failedprojects.anjaroot;
 
+import java.io.File;
+
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -46,20 +48,34 @@ public class MainActivity extends FragmentActivity {
 		return dial;
 	}
 
+	String getInstallerLocation() {
+		final String basepath = getApplicationInfo().dataDir + "/lib/";
+		final String installer = basepath + "libanjarootinstaller.so";
+
+		if (new File(installer).exists()) {
+			return installer;
+		} else {
+			return "/system/bin/anjarootinstaller";
+		}
+	}
+
+	String getLibraryLocation() {
+
+		final String basepath = getApplicationInfo().dataDir + "/lib/";
+		return basepath + "libanjarootinstaller.so";
+	}
+
 	void doSystemInstall() {
 		final Context ctx = this;
 		final ProgressDialog dial = createProgessDialog();
 		new Thread() {
 			@Override
 			public void run() {
-
-				final String basepath = ctx.getApplicationInfo().dataDir
-						+ "/lib/";
-				final String library = basepath + "libanjaroot.so";
-				final String installer = basepath + "libanjarootinstaller.so";
-				Log.v(LOGTAG, "Installer Path: " + installer);
+				final String library = getLibraryLocation();
+				final String installer = getInstallerLocation();
 				final String command = "mount -orw,remount /system\n"
-						+ String.format("%s -i -s '%s'\n", installer, library)
+						+ String.format("%s -i -s '%s' -a '%s'\n", installer,
+								library, ctx.getPackageCodePath())
 						+ "mount -oro,remount /system\n";
 
 				try {
@@ -86,10 +102,7 @@ public class MainActivity extends FragmentActivity {
 		new Thread() {
 			@Override
 			public void run() {
-
-				final String basepath = ctx.getApplicationInfo().dataDir
-						+ "/lib/";
-				final String installer = basepath + "libanjarootinstaller.so";
+				final String installer = getInstallerLocation();
 				final String command = "mount -orw,remount /system\n"
 						+ String.format("%s --uninstall\n", installer)
 						+ "mount -oro,remount /system\n";
@@ -118,11 +131,7 @@ public class MainActivity extends FragmentActivity {
 		new Thread() {
 			@Override
 			public void run() {
-
-				final String basepath = ctx.getApplicationInfo().dataDir
-						+ "/lib/";
-				final String installer = basepath + "libanjarootinstaller.so";
-				Log.v(LOGTAG, "Installer Path: " + installer);
+				final String installer = getInstallerLocation();
 				final String command = String.format("%s -r -a %s\n",
 						installer, ctx.getPackageCodePath());
 

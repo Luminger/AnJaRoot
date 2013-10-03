@@ -134,15 +134,9 @@ chmod 755 $INSTALLER || abort
 printnl 'Cleaning away (possible) previous installation...'
 "$INSTALLER" -u || abort
 
-printnl 'Running installer...'
-"$INSTALLER" -i -s "$LIBRARY" || abort
-
-
 if [ -f "$APK_ZIP" ]
 then
-    printnl 'Copying AnJaRoot.apk from update.zip to /system/app/...'
-    cp $APK_ZIP $APK_TARGET || abort
-    chmod 644 $APK_TARGET || abort
+    APK=$APK_ZIP
 else
     prinnl 'Mounting /data...'
     mount /data
@@ -151,16 +145,17 @@ else
     debug "APK_SYS_FILE: $APK_SYS_FILE"
     if [ ! -z "$APK_SYS_FILE" ]
     then
-        printnl 'Copying AnJaRoot.apk from /data/app/ to /system/app/...'
-        cp $APK_SYS_FILE $APK_TARGET || abort
-        chmod 644 $APK_TARGET || abort
+        APK=$APK_SYS_FILE
     else
-        printnl '******************************************'
-        printnl ' WARNING: Unable to install AnJaRoot.apk.'
-        printnl ' Install it manually from Play Store!'
-        printnl '******************************************'
+        printnl '*************************************'
+        printnl ' ERROR: Unable to find AnJaRoot.apk.'
+        printnl '*************************************'
+        abort
     fi
 fi
+
+printnl 'Running installer...'
+"$INSTALLER" -i -s "$LIBRARY" -a "$APK"|| abort
 
 cleanup
 

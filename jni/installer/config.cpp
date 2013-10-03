@@ -26,6 +26,8 @@ const std::string config::tmpBinary = "/system/bin/app_process_tmp";
 const std::string config::newBinary = "/system/bin/app_process_orig";
 const std::string config::backupBinary = "/system/bin/app_process_backup";
 const std::string config::origBinary = "/system/bin/app_process";
+const std::string config::installerBinary = "/system/bin/anjarootinstaller";
+const std::string config::apkSystemPath = "/system/app/AnJaRoot.apk";
 const std::string config::content =
         "#!/system/bin/sh\n\n"
         "LD_PRELOAD=/system/lib/libanjaroot.so /system/bin/app_process_orig $@";
