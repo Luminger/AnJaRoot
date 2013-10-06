@@ -211,8 +211,7 @@ int reboot(bool bootRecovery)
     char cmd[] = "recovery";
     if(!android_reboot)
     {
-        util::logError("Failed to resolve symbol, doing legacy reboot.");
-
+        util::logVerbose("Failed to resolve symbol, doing legacy reboot.");
         if(bootRecovery)
         {
             // Direct copy from JB's libcutils/android_reboot.c
@@ -226,15 +225,17 @@ int reboot(bool bootRecovery)
     }
     else
     {
+        const int ANDROID_RB_RESTART2 = 0xDEAD0003;
+        const int ANDROID_RB_RESTART = 0xDEAD0001;
+
+        util::logVerbose("Using libcutils reboot method");
         if(bootRecovery)
         {
             // Value stolen from: include/cutils/android_reboot.h
-            int ANDROID_RB_RESTART2 = 0xDEAD0003;
             ret = android_reboot(ANDROID_RB_RESTART2, 0, cmd);
         }
         else
         {
-           int ANDROID_RB_RESTART = 0xDEAD0001;
            ret = android_reboot(ANDROID_RB_RESTART, 0, NULL);
         }
 

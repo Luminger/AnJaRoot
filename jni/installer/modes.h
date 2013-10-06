@@ -29,6 +29,8 @@ namespace modes {
         UninstallMode,
         CheckMode,
         RecoveryInstallMode,
+        RebootRecoveryMode,
+        RebootSystemMode,
         HelpMode,    // doesn't belong here, but I don't want to special
         VersionMode  // special case them even more than I did already...
     };
@@ -42,6 +44,8 @@ namespace modes {
     ReturnCode uninstall();
     ReturnCode check();
     ReturnCode recoveryInstall(const std::string& apkpath);
+    ReturnCode rebootIntoRecovery();
+    ReturnCode rebootSystem();
 }
 
 #endif

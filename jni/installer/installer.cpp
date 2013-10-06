@@ -46,17 +46,20 @@
 
 #include "installer.h"
 #include "modes.h"
+#include "operations.h"
 
-const char* shortopts = "s:a:icurvh";
+const char* shortopts = "s:a:icurymvh";
 const struct option longopts[] = {
-    {"srclibpath",   required_argument, 0, 's'},
-    {"apkpath",      required_argument, 0, 'a'},
-    {"install",      no_argument,       0, 'i'},
-    {"check",        no_argument,       0, 'c'},
-    {"uninstall",    no_argument,       0, 'u'},
-    {"recovery",     no_argument,       0, 'r'},
-    {"version",      no_argument,       0, 'v'},
-    {"help",         no_argument,       0, 'h'},
+    {"srclibpath",      required_argument, 0, 's'},
+    {"apkpath",         required_argument, 0, 'a'},
+    {"install",         no_argument,       0, 'i'},
+    {"check",           no_argument,       0, 'c'},
+    {"uninstall",       no_argument,       0, 'u'},
+    {"recovery",        no_argument,       0, 'r'},
+    {"reboot-recovery", no_argument,       0, 'y'},
+    {"reboot-system",   no_argument,       0, 'm'},
+    {"version",         no_argument,       0, 'v'},
+    {"help",            no_argument,       0, 'h'},
     {0, 0, 0, 0},
 };
 
@@ -72,6 +75,8 @@ void printUsage(const char* progname)
     std::cerr << "\t-i, --install\t\t\tdo install (needs -s to be set)" << std::endl;
     std::cerr << "\t-u, --uninstall\t\t\tdo uninstall" << std::endl;
     std::cerr << "\t-r, --recovery\t\t\tdo recovery install" << std::endl;
+    std::cerr << "\t-y, --reboot-recovery\t boot into recovery" << std::endl;
+    std::cerr << "\t-m, --reboot-system\t perform system reboot" << std::endl;
     std::cerr << "\t-c, --check\t\t\tdo an installation ckeck" << std::endl;
 }
 
@@ -115,6 +120,14 @@ ModeSpec processArguments(int argc, char** argv)
             case 'r':
                 util::logVerbose("Opt: -r");
                 mode = modes::RecoveryInstallMode;
+                break;
+            case 'y':
+                util::logVerbose("Opt: -y");
+                mode = modes::RebootRecoveryMode;
+                break;
+            case 'm':
+                util::logVerbose("Opt: -m");
+                mode = modes::RebootSystemMode;
                 break;
             case 'v':
                 util::logVerbose("opt: -v");
@@ -170,23 +183,27 @@ int main(int argc, char** argv)
     {
         if(mode == modes::InstallMode)
         {
-            util::logVerbose("Running install mode");
             ret = modes::install(std::get<1>(spec), std::get<2>(spec));
         }
         else if(mode == modes::UninstallMode)
         {
-            util::logVerbose("Running uninstall mode");
             ret = modes::uninstall();
         }
         else if(mode == modes::RecoveryInstallMode)
         {
-            util::logVerbose("Running recovery install mode");
             ret = modes::recoveryInstall(std::get<2>(spec));
         }
         else if(mode == modes::CheckMode)
         {
-            util::logVerbose("Running check mode");
             ret = modes::check();
+        }
+        else if(mode == modes::RebootRecoveryMode)
+        {
+            ret = modes::rebootIntoRecovery();
+        }
+        else if(mode == modes::RebootSystemMode)
+        {
+            ret = modes::rebootSystem();
         }
     }
     catch(std::exception& e)

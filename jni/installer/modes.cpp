@@ -40,6 +40,8 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     //        loaded. We have to make sure the library is still around for the
     //        processes which are using it.
 
+    util::logVerbose("Running install mode");
+
     // check if there is an install mark
     if(mark::exists())
     {
@@ -228,6 +230,9 @@ ReturnCode uninstall()
 {
     // BEWARE: don't let an exception escape here as there is already one
     //         active if we come from modes::instal! Catch and handle them!
+
+    util::logVerbose("Running uninstall mode");
+
     try
     {
         operations::unlink(config::library);
@@ -302,6 +307,8 @@ ReturnCode check()
     // would have to verify every binary and the wrapper script and it may be
     // quite hard to do so, think of version updates etc.
 
+    util::logVerbose("Running check mode");
+
     if(!mark::verify())
     {
         util::logError("Failed to verify install mark, we may be broken!");
@@ -312,6 +319,8 @@ ReturnCode check()
 
 ReturnCode recoveryInstall(const std::string& apkpath)
 {
+    util::logVerbose("Running recovery install mode");
+
     try
     {
         operations::mkdir("/cache/recovery/", 0770);
@@ -340,8 +349,23 @@ ReturnCode recoveryInstall(const std::string& apkpath)
     }
 
     operations::sync();
-    int ret = operations::reboot(true);
 
+    return OK;
+}
+
+ReturnCode rebootIntoRecovery()
+{
+    util::logVerbose("Booting into recovery");
+
+    int ret = operations::reboot(true) ? FAIL : OK;
+    return ret != 0 ? FAIL : OK;
+}
+
+ReturnCode rebootSystem()
+{
+    util::logVerbose("Rebooting system");
+
+    int ret = operations::reboot(false) ? FAIL : OK;
     return ret != 0 ? FAIL : OK;
 }
 
