@@ -212,6 +212,10 @@ int reboot(bool bootRecovery)
     if(!android_reboot)
     {
         util::logVerbose("Failed to resolve symbol, doing legacy reboot.");
+
+        // emulate androids reboot toolbox utility a bit
+        sync();
+
         if(bootRecovery)
         {
             // Direct copy from JB's libcutils/android_reboot.c
