@@ -133,7 +133,8 @@ public class MainActivity extends FragmentActivity {
 			public void run() {
 				final String installer = getInstallerLocation();
 				final String command = String.format("%s -r -a %s\n",
-						installer, ctx.getPackageCodePath());
+						installer, ctx.getPackageCodePath()) +
+                        String.format("%s -y\n", installer);
 
 				try {
 					Process p = Runtime.getRuntime().exec("su");
