@@ -61,6 +61,14 @@ bool verify()
 
 bool exists()
 {
+    bool exists = operations::access(config::installMark, F_OK);
+    if(!exists)
+    {
+        util::logVerbose("Mark file %s doesn't exist",
+                config::installMark.c_str());
+        return false;
+    }
+
     struct stat st;
     try
     {

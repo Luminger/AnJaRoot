@@ -190,6 +190,8 @@ void mkdir(const std::string& dir, mode_t mode)
 
 int reboot(bool bootRecovery)
 {
+    util::logVerbose("Op: reboot with bootRecovery=%d", bootRecovery);
+
     // Now the hack: libcutils.so has a function (android_reboot.c) to reboot
     // the device into recovery mode. Unfortunately this is not part of the ndk
     // to we try a manual load here. If that failed (Gingerbread doesn't know
@@ -252,6 +254,23 @@ int reboot(bool bootRecovery)
     }
 
     return ret;
+}
+
+bool access(const std::string& target, int mode)
+{
+    util::logVerbose("Op: access on %s with mode=%d", target.c_str(), mode);
+
+    int ret = ::access(target.c_str(), mode);
+
+    // this check is way to simple (see manpage) but it's sufficient for our
+    // needs (at least currently).
+    if(ret != 0)
+    {
+        util::logError("access() failed with %d on %s: %s", errno,
+                target.c_str(), strerror(errno));
+    }
+
+    return ret == 0;
 }
 
 void sync()

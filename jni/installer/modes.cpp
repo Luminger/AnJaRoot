@@ -106,9 +106,18 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     // create a backup of the original app_process;
     try
     {
-        operations::copy(config::origBinary, config::backupBinary);
-        operations::chown(config::backupBinary, origst.st_uid, origst.st_gid);
-        operations::chmod(config::backupBinary, origst.st_mode);
+        bool exists = operations::access(config::backupBinary, F_OK);
+        if(!exists)
+        {
+            operations::copy(config::origBinary, config::backupBinary);
+            operations::chown(config::backupBinary, origst.st_uid,
+                    origst.st_gid);
+            operations::chmod(config::backupBinary, origst.st_mode);
+        }
+        else
+        {
+            util::logVerbose("Backup exists, will not overwrite it");
+        }
     }
     catch(std::exception& e)
     {

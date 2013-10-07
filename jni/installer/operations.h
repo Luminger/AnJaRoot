@@ -24,6 +24,7 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 namespace operations {
     std::string readFile(const std::string& target);
@@ -38,6 +39,7 @@ namespace operations {
     void chmod(const std::string& target, mode_t mode);
     void mkdir(const std::string& dir, mode_t mode);
     int reboot(bool bootRecovery);
+    bool access(const std::string& target, int mode);
     void sync();
 }
 
