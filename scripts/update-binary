@@ -132,7 +132,7 @@ printnl 'Preparing installer...'
 chmod 755 $INSTALLER || abort
 
 printnl 'Cleaning away (possible) previous installation...'
-"$INSTALLER" -u || abort
+"$INSTALLER" --uninstall || abort
 
 if [ -f "$APK_ZIP" ]
 then
@@ -155,7 +155,7 @@ else
 fi
 
 printnl 'Running installer...'
-"$INSTALLER" -i -s "$LIBRARY" -a "$APK"|| abort
+"$INSTALLER" --install --srclibpath="$LIBRARY" --apkpath="$APK"|| abort
 
 cleanup
 
