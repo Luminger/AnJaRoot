@@ -138,7 +138,7 @@ if [ -f "$APK_ZIP" ]
 then
     APK=$APK_ZIP
 else
-    prinnl 'Mounting /data...'
+    printnl 'Mounting /data...'
     mount /data
 
     APK_SYS_FILE=$(ls $APK_SYS 2> /dev/null )

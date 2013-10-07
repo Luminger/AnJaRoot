@@ -33,9 +33,6 @@ import android.view.View;
 import android.widget.Button;
 
 public class MainActivity extends FragmentActivity {
-
-	// TODO: upgrade needs a reboot! On first install this is not a problem,
-	// but whenever we upgrade/reinstall the zygote
 	static final String LOGTAG = "AnjaRoot";
 
 	ProgressDialog createProgessDialog() {
@@ -133,8 +130,8 @@ public class MainActivity extends FragmentActivity {
 			public void run() {
 				final String installer = getInstallerLocation();
 				final String command = String.format("%s -r -a %s\n",
-						installer, ctx.getPackageCodePath()) +
-                        String.format("%s -y\n", installer);
+						installer, ctx.getPackageCodePath())
+						+ String.format("%s -y\n", installer);
 
 				try {
 					Process p = Runtime.getRuntime().exec("su");
