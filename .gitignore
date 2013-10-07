@@ -25,3 +25,9 @@ local.properties
 # vim swap file
 *.swp
 *.swo
+
+# AnJaRoot generated
+updatezip
+release
+assets/AnJaRoot.zip
+assets/install-template.sh

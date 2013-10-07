@@ -18,139 +18,18 @@
  */
 package org.failedprojects.anjaroot;
 
-import java.io.File;
-
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 
 public class MainActivity extends FragmentActivity {
-	static final String LOGTAG = "AnjaRoot";
-
-	ProgressDialog createProgessDialog() {
-		ProgressDialog dial = new ProgressDialog(this);
-		dial.setTitle("AnJaRoot");
-		dial.setMessage("Testing root access...");
-		dial.setIndeterminate(true);
-		dial.show();
-
-		return dial;
-	}
-
-	String getInstallerLocation() {
-		final String basepath = getApplicationInfo().dataDir + "/lib/";
-		final String installer = basepath + "libanjarootinstaller.so";
-
-		if (new File(installer).exists()) {
-			return installer;
-		} else {
-			return "/system/bin/anjarootinstaller";
-		}
-	}
-
-	String getLibraryLocation() {
-
-		final String basepath = getApplicationInfo().dataDir + "/lib/";
-		return basepath + "libanjarootinstaller.so";
-	}
-
-	void doSystemInstall() {
-		final Context ctx = this;
-		final ProgressDialog dial = createProgessDialog();
-		new Thread() {
-			@Override
-			public void run() {
-				final String library = getLibraryLocation();
-				final String installer = getInstallerLocation();
-				final String command = "mount -orw,remount /system\n"
-						+ String.format("%s -i -s '%s' -a '%s'\n", installer,
-								library, ctx.getPackageCodePath())
-						+ "mount -oro,remount /system\n";
-
-				try {
-					Process p = Runtime.getRuntime().exec("su");
-					p.getOutputStream().write(command.getBytes());
-					p.getOutputStream().close();
-
-					if (p.waitFor() != 0) {
-						Log.e(LOGTAG, "Non zero result");
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					Log.e(LOGTAG, "Failed to install", e);
-				}
-
-				dial.dismiss();
-			}
-		}.run();
-	}
-
-	void doSystemUninstall() {
-		final Context ctx = this;
-		final ProgressDialog dial = createProgessDialog();
-		new Thread() {
-			@Override
-			public void run() {
-				final String installer = getInstallerLocation();
-				final String command = "mount -orw,remount /system\n"
-						+ String.format("%s --uninstall\n", installer)
-						+ "mount -oro,remount /system\n";
-
-				try {
-					Process p = Runtime.getRuntime().exec("su");
-					p.getOutputStream().write(command.getBytes());
-					p.getOutputStream().close();
-
-					if (p.waitFor() != 0) {
-						Log.e(LOGTAG, "Non zero result");
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					Log.e(LOGTAG, "Failed to install", e);
-				}
-
-				dial.dismiss();
-			}
-		}.run();
-	}
-
-	void doRecoveryInstall() {
-		final Context ctx = this;
-		final ProgressDialog dial = createProgessDialog();
-		new Thread() {
-			@Override
-			public void run() {
-				final String installer = getInstallerLocation();
-				final String command = String.format("%s -r -a %s\n",
-						installer, ctx.getPackageCodePath())
-						+ String.format("%s -y\n", installer);
-
-				try {
-					Process p = Runtime.getRuntime().exec("su");
-					p.getOutputStream().write(command.getBytes());
-					p.getOutputStream().close();
-
-					if (p.waitFor() != 0) {
-						Log.e(LOGTAG, "Non zero result");
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-					Log.e(LOGTAG, "Failed to install", e);
-				}
-
-				dial.dismiss();
-			}
-		}.run();
-
-	}
+	private static final String LOGTAG = "AnjaRoot";
+	private Installer installer;
 
 	void createInstallDialog() {
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -159,13 +38,13 @@ public class MainActivity extends FragmentActivity {
 		builder.setPositiveButton("Install", new OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				doSystemInstall();
+				installer.doSystemInstall();
 			}
 		});
 		builder.setNeutralButton("Recovery", new OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				doRecoveryInstall();
+				installer.doRecoveryInstall();
 			}
 		});
 		builder.setNegativeButton("Cancel", null);
@@ -179,7 +58,7 @@ public class MainActivity extends FragmentActivity {
 		builder.setPositiveButton("Uninstall", new OnClickListener() {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				doSystemUninstall();
+				installer.doSystemUninstall();
 			}
 		});
 		builder.setNegativeButton("Cancel", null);
@@ -190,6 +69,8 @@ public class MainActivity extends FragmentActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		installer = new Installer(this);
 
 		Button install = (Button) findViewById(R.id.installBtn);
 		install.setOnClickListener(new View.OnClickListener() {

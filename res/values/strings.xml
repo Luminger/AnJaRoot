@@ -3,6 +3,12 @@
 
     <string name="app_name">AnJaRoot</string>
     <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
 
+    <!-- Installer.java -->
+    <string name="installer_working_title">AnJaRoot</string>
+    <string name="installer_working_message">Working&#8230;</string>
+    
+    <string name="installer_toast_success">Operation successful!</string>
+    <string name="installer_toast_failure">Operation failed, see logcat for information!</string>
+    <string name="installer_toast_reboot_failure">Reboot failed, see logcat for information!</string>
 </resources>
