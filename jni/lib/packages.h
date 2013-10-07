@@ -83,6 +83,7 @@ namespace packages
         private:
             void readPackages(const std::string& filename);
 
+            const Package& myself;
             Packages packages;
     };
 }

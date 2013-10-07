@@ -116,6 +116,7 @@ const Package* PackageList::findByUid(uid_t uid) const
 }
 
 GrantedPackageList::GrantedPackageList(const Package& anjaroot)
+    : myself(anjaroot)
 {
     std::string grantfile = "/data/data/" + anjaroot.pkgName + "/files/granted";
     readPackages(grantfile);
@@ -135,12 +136,18 @@ void GrantedPackageList::readPackages(const std::string& filename)
     }
     catch(std::exception& e)
     {
+        packages.clear();
         util::logError("Failed to read granted file!");
     }
 }
 
 bool GrantedPackageList::isGranted(const Package& package) const
 {
+    if(package.pkgName == myself.pkgName)
+    {
+        return true;
+    }
+
     for(Packages::const_iterator iter = packages.begin();
             iter != packages.end(); iter++)
     {
