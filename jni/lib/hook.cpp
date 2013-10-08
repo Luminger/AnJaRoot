@@ -46,24 +46,6 @@ static void constructor()
 {
     util::logVerbose("AnJaRoot %s loaded", version::asString().c_str());
 
-    orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_NEXT, "capset"));
-    if(orig_capset != NULL)
-    {
-        hook::Hooked = true;
-        util::logVerbose("Installed hook for capset()");
-        return;
-    }
-
-    util::logError("Failed to get original capset() with RTLD_NEXT");
-    orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_DEFAULT, "capset"));
-    if(orig_capset != NULL)
-    {
-        util::logVerbose("Hook not installed");
-        return;
-    }
-
-    util::logError("Failed to get original capset() with RTLD_DEFAULT");
-    abort();
 }
 
 bool isGranted(uid_t uid)
@@ -88,18 +70,37 @@ bool isGranted(uid_t uid)
     return granter.isGranted(*target);
 }
 
+void prepareIfNeeded()
+{
+    if(orig_capset)
+    {
+        return;
+    }
+
+    orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_DEFAULT, "capset"));
+    if(orig_capset != NULL)
+    {
+        hook::Hooked = true;
+        util::logVerbose("Found original capset()");
+        return;
+    }
+
+    util::logError("Failed to get original capset(), abort!");
+    abort();
+}
+
 int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
 {
+    prepareIfNeeded();
     if(hook::Hooked && hook::AlreadyRun)
     {
-        util::logVerbose("hooked capset() called");
-
-        // Set alreadyRun to false to prefent later abuse of our hook
-        hook::AlreadyRun = false;
-    } else {
         util::logVerbose("unhooked capset() called");
         return orig_capset(hdrp, datap);
     }
+
+    util::logVerbose("hooked capset() called");
+    // Set alreadyRun to false to prefent later abuse of our hook
+    hook::AlreadyRun = true;
 
     try
     {
