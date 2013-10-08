@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="custom_rules_anjaroot" default="debug">
     <xmlproperty file="AndroidManifest.xml" prefix="manifest" collapseAttributes="true"/>
-    <property name="version.name" value="${manifest.manifest.android:versionName}"/>
+    <property name="anjaroot.version" value="${manifest.manifest.android:versionName}"/>
+    <property name="anjaroot.release.dir" location="release"/>
+    <property name="anjaroot.updatezip.dir" location="updatezip"/>
     <target name="-pre-build">
         <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
     </target>
     <target name="-pre-clean">
-        <delete dir="release"/>
+        <delete dir="${anjaroot.release.dir}"/>
+        <delete dir="${anjaroot.updatezip.dir}"/>
         <delete file="assets/AnJaRoot.zip"/>
-        <delete dir="updatezip"/>
         <exec executable="${ndk.dir}/ndk-build" failonerror="true">
             <arg value="clean"/>
         </exec>
@@ -28,36 +30,37 @@
         <chmod perm="ugo+x" file="libs/x86/libanjarootinstaller.so"/>
     </target>
     <target name="updatezip-without-apk" depends="copy-native-files">
-        <delete dir="updatezip"/>
-        <copy todir="updatezip" overwrite="true" encoding="utf-8">
+        <delete dir="${anjaroot.updatezip.dir}"/>
+        <copy todir="${anjaroot.updatezip.dir}" overwrite="true" encoding="utf-8">
             <fileset dir="libs">
                 <include name="**/anjarootinstaller"/>
                 <include name="**/libanjaroot.so"/>
             </fileset>
         </copy>
-        <mkdir dir="updatezip/META-INF/com/google/android/"/>
-        <copy todir="updatezip/META-INF/com/google/android/"
+        <mkdir dir="${anjaroot.updatezip.dir}/META-INF/com/google/android/"/>
+        <copy todir="${anjaroot.updatezip.dir}/META-INF/com/google/android/"
             file="scripts/update-binary"/>
         <mkdir dir="assets"/>
-        <exec executable="zip" failonerror="true" dir="updatezip">
+        <exec executable="zip" failonerror="true" dir="${anjaroot.updatezip.dir}">
             <arg value="-ru"/>
             <arg value="../assets/AnJaRoot.zip"/>
             <arg value="."/>
         </exec>
     </target>
-    <target name="release" depends="android_rules.release, updatezip-standalone">
-        <copy tofile="release/AnJaRoot-${version.name}.apk" overwrite="true"
+    <target name="debug" depends="android_rules.debug, updatezip-without-apk"/>
+    <target name="release" depends="android_rules.release">
+        <copy tofile="${anjaroot.release.dir}/AnJaRoot-${anjaroot.version}.apk" overwrite="true"
             file="bin/AnJaRoot-release.apk"/>
         <antcall target="updatezip-standalone"/>
     </target>
     <target name="updatezip-standalone" depends="updatezip-without-apk">
-        <mkdir dir="release"/>
-        <copy tofile="updatezip/AnJaRoot.apk" overwrite="true"
+        <mkdir dir="${anjaroot.release.dir}"/>
+        <copy tofile="${anjaroot.updatezip.dir}/AnJaRoot.apk" overwrite="true"
             file="bin/AnJaRoot-release.apk"/>
-        <mkdir dir="release"/>
-        <exec executable="zip" failonerror="true" dir="updatezip">
+        <mkdir dir="${anjaroot.release.dir}"/>
+        <exec executable="zip" failonerror="true" dir="${anjaroot.updatezip.dir}">
             <arg value="-ru"/>
-            <arg value="../release/AnJaRoot-${version.name}-update.zip"/>
+            <arg value="${anjaroot.release.dir}/AnJaRoot-${anjaroot.version}-update.zip"/>
             <arg value="."/>
         </exec>
     </target>
