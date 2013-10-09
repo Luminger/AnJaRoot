@@ -178,7 +178,7 @@ public class Installer {
 			}
 
 			String[] env = buildEnvironment(params[0]);
-			String[] command = new String[] { "su", "-c",
+			String[] command = new String[] { "su", "-p", "-c",
 					String.format("sh %s", script.getAbsolutePath()) };
 			int ret = runWithSu(command, env);
 			return ret == 0;
