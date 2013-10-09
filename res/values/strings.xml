@@ -2,6 +2,8 @@
 <resources>
 
     <string name="app_name">AnJaRoot</string>
+    
+    <!-- main.xml -->
     <string name="action_settings">Settings</string>
 
     <!-- Installer.java -->
@@ -11,4 +13,13 @@
     <string name="installer_toast_success">Operation successful!</string>
     <string name="installer_toast_failure">Operation failed, see logcat for information!</string>
     <string name="installer_toast_reboot_failure">Reboot failed, see logcat for information!</string>
+    
+    <!-- packages_list.xml -->
+    <string name="packages_list_empty">Empty</string>
+    
+    <!-- install_fragment.xml -->
+    <string name="install_fragment_install_text">AnJaRoot is currently not installed on your device.</string>
+    <string name="install_fragment_install_btn_text">Install AnJaRoot</string>
+    <string name="install_fragment_reboot_text">Prepare was successful!</string>
+    <string name="install_fragment_reboot_btn_text">Reboot into Recovery</string>
 </resources>

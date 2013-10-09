@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    
+    <TextView
+        android:id="@+id/install_fragment_install_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/install_fragment_install_text"/>
+    <Button
+        android:id="@+id/install_fragment_install_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/install_fragment_install_text"
+        android:layout_centerHorizontal="true"
+        android:text="@string/install_fragment_install_btn_text"/>
+    
+    <TextView
+        android:id="@+id/install_fragment_reboot_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/install_fragment_reboot_text"
+        android:visibility="gone"/>
+    <Button
+        android:id="@+id/install_fragment_reboot_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/install_fragment_reboot_text"
+        android:layout_centerHorizontal="true"
+        android:text="@string/install_fragment_reboot_btn_text"
+        android:visibility="gone"/>
+</RelativeLayout>

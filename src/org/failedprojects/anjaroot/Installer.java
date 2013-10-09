@@ -19,17 +19,18 @@
 package org.failedprojects.anjaroot;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.Toast;
 
 public class Installer {
 	private static final String LOGTAG = "AnJaRootInstallerCls";
+	private final Context ctx;
+	private final String installTemplate;
 
 	private static enum InstallMode {
 		SystemInstall, RecoveryInstall, SystemUninstall
@@ -39,8 +40,11 @@ public class Installer {
 		Recovery, System
 	}
 
-	private final Context ctx;
-	private final String installTemplate;
+	public interface Handler {
+		void preExecute();
+
+		void postExecute(boolean result);
+	}
 
 	public Installer(Context ctx) {
 		this.ctx = ctx;
@@ -76,8 +80,28 @@ public class Installer {
 		}
 	}
 
+	private int runWithSu(String[] command) {
+		try {
+			Process p = Runtime.getRuntime().exec(command);
+
+			int ret = p.waitFor();
+			Log.v(LOGTAG, String.format("Command returned '%d'", ret));
+
+			return ret;
+		} catch (Exception e) {
+			e.printStackTrace();
+			Log.e(LOGTAG, "Failed to run command", e);
+		}
+
+		return -1;
+	}
+
 	private class InstallTask extends AsyncTask<InstallMode, Integer, Boolean> {
-		private ProgressDialog dialog;
+		private final Handler handler;
+
+		public InstallTask(Handler handler) {
+			this.handler = handler;
+		}
 
 		private String getLibraryLocation() {
 			final String basepath = ctx.getApplicationInfo().dataDir + "/lib/";
@@ -90,7 +114,7 @@ public class Installer {
 
 		private String buildCommand(InstallMode mode) {
 
-			String command = "false";
+			String command;
 			switch (mode) {
 			case RecoveryInstall:
 				command = String.format("%s --recovery --apkpath='%s'\n",
@@ -106,6 +130,9 @@ public class Installer {
 				command = String.format("%s --uninstall\n",
 						getInstallerLocation());
 				break;
+			default:
+				command = "false";
+				break;
 			}
 
 			return installTemplate.replace("%COMMAND%", command);
@@ -113,51 +140,45 @@ public class Installer {
 
 		@Override
 		protected void onPreExecute() {
-			dialog = new ProgressDialog(ctx);
-			dialog.setTitle(ctx.getText(R.string.installer_working_title));
-			dialog.setMessage(ctx.getText(R.string.installer_working_message));
-			dialog.setIndeterminate(true);
-			dialog.show();
+			handler.preExecute();
 		}
 
 		@Override
 		protected Boolean doInBackground(InstallMode... params) {
-			String command = buildCommand(params[0]);
-			Log.v(LOGTAG, String.format("Running as su: \n%s", command));
+			String commandscript = buildCommand(params[0]);
+			Log.v(LOGTAG, String.format("Running as su: \n%s", commandscript));
 
+			File script = ctx.getFileStreamPath("installer.sh");
 			try {
-				Process p = Runtime.getRuntime().exec("su");
-				p.getOutputStream().write(command.getBytes());
-				p.getOutputStream().close();
-
-				int ret = p.waitFor();
-				Log.v(LOGTAG, String.format("Command returned '%d'", ret));
-
-				return ret == 0;
-			} catch (Exception e) {
-				e.printStackTrace();
-				Log.e(LOGTAG, "Failed to run command", e);
+				FileOutputStream stream = ctx.openFileOutput("installer.sh", 0);
+				stream.write(commandscript.getBytes());
+				stream.flush();
+				stream.close();
+			} catch (IOException e) {
+				Log.e(LOGTAG, "Failed to write installer.sh", e);
+				return false;
 			}
 
-			return false;
+			String[] command = new String[] { "su", "-c",
+					String.format("sh %s", script.getAbsolutePath()) };
+			int ret = runWithSu(command);
+			return ret == 0;
 		}
 
 		@Override
 		protected void onPostExecute(Boolean result) {
-			dialog.dismiss();
-
-			int rid;
-			if (result) {
-				rid = R.string.installer_toast_success;
-			} else {
-				rid = R.string.installer_toast_failure;
-			}
-			Toast.makeText(ctx, rid, Toast.LENGTH_LONG).show();
+			handler.postExecute(result);
 		}
 	}
 
 	private class RebootTask extends AsyncTask<RebootMode, Integer, Boolean> {
-		private String buildCommand(RebootMode mode) {
+		private final Handler handler;
+
+		public RebootTask(Handler handler) {
+			this.handler = handler;
+		}
+
+		private String[] buildCommand(RebootMode mode) {
 			String cmdswitch;
 
 			switch (mode) {
@@ -170,65 +191,55 @@ public class Installer {
 				break;
 			}
 
-			return String.format("su -c '%s %s'", getInstallerLocation(),
-					cmdswitch);
+			return new String[] { "su", "-c",
+					String.format("%s %s", getInstallerLocation(), cmdswitch) };
 		}
 
 		@Override
 		protected Boolean doInBackground(RebootMode... params) {
-			try {
-				String command = buildCommand(params[0]);
-				Process p = Runtime.getRuntime().exec(command);
-				p.getOutputStream().close();
+			String[] command = buildCommand(params[0]);
+			int ret = runWithSu(command);
+			return ret == 0;
+		}
 
-				int ret = p.waitFor();
-				Log.v(LOGTAG, String.format("Command returned '%d'", ret));
-
-				return ret == 0;
-			} catch (Exception e) {
-				e.printStackTrace();
-				Log.e(LOGTAG, "Failed to run command", e);
-			}
-
-			return false;
+		@Override
+		protected void onPreExecute() {
+			handler.preExecute();
 		}
 
 		@Override
 		protected void onPostExecute(Boolean result) {
-			if (!result) {
-				Toast.makeText(ctx, R.string.installer_toast_reboot_failure,
-						Toast.LENGTH_LONG).show();
-			}
+			handler.postExecute(result);
 		}
 	}
 
-	public void doRecoveryInstall() {
+	public void doRecoveryInstall(Handler handler) {
 		Log.v(LOGTAG, "Starting recovery install process");
-		InstallTask task = new InstallTask();
+		InstallTask task = new InstallTask(handler);
 		task.execute(InstallMode.RecoveryInstall);
 	}
 
-	public void doSystemInstall() {
+	public void doSystemInstall(Handler handler) {
 		Log.v(LOGTAG, "Starting system install process");
-		InstallTask task = new InstallTask();
+		InstallTask task = new InstallTask(handler);
 		task.execute(InstallMode.SystemInstall);
 	}
 
-	public void doSystemUninstall() {
+	public void doSystemUninstall(Handler handler) {
 		Log.v(LOGTAG, "Starting system uninstall process");
-		InstallTask task = new InstallTask();
+		InstallTask task = new InstallTask(handler);
 		task.execute(InstallMode.SystemUninstall);
 	}
 
-	public void doSystemReboot() {
+	public void doSystemReboot(Handler handler) {
 		Log.v(LOGTAG, "Performing system reboot");
-		RebootTask task = new RebootTask();
+		RebootTask task = new RebootTask(handler);
 		task.execute(RebootMode.System);
 	}
 
-	public void doRecoveryReboot() {
+	public void doRecoveryReboot(Handler handler) {
 		Log.v(LOGTAG, "Performing recovery reboot");
-		RebootTask task = new RebootTask();
+		RebootTask task = new RebootTask(handler);
 		task.execute(RebootMode.Recovery);
 	}
 }
