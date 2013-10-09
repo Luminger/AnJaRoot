@@ -77,7 +77,7 @@ void prepareIfNeeded()
         return;
     }
 
-    orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_DEFAULT, "capset"));
+    orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_NEXT, "capset"));
     if(orig_capset != NULL)
     {
         hook::Hooked = true;
@@ -118,6 +118,7 @@ int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
             util::logVerbose("Process is not a target");
             helper::setGroupIds(origGids);
             helper::setUserIds(origUids);
+            util::logVerbose("Running original capset() to restore defaults");
             return orig_capset(hdrp, datap);
         }
 
