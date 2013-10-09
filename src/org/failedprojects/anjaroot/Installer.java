@@ -30,7 +30,6 @@ import android.util.Log;
 public class Installer {
 	private static final String LOGTAG = "AnJaRootInstallerCls";
 	private final Context ctx;
-	private final String installTemplate;
 
 	private static enum InstallMode {
 		SystemInstall, RecoveryInstall, SystemUninstall
@@ -48,7 +47,6 @@ public class Installer {
 
 	public Installer(Context ctx) {
 		this.ctx = ctx;
-		this.installTemplate = readFileFromAssets("install-template.sh");
 	}
 
 	private String readFileFromAssets(String file) {
@@ -80,9 +78,9 @@ public class Installer {
 		}
 	}
 
-	private int runWithSu(String[] command) {
+	private int runWithSu(String[] command, String[] environment) {
 		try {
-			Process p = Runtime.getRuntime().exec(command);
+			Process p = Runtime.getRuntime().exec(command, environment);
 
 			int ret = p.waitFor();
 			Log.v(LOGTAG, String.format("Command returned '%d'", ret));
@@ -94,6 +92,24 @@ public class Installer {
 		}
 
 		return -1;
+	}
+
+	private File buildScript(String command) {
+
+		String installTemplate = readFileFromAssets("install-template.sh");
+		installTemplate.replace("%COMMAND%", command);
+		File script = ctx.getFileStreamPath("install.sh");
+		try {
+			FileOutputStream stream = ctx.openFileOutput("installer.sh", 0);
+			stream.write(installTemplate.getBytes());
+			stream.flush();
+			stream.close();
+		} catch (IOException e) {
+			Log.e(LOGTAG, "Failed to write installer.sh", e);
+			return null;
+		}
+
+		return script;
 	}
 
 	private class InstallTask extends AsyncTask<InstallMode, Integer, Boolean> {
@@ -135,7 +151,18 @@ public class Installer {
 				break;
 			}
 
-			return installTemplate.replace("%COMMAND%", command);
+			return command;
+		}
+
+		private String[] buildEnvironment(InstallMode mode) {
+			switch (mode) {
+			case SystemInstall:
+			case SystemUninstall:
+				return new String[] { "MOUNTSYSTEMRW=1" };
+			case RecoveryInstall:
+			default:
+				return new String[0];
+			}
 		}
 
 		@Override
@@ -145,23 +172,15 @@ public class Installer {
 
 		@Override
 		protected Boolean doInBackground(InstallMode... params) {
-			String commandscript = buildCommand(params[0]);
-			Log.v(LOGTAG, String.format("Running as su: \n%s", commandscript));
-
-			File script = ctx.getFileStreamPath("installer.sh");
-			try {
-				FileOutputStream stream = ctx.openFileOutput("installer.sh", 0);
-				stream.write(commandscript.getBytes());
-				stream.flush();
-				stream.close();
-			} catch (IOException e) {
-				Log.e(LOGTAG, "Failed to write installer.sh", e);
+			File script = buildScript(buildCommand(params[0]));
+			if (script == null) {
 				return false;
 			}
 
+			String[] env = buildEnvironment(params[0]);
 			String[] command = new String[] { "su", "-c",
 					String.format("sh %s", script.getAbsolutePath()) };
-			int ret = runWithSu(command);
+			int ret = runWithSu(command, env);
 			return ret == 0;
 		}
 
@@ -178,7 +197,7 @@ public class Installer {
 			this.handler = handler;
 		}
 
-		private String[] buildCommand(RebootMode mode) {
+		private String buildCommand(RebootMode mode) {
 			String cmdswitch;
 
 			switch (mode) {
@@ -191,14 +210,19 @@ public class Installer {
 				break;
 			}
 
-			return new String[] { "su", "-c",
-					String.format("%s %s", getInstallerLocation(), cmdswitch) };
+			return String.format("%s %s", getInstallerLocation(), cmdswitch);
 		}
 
 		@Override
 		protected Boolean doInBackground(RebootMode... params) {
-			String[] command = buildCommand(params[0]);
-			int ret = runWithSu(command);
+			File script = buildScript(buildCommand(params[0]));
+			if (script == null) {
+				return false;
+			}
+
+			String[] command = { "su", "-c",
+					String.format("sh %s", script.getAbsolutePath()) };
+			int ret = runWithSu(command, new String[0]);
 			return ret == 0;
 		}
 
