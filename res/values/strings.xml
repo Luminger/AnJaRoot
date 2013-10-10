@@ -33,4 +33,7 @@
     <string name="request_activity_description_text">Warning: This will allow the requester to execute commands as \'root\'. If you don\'t know what this is, deny this request.</string>
     <string name="request_activity_app_name">%s</string>
 
+    <!-- packages_list_item.xml -->
+    <string name="packages_list_item_icon_description">Package Icon</string>
+
 </resources>

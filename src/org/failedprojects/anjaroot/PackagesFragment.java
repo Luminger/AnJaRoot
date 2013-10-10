@@ -18,17 +18,83 @@
  */
 package org.failedprojects.anjaroot;
 
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
 
 public class PackagesFragment extends ListFragment {
 	private static final String LOGTAG = "AnjaRoot";
+	private PackageManager pm;
+	private GrantedStorage storage;
+	private PackagesAdapter adapter;
+
+	class PackagesAdapter extends BaseAdapter {
+		private class ViewHolder {
+			TextView name;
+			TextView pkgname;
+			ImageView icon;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			View v = convertView;
+			if (v == null) {
+				LayoutInflater inflater = (LayoutInflater) getActivity()
+						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+				v = inflater
+						.inflate(R.layout.packages_list_item, parent, false);
+
+				ViewHolder holder = new ViewHolder();
+				holder.name = (TextView) v.findViewById(R.id.name);
+				holder.pkgname = (TextView) v.findViewById(R.id.package_name);
+				holder.icon = (ImageView) v.findViewById(R.id.icon);
+				v.setTag(holder);
+			}
+
+			String pkgname = storage.getPackages().get(position);
+			try {
+				PackageInfo pi = pm.getPackageInfo(pkgname, 0);
+
+				ViewHolder holder = (ViewHolder) v.getTag();
+				holder.name.setText(pi.applicationInfo.loadLabel(pm));
+				holder.pkgname.setText(pkgname);
+				holder.icon.setImageDrawable(pi.applicationInfo.loadIcon(pm));
+			} catch (NameNotFoundException e) {
+				Log.e(LOGTAG, "Failed to get PackageInfo", e);
+			}
+
+			return v;
+		}
+
+		@Override
+		public int getCount() {
+			return storage.getPackages().size();
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return storage.getPackages().get(position);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+	}
 
 	public static PackagesFragment newInstance() {
 		return new PackagesFragment();
@@ -38,6 +104,19 @@ public class PackagesFragment extends ListFragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);
+
+		storage = new GrantedStorage(getActivity());
+		pm = getActivity().getPackageManager();
+
+		adapter = new PackagesAdapter();
+		setListAdapter(adapter);
+	}
+
+	@Override
+	public void onListItemClick(ListView l, View v, int position, long id) {
+		String pkg = (String) adapter.getItem(position);
+		storage.removePackage(pkg);
+		adapter.notifyDataSetChanged();
 	}
 
 	@Override
