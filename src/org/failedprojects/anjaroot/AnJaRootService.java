@@ -23,6 +23,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
@@ -66,6 +67,17 @@ public class AnJaRootService extends Service {
 	private class ServiceImplementation extends IAnJaRootService.Stub {
 		@Override
 		public boolean requestAccess() throws RemoteException {
+			PackageManager pm = getPackageManager();
+			String[] pkgs = pm.getPackagesForUid(getCallingUid());
+
+			GrantedStorage storage = new GrantedStorage(getApplicationContext());
+			if (pkgs.length >= 1) {
+				if (storage.isGranted(pkgs[0])) {
+					Log.v(LOGTAG, "Request not needed, already allowed");
+					return true;
+				}
+			}
+
 			RequestResult result = new RequestResult(getCallingUid());
 			requestResultWaitingList.add(result);
 
@@ -80,7 +92,7 @@ public class AnJaRootService extends Service {
 			long start = System.currentTimeMillis();
 			while ((System.currentTimeMillis() - timeout) < start) {
 				try {
-					Thread.sleep(100);
+					Thread.sleep(250);
 					if (result.isHandled()) {
 						Log.v(LOGTAG, "Request answered");
 						break;
@@ -95,6 +107,13 @@ public class AnJaRootService extends Service {
 			if (!result.isHandled()) {
 				Log.v(LOGTAG, "Request wasn't answered within time");
 				return false;
+			}
+
+			if (result.isGranted()) {
+
+				if (pkgs.length != 0) {
+					storage.addPackage(pkgs[0]);
+				}
 			}
 
 			return result.isGranted();
