@@ -42,7 +42,7 @@
             file="scripts/update-binary"/>
         <mkdir dir="assets"/>
         <exec executable="zip" failonerror="true" dir="${anjaroot.updatezip.dir}">
-            <arg value="-ru"/>
+            <arg value="-r"/>
             <arg value="../assets/AnJaRoot.zip"/>
             <arg value="."/>
         </exec>
@@ -59,7 +59,7 @@
             file="bin/AnJaRoot-release.apk"/>
         <mkdir dir="${anjaroot.release.dir}"/>
         <exec executable="zip" failonerror="true" dir="${anjaroot.updatezip.dir}">
-            <arg value="-ru"/>
+            <arg value="-r"/>
             <arg value="${anjaroot.release.dir}/AnJaRoot-${anjaroot.version}-update.zip"/>
             <arg value="."/>
         </exec>
