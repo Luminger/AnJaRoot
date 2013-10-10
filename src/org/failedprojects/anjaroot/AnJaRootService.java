@@ -65,11 +65,6 @@ public class AnJaRootService extends Service {
 
 	private class ServiceImplementation extends IAnJaRootService.Stub {
 		@Override
-		public boolean isRequestGranted() throws RemoteException {
-			return false;
-		}
-
-		@Override
 		public boolean requestAccess() throws RemoteException {
 			RequestResult result = new RequestResult(getCallingUid());
 			requestResultWaitingList.add(result);
