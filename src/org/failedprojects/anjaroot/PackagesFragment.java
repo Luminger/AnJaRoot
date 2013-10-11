@@ -18,10 +18,14 @@
  */
 package org.failedprojects.anjaroot;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.failedprojects.anjaroot.GrantedStorage.OnChangeHandler;
+import org.failedprojects.anjaroot.library.AnJaRoot;
 
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -30,6 +34,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
+import android.os.Process;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -131,6 +136,10 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 					public void onClick(DialogInterface dialog, int which) {
 						// this will trigger the OnChangeHandler
 						storage.removePackage(pkg);
+
+						List<String> remove = new ArrayList<String>(1);
+						remove.add(pkg);
+						killProcesses(new ArrayList<String>(remove));
 					}
 				});
 		dialog.setNegativeButton(R.string.packages_list_delete_single_negative,
@@ -181,7 +190,9 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 					new OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
+							List<String> remove = storage.getPackages();
 							storage.removeAll();
+							killProcesses(remove);
 						}
 					});
 			dialog.setNegativeButton(
@@ -191,6 +202,36 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 			return super.onOptionsItemSelected(item);
 		}
 
+	}
+
+	public void killProcesses(List<String> pkgs) {
+		boolean success = AnJaRoot.gainAccess();
+		if (!success) {
+			Log.e(LOGTAG,
+					"Failed to gain access, something must be seriously broken...");
+			return;
+		}
+
+		ActivityManager am = (ActivityManager) getActivity().getSystemService(
+				Context.ACTIVITY_SERVICE);
+		List<RunningAppProcessInfo> runningapps = am.getRunningAppProcesses();
+		for (RunningAppProcessInfo info : runningapps) {
+			for (String pkgname : info.pkgList) {
+				if (!pkgs.contains(pkgname)) {
+					continue;
+				}
+
+				Log.v(LOGTAG, String.format(
+						"Killing %s with pid %d as access has been revoked",
+						pkgname, info.pid));
+				Process.killProcess(info.pid);
+			}
+		}
+
+		success = AnJaRoot.dropAccess();
+		if (!success) {
+			Log.e(LOGTAG, "Failed to drop access level");
+		}
 	}
 
 	@Override
