@@ -7,6 +7,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 
 public class MainActivity extends FragmentActivity {
+	private final PackagesFragment packages = PackagesFragment.newInstance();
+	private final InstallFragment install = InstallFragment.newInstance();
 
 	@Override
 	protected void onCreate(Bundle arg0) {
@@ -17,9 +19,9 @@ public class MainActivity extends FragmentActivity {
 		Fragment fragment;
 		boolean installed = AnJaRoot.isAccessPossible();
 		if (installed) {
-			fragment = PackagesFragment.newInstance();
+			fragment = packages;
 		} else {
-			fragment = InstallFragment.newInstance();
+			fragment = install;
 		}
 
 		getSupportFragmentManager().beginTransaction()

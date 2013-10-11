@@ -97,6 +97,10 @@ public class GrantedStorage {
 		Log.v(LOGTAG, String.format("Stoped observing %s", dir.toString()));
 	}
 
+	public void forceReload() {
+		readPackageList();
+	}
+
 	private boolean readPackageList() {
 		boolean ret = true;
 		packages.clear();

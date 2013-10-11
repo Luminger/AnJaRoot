@@ -30,6 +30,7 @@
         android:theme="@style/Theme.AppCompat" >
         <activity
             android:name=".MainActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/anjaroot" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

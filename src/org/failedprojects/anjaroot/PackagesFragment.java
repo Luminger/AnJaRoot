@@ -116,8 +116,11 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 	@Override
 	public void onResume() {
 		super.onResume();
+
 		PackagesAdapter pa = (PackagesAdapter) getListAdapter();
 		pa.clear();
+
+		storage.forceReload();
 		pa.addAll(storage.getPackages());
 		storage.startObserving(this);
 	}
