@@ -89,7 +89,15 @@ public class Installer {
 				execenv.add(String.format("%s=%s", name, myenv.get(name)));
 
 			}
-			execenv.addAll(Arrays.asList(environment));
+
+			if (environment != null) {
+				execenv.addAll(Arrays.asList(environment));
+			}
+
+			Log.v(LOGTAG, "Spawning command with this environment variables:");
+			for (String var : execenv) {
+				Log.v(LOGTAG, String.format("  %s", var));
+			}
 
 			Process p = Runtime.getRuntime().exec(command,
 					execenv.toArray(new String[execenv.size()]));
