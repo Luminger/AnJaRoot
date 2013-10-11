@@ -22,6 +22,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
 
 import android.content.Context;
 import android.os.AsyncTask;
@@ -80,7 +83,16 @@ public class Installer {
 
 	private int runWithSu(String[] command, String[] environment) {
 		try {
-			Process p = Runtime.getRuntime().exec(command, environment);
+			ArrayList<String> execenv = new ArrayList<String>();
+			Map<String, String> myenv = System.getenv();
+			for (String name : myenv.keySet()) {
+				execenv.add(String.format("%s=%s", name, myenv.get(name)));
+
+			}
+			execenv.addAll(Arrays.asList(environment));
+
+			Process p = Runtime.getRuntime().exec(command,
+					execenv.toArray(new String[execenv.size()]));
 
 			int ret = p.waitFor();
 			Log.v(LOGTAG, String.format("Command returned '%d'", ret));
@@ -97,15 +109,15 @@ public class Installer {
 	private File buildScript(String command) {
 
 		String installTemplate = readFileFromAssets("install-template.sh");
-		installTemplate.replace("%COMMAND%", command);
+		String content = installTemplate.replace("%COMMAND%", command);
 		File script = ctx.getFileStreamPath("install.sh");
 		try {
-			FileOutputStream stream = ctx.openFileOutput("installer.sh", 0);
-			stream.write(installTemplate.getBytes());
+			FileOutputStream stream = ctx.openFileOutput("install.sh", 0);
+			stream.write(content.getBytes());
 			stream.flush();
 			stream.close();
 		} catch (IOException e) {
-			Log.e(LOGTAG, "Failed to write installer.sh", e);
+			Log.e(LOGTAG, "Failed to write install.sh", e);
 			return null;
 		}
 
@@ -222,7 +234,7 @@ public class Installer {
 
 			String[] command = { "su", "-c",
 					String.format("sh %s", script.getAbsolutePath()) };
-			int ret = runWithSu(command, new String[0]);
+			int ret = runWithSu(command, null);
 			return ret == 0;
 		}
 

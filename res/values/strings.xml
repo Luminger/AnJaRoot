@@ -31,7 +31,7 @@
     <!-- install_fragment.xml -->
     <string name="install_fragment_install_text">AnJaRoot is currently not installed on your device.</string>
     <string name="install_fragment_install_btn_text">Install AnJaRoot</string>
-    <string name="install_fragment_reboot_text">Prepare was successful!</string>
+    <string name="install_fragment_reboot_text">Preparation was successful, boot now into recovery to finish the installation.</string>
     <string name="install_fragment_reboot_btn_text">Reboot into Recovery</string>
 
     <!-- InstallFragment.java -->
