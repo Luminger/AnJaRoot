@@ -42,10 +42,7 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:excludeFromRecents="true"
             android:label="@string/request_activity_name"
-            android:launchMode="singleTask" >
-            <intent-filter>
-                <action android:name="org.failedprojects.anjaroot.REQUEST_ACCESS" />
-            </intent-filter>
+            android:launchMode="singleInstance" >
         </activity>
 
         <service
