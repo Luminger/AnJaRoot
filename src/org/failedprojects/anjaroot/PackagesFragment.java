@@ -18,6 +18,10 @@
  */
 package org.failedprojects.anjaroot;
 
+import java.util.List;
+
+import org.failedprojects.anjaroot.GrantedStorage.OnChangeHandler;
+
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -31,22 +35,25 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class PackagesFragment extends ListFragment {
+public class PackagesFragment extends ListFragment implements OnChangeHandler {
 	private static final String LOGTAG = "AnjaRoot";
 	private PackageManager pm;
 	private GrantedStorage storage;
-	private PackagesAdapter adapter;
 
-	class PackagesAdapter extends BaseAdapter {
+	class PackagesAdapter extends ArrayAdapter<String> {
 		private class ViewHolder {
 			TextView name;
 			TextView pkgname;
 			ImageView icon;
+		}
+
+		public PackagesAdapter(Context context, List<String> objects) {
+			super(context, R.layout.packages_list_item, objects);
 		}
 
 		@Override
@@ -65,7 +72,7 @@ public class PackagesFragment extends ListFragment {
 				v.setTag(holder);
 			}
 
-			String pkgname = storage.getPackages().get(position);
+			String pkgname = getItem(position);
 			try {
 				PackageInfo pi = pm.getPackageInfo(pkgname, 0);
 
@@ -80,20 +87,6 @@ public class PackagesFragment extends ListFragment {
 			return v;
 		}
 
-		@Override
-		public int getCount() {
-			return storage.getPackages().size();
-		}
-
-		@Override
-		public Object getItem(int position) {
-			return storage.getPackages().get(position);
-		}
-
-		@Override
-		public long getItemId(int position) {
-			return position;
-		}
 	}
 
 	public static PackagesFragment newInstance() {
@@ -108,15 +101,32 @@ public class PackagesFragment extends ListFragment {
 		storage = new GrantedStorage(getActivity());
 		pm = getActivity().getPackageManager();
 
-		adapter = new PackagesAdapter();
-		setListAdapter(adapter);
+		setListAdapter(new PackagesAdapter(getActivity(), storage.getPackages()));
 	}
 
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
-		String pkg = (String) adapter.getItem(position);
+		PackagesAdapter pa = (PackagesAdapter) getListAdapter();
+		String pkg = pa.getItem(position);
+
+		// this will trigger the OnChangeHandler
 		storage.removePackage(pkg);
-		adapter.notifyDataSetChanged();
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		PackagesAdapter pa = (PackagesAdapter) getListAdapter();
+		pa.clear();
+		pa.addAll(storage.getPackages());
+		storage.startObserving(this);
+	}
+
+	@Override
+	public void onPause() {
+		super.onPause();
+
+		storage.stopObserving();
 	}
 
 	@Override
@@ -139,5 +149,17 @@ public class PackagesFragment extends ListFragment {
 		}
 
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void onReload(boolean success) {
+		getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				PackagesAdapter pa = (PackagesAdapter) getListAdapter();
+				pa.clear();
+				pa.addAll(storage.getPackages());
+			}
+		});
 	}
 }

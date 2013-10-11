@@ -56,6 +56,14 @@
                 <action android:name="org.failedprojects.anjaroot.action.ANSWER_REQUEST" />
             </intent-filter>
         </service>
+
+        <receiver android:name=".PackageManagerReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
