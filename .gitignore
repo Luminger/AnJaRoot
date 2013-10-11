@@ -26,6 +26,9 @@ local.properties
 *.swp
 *.swo
 
+# private files
+secure.properties
+
 # AnJaRoot generated
 updatezip
 release

@@ -4,6 +4,7 @@
     <property name="anjaroot.version" value="${manifest.manifest.android:versionName}"/>
     <property name="anjaroot.release.dir" location="release"/>
     <property name="anjaroot.updatezip.dir" location="updatezip"/>
+    <property file="secure.properties" />
     <target name="-pre-build">
         <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
     </target>
