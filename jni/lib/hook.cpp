@@ -91,6 +91,7 @@ void prepareIfNeeded()
 
 int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
 {
+    util::logVerbose("capset() called");
     prepareIfNeeded();
     if(hook::Hooked && hook::AlreadyRun)
     {
@@ -122,7 +123,10 @@ int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
             return orig_capset(hdrp, datap);
         }
 
-        // restore orig uids/guids, permissions are granted
+        // restore orig uids/guids (except suid/sgid, we need them to regain
+        // access later), permissions are granted
+        origGids.sgid = 0;
+        origUids.suid = 0;
         helper::setGroupIds(origGids);
         helper::setUserIds(origUids);
 
