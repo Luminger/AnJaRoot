@@ -43,7 +43,8 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:excludeFromRecents="true"
             android:label="@string/request_activity_name"
-            android:launchMode="singleInstance" >
+            android:launchMode="singleInstance"
+            android:taskAffinity="" >
         </activity>
 
         <service
