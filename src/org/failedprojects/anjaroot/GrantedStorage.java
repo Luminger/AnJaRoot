@@ -110,9 +110,14 @@ public class GrantedStorage {
 		boolean ret = true;
 		packages.clear();
 
+		File file = new File(dir, filename);
+		if (!file.exists()) {
+			Log.v(LOGTAG, "%s doesn't exist, nothing to read...");
+			return true;
+		}
+
 		try {
-			FileInputStream inputstream = new FileInputStream(new File(dir,
-					filename));
+			FileInputStream inputstream = new FileInputStream(file);
 			InputStreamReader inputreader = new InputStreamReader(inputstream);
 			BufferedReader bufreader = new BufferedReader(inputreader);
 
