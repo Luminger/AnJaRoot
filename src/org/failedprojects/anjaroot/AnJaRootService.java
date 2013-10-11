@@ -21,6 +21,8 @@ package org.failedprojects.anjaroot;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.failedprojects.anjaroot.library.AnJaRoot;
+
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -67,6 +69,13 @@ public class AnJaRootService extends Service {
 	private class ServiceImplementation extends IAnJaRootService.Stub {
 		@Override
 		public boolean requestAccess() throws RemoteException {
+			boolean installed = AnJaRoot.isAccessPossible();
+			if (!installed) {
+				Log.e(LOGTAG,
+						"AnJaRoot is not accesssable, requesting access is not allowed.");
+				return false;
+			}
+
 			PackageManager pm = getPackageManager();
 			String[] pkgs = pm.getPackagesForUid(getCallingUid());
 
