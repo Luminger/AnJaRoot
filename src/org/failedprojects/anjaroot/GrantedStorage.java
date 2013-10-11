@@ -101,6 +101,11 @@ public class GrantedStorage {
 		readPackageList();
 	}
 
+	public void removeAll() {
+		packages.clear();
+		write();
+	}
+
 	private boolean readPackageList() {
 		boolean ret = true;
 		packages.clear();
@@ -140,14 +145,14 @@ public class GrantedStorage {
 		return new ArrayList<String>(packages);
 	}
 
-	private boolean write(List<String> granted) {
+	private boolean write() {
 		boolean ret = true;
 		try {
 			File tmp = File.createTempFile("granted", "tmp", dir);
 			FileWriter writer = new FileWriter(tmp);
 			BufferedWriter bufwriter = new BufferedWriter(writer);
 
-			for (String pkg : granted) {
+			for (String pkg : packages) {
 				bufwriter.write(pkg);
 				bufwriter.newLine();
 			}
@@ -171,18 +176,16 @@ public class GrantedStorage {
 	}
 
 	public void addPackage(String name) {
-		List<String> granted = getPackages();
-		if (!granted.contains(name)) {
-			granted.add(name);
-			write(granted);
+		if (!packages.contains(name)) {
+			packages.add(name);
+			write();
 		}
 	}
 
 	public boolean removePackage(String name) {
-		List<String> granted = getPackages();
-		if (granted.contains(name)) {
-			granted.remove(name);
-			write(granted);
+		if (packages.contains(name)) {
+			packages.remove(name);
+			write();
 			return true;
 		}
 

@@ -67,15 +67,20 @@ public class InstallFragment extends Fragment {
 			public void onClick(View v) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(
 						getActivity());
-				builder.setTitle("AnJaRoot");
-				builder.setMessage("Do you want to install AnJaRoot?");
-				builder.setPositiveButton("Install", new OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						installer.doRecoveryInstall(recoveryInstallHandler);
-					}
-				});
-				builder.setNegativeButton("Cancel", null);
+				builder.setTitle(R.string.install_fragment_install_dialog_title);
+				builder.setMessage(R.string.install_fragment_install_dialog_msg);
+				builder.setPositiveButton(
+						R.string.install_fragment_install_dialog_positive,
+						new OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								installer
+										.doRecoveryInstall(recoveryInstallHandler);
+							}
+						});
+				builder.setNegativeButton(
+						R.string.install_fragment_install_dialog_negative, null);
 				builder.create().show();
 			}
 		});
@@ -86,15 +91,20 @@ public class InstallFragment extends Fragment {
 			public void onClick(View v) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(
 						getActivity());
-				builder.setTitle("AnJaRoot");
-				builder.setMessage("Do you want reboot into recovery now?");
-				builder.setPositiveButton("Reboot now", new OnClickListener() {
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						installer.doRecoveryReboot(recoveryRebootHandler);
-					}
-				});
-				builder.setNegativeButton("Cancel", null);
+				builder.setTitle(R.string.install_fragment_reboot_title);
+				builder.setMessage(R.string.install_fragment_reboot_msg);
+				builder.setPositiveButton(
+						R.string.install_fragment_reboot_positive,
+						new OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								installer
+										.doRecoveryReboot(recoveryRebootHandler);
+							}
+						});
+				builder.setNegativeButton(
+						R.string.install_fragment_reboot_negative, null);
 				builder.create().show();
 			}
 		});

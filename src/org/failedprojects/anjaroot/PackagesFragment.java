@@ -22,7 +22,10 @@ import java.util.List;
 
 import org.failedprojects.anjaroot.GrantedStorage.OnChangeHandler;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -107,10 +110,32 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 	@Override
 	public void onListItemClick(ListView l, View v, int position, long id) {
 		PackagesAdapter pa = (PackagesAdapter) getListAdapter();
-		String pkg = pa.getItem(position);
+		final String pkg = pa.getItem(position);
+		String pkgname = "";
 
-		// this will trigger the OnChangeHandler
-		storage.removePackage(pkg);
+		try {
+			PackageInfo pi = pm.getPackageInfo(pkg, 0);
+			pkgname = (String) pi.applicationInfo.loadLabel(pm);
+		} catch (NameNotFoundException e) {
+			Log.e(LOGTAG, "Failed to load label", e);
+		}
+
+		AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
+		dialog.setTitle(R.string.packages_list_delete_single_title);
+
+		dialog.setMessage(String.format(
+				getString(R.string.packages_list_delete_single_msg), pkgname));
+		dialog.setPositiveButton(R.string.packages_list_delete_single_positive,
+				new OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						// this will trigger the OnChangeHandler
+						storage.removePackage(pkg);
+					}
+				});
+		dialog.setNegativeButton(R.string.packages_list_delete_single_negative,
+				null);
+		dialog.create().show();
 	}
 
 	@Override
@@ -147,11 +172,25 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		case R.id.action_delete_all:
+			AlertDialog.Builder dialog = new AlertDialog.Builder(getActivity());
+			dialog.setTitle(R.string.packages_list_delete_all_title);
+			dialog.setMessage(R.string.packages_list_delete_all_msg);
+			dialog.setPositiveButton(
+					R.string.packages_list_delete_all_positive,
+					new OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							storage.removeAll();
+						}
+					});
+			dialog.setNegativeButton(
+					R.string.packages_list_delete_all_negative, null);
+			dialog.create().show();
 		default:
-			break;
+			return super.onOptionsItemSelected(item);
 		}
 
-		return super.onOptionsItemSelected(item);
 	}
 
 	@Override
