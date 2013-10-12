@@ -20,11 +20,11 @@
 
     <!-- PackagesFragment.java -->
     <string name="packages_list_delete_all_title">Confirmation</string>
-    <string name="packages_list_delete_all_msg">Do you want to revoke all permissions?</string>
+    <string name="packages_list_delete_all_msg">Do you want to revoke all permissions? This will stop running apps violently if running.</string>
     <string name="packages_list_delete_all_positive">Revoke</string>
     <string name="packages_list_delete_all_negative">Cancel</string>
     <string name="packages_list_delete_single_title">Confirmation</string>
-    <string name="packages_list_delete_single_msg">Revoke permission for %s?</string>
+    <string name="packages_list_delete_single_msg">Revoke permission for %s? This will stop the app violently if currently running.</string>
     <string name="packages_list_delete_single_positive">Revoke</string>
     <string name="packages_list_delete_single_negative">Cancel</string>
 
