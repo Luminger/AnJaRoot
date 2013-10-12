@@ -28,7 +28,6 @@ static const char* MethodNotFoundName = "java/lang/NoSuchMethodError";
 static const char* NativeName = "org/failedprojects/anjaroot/library/exceptions/NativeException";
 static const char* NativeConstructorSignatur = "(ILjava/lang/String;)V";
 static const char* OutOfBoundsName = "org/failedprojects/anjaroot/library/exceptions/OutOfBoundsException";
-static const char* PermissionsName = "org/failedprojects/anjaroot/library/exceptions/PermissionsException";
 
 void throwExceptionSimple(JNIEnv* env, const char* clsname, const char* msg)
 {
@@ -61,11 +60,6 @@ void throwNoMethodFoundException(JNIEnv* env, const char* method)
 void throwOutOfBoundsException(JNIEnv* env, const char* msg)
 {
     throwExceptionSimple(env, OutOfBoundsName, msg);
-}
-
-void throwPermissionsException(JNIEnv* env)
-{
-    throwExceptionSimple(env, PermissionsName, "");
 }
 
 void throwNativeException(JNIEnv* env, const std::system_error& e)

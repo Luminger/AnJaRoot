@@ -51,14 +51,7 @@ jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
     }
     catch(std::system_error& e)
     {
-        if(e.code().value() == EPERM)
-        {
-            exceptions::throwPermissionsException(env);
-        }
-        else
-        {
-            exceptions::throwNativeException(env, e);
-        }
+        exceptions::throwNativeException(env, e);
         return NULL;
     }
 }
@@ -99,14 +92,7 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
     }
     catch(std::system_error& e)
     {
-        if(e.code().value() == EPERM)
-        {
-            exceptions::throwPermissionsException(env);
-        }
-        else
-        {
-            exceptions::throwNativeException(env, e);
-        }
+        exceptions::throwNativeException(env, e);
     }
 }
 
@@ -167,14 +153,7 @@ void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid, jlong suid)
     }
     catch(std::system_error& e)
     {
-        if(e.code().value() == EPERM)
-        {
-            exceptions::throwPermissionsException(env);
-        }
-        else
-        {
-            exceptions::throwNativeException(env, e);
-        }
+        exceptions::throwNativeException(env, e);
     }
 }
 
@@ -235,14 +214,7 @@ void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
     }
     catch(std::system_error& e)
     {
-        if(e.code().value() == EPERM)
-        {
-            exceptions::throwPermissionsException(env);
-        }
-        else
-        {
-            exceptions::throwNativeException(env, e);
-        }
+        exceptions::throwNativeException(env, e);
     }
 }
 

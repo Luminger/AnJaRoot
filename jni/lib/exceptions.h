@@ -29,7 +29,6 @@ namespace exceptions {
     void throwNoMethodFoundException(JNIEnv* env, const char* method);
     void throwNativeException(JNIEnv* env, const std::system_error& e);
     void throwOutOfBoundsException(JNIEnv* env, const char* msg);
-    void throwPermissionsException(JNIEnv* env);
 }
 
 #endif
