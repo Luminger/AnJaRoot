@@ -30,9 +30,11 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Process;
 import android.support.v4.app.ListFragment;
@@ -175,6 +177,10 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.packages_list_menu, menu);
+
+		if (isDonateAppPresent()) {
+			menu.removeItem(R.id.action_buy_donate);
+		}
 		super.onCreateOptionsMenu(menu, inflater);
 	}
 
@@ -198,6 +204,13 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 			dialog.setNegativeButton(
 					R.string.packages_list_delete_all_negative, null);
 			dialog.create().show();
+			return true;
+		case R.id.action_buy_donate:
+			Intent intent = new Intent(Intent.ACTION_VIEW);
+			intent.setData(Uri
+					.parse("market://details?id=org.failedprojects.anjaroot.donate"));
+			startActivity(intent);
+			return true;
 		default:
 			return super.onOptionsItemSelected(item);
 		}
@@ -244,5 +257,15 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 				pa.addAll(storage.getPackages());
 			}
 		});
+	}
+
+	private boolean isDonateAppPresent() {
+		int sigmatch = pm.checkSignatures("org.failedprojects.anjaroot",
+				"org.failedprojects.anjaroot.donate");
+		if (sigmatch != PackageManager.SIGNATURE_MATCH) {
+			return false;
+		}
+
+		return true;
 	}
 }

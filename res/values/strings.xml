@@ -17,6 +17,7 @@
 
     <!-- packages_list_menu.xml -->
     <string name="action_delete_all">Delete all items</string>
+    <string name="action_buy_donate">Buy Donate Version</string>
 
     <!-- PackagesFragment.java -->
     <string name="packages_list_delete_all_title">Confirmation</string>
