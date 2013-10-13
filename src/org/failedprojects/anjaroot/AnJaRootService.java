@@ -18,7 +18,9 @@
  */
 package org.failedprojects.anjaroot;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.failedprojects.anjaroot.library.AnJaRoot;
@@ -34,7 +36,13 @@ import android.util.Log;
 public class AnJaRootService extends Service {
 	private static final String LOGTAG = "AnJaRootService";
 	private static final int timeout = 11 * 1000;
+	private static final long denyTimeout = 10L * 1000 * 1000 * 1000;
 	private static List<RequestResult> requestResultWaitingList = new CopyOnWriteArrayList<AnJaRootService.RequestResult>();
+
+	// TODO we should clean up this list at some points in time, no need to
+	// consume that much memory for nothing. On the other side, how many
+	// packages will be kept here? A dozen? Maybe two? Not worth the hassle...
+	private static final Map<String, Long> lastDeniedRequest = new HashMap<String, Long>();
 
 	private class RequestResult {
 		private final int uid;
@@ -87,6 +95,22 @@ public class AnJaRootService extends Service {
 				}
 			}
 
+			// A denied client may ask in 10 seconds again
+			long now = System.nanoTime();
+			if (lastDeniedRequest.containsKey(pkgs[0])) {
+				long last = lastDeniedRequest.get(pkgs[0]);
+				if (last + denyTimeout >= now) {
+					lastDeniedRequest.put(pkgs[0], System.nanoTime());
+					Log.e(LOGTAG,
+							String.format(
+									"%s called again before 10 seconds were over, denying request for another 10 seconds.",
+									pkgs[0]));
+					return false;
+				} else {
+					lastDeniedRequest.remove(pkgs[0]);
+				}
+			}
+
 			RequestResult result = new RequestResult(getCallingUid());
 			requestResultWaitingList.add(result);
 
@@ -123,6 +147,13 @@ public class AnJaRootService extends Service {
 				if (pkgs.length != 0) {
 					storage.addPackage(pkgs[0]);
 				}
+			} else {
+				// Clients are only allowed to call this interface every 10
+				// seconds if the user declined.
+				Log.v(LOGTAG, String
+						.format("%s is blocked for 10 seconds from requesting",
+								pkgs[0]));
+				lastDeniedRequest.put(pkgs[0], System.nanoTime());
 			}
 
 			return result.isGranted();
