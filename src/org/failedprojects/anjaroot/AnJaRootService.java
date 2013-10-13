@@ -111,11 +111,7 @@ public class AnJaRootService extends Service {
 			if (lastDeniedRequest.containsKey(pkgs[0])) {
 				long last = lastDeniedRequest.get(pkgs[0]);
 				if (last + denyTimeout >= now) {
-					lastDeniedRequest.put(pkgs[0], System.nanoTime());
-					Log.e(LOGTAG,
-							String.format(
-									"%s called again before 10 seconds were over, denying request for another 10 seconds.",
-									pkgs[0]));
+					Log.e(LOGTAG, String.format("%s is still blocked", pkgs[0]));
 					return false;
 				} else {
 					lastDeniedRequest.remove(pkgs[0]);
