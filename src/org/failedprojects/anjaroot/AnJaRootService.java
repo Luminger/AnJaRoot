@@ -36,7 +36,7 @@ import android.util.Log;
 public class AnJaRootService extends Service {
 	private static final String LOGTAG = "AnJaRootService";
 	private static final int timeout = 11 * 1000;
-	private static final long denyTimeout = 10L * 1000 * 1000 * 1000;
+	private static final long denyTimeout = 5L * 1000 * 1000 * 1000;
 	private static List<RequestResult> requestResultWaitingList = new CopyOnWriteArrayList<AnJaRootService.RequestResult>();
 
 	// TODO we should clean up this list at some points in time, no need to
@@ -95,7 +95,7 @@ public class AnJaRootService extends Service {
 				}
 			}
 
-			// A denied client may ask in 10 seconds again
+			// A denied client may ask in 5 seconds again
 			long now = System.nanoTime();
 			if (lastDeniedRequest.containsKey(pkgs[0])) {
 				long last = lastDeniedRequest.get(pkgs[0]);

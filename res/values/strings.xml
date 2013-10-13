@@ -51,7 +51,7 @@
     <string name="request_activity_grant_btn_text">Grant</string>
     <string name="request_activity_icon_description">Requester Icon</string>
     <string name="request_activity_title_text">%s requests AnJaRoot-Access</string>
-    <string name="request_activity_description_text">Warning: This will allow the requester to execute commands as \'root\'. If you don\'t know what this is, deny this request.</string>
+    <string name="request_activity_description_text">Warning: This will allow the requester to execute commands as \'root\'. If you don\'t know what this is, deny this request.\n\nDenying will prevent the app from issuing a request again within 5 seconds to prevent spam.</string>
     <string name="request_activity_app_name">%s</string>
 
     <!-- packages_list_item.xml -->
