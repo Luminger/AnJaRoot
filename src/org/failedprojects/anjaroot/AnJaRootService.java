@@ -95,6 +95,17 @@ public class AnJaRootService extends Service {
 				}
 			}
 
+			// return immediately if a request from this package is currently
+			// handled
+			for (RequestResult res : requestResultWaitingList) {
+				if (res.getUid() == getCallingUid()) {
+					Log.e(LOGTAG, String.format(
+							"A request for uid %d is already active",
+							getCallingUid()));
+					return false;
+				}
+			}
+
 			// A denied client may ask in 5 seconds again
 			long now = System.nanoTime();
 			if (lastDeniedRequest.containsKey(pkgs[0])) {
