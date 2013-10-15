@@ -54,6 +54,8 @@ APK_TARGET=/system/app/AnJaRoot.apk
 APK_ZIP=$TMPDIR/AnJaRoot.apk
 APK_SYS='/data/app/org.failedprojects.anjaroot-*.apk'
 
+OLD_INSTALLER="/system/bin/anjarootinstaller"
+
 
 # UTILITY FUNCTIONS
 printnl(){
@@ -113,6 +115,8 @@ debug "APK_TARGET: $APK_TARGET"
 debug "APK_ZIP: $APK_ZIP"
 debug "APK_SYS: $APK_SYS"
 
+debug "OLD_INSTALLER: $OLD_INSTALLER"
+
 printnl 'Getting device ABI...'
 discoverArch
 
@@ -131,8 +135,14 @@ unzip -o $UPDATEZIP_PATH -d $TMPDIR || abort
 printnl 'Preparing installer...'
 chmod 755 $INSTALLER || abort
 
-printnl 'Cleaning away (possible) previous installation...'
-"$INSTALLER" --uninstall || abort
+if [ -f "$OLD_INSTALLER" ]
+then
+    printnl 'Cleaning away previous installation...'
+    "$OLD_INSTALLER" --uninstall || abort
+else
+    printnl 'Cleaning away (possible) previous installation...'
+    "$INSTALLER" --uninstall || abort
+fi
 
 if [ -f "$APK_ZIP" ]
 then

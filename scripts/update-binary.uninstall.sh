@@ -48,7 +48,7 @@ RECOVERY_VERSION=$1
 COMMUNICATION_FD=$2
 UPDATEZIP_PATH=$3
 
-INSTALLER="/system/bin/anjarootinstaller"
+OLD_INSTALLER="/system/bin/anjarootinstaller"
 
 # UTILITY FUNCTIONS
 printnl(){
@@ -75,15 +75,15 @@ abort(){
 debug "SELF: $SELF"
 debug "RECOVERY_VERSION: $RECOVERY_VERSION"
 debug "UPDATEZIP_PATH: $UPDATEZIP_PATH"
-debug "INSTALLER: $INSTALLER"
+debug "OLD_INSTALLER: $OLD_INSTALLER"
 
 printnl 'Mounting /system...'
 mount /system
 
 printnl 'Preparing installer...'
-chmod 755 $INSTALLER || abort
+chmod 755 $OLD_INSTALLER || abort
 
 printnl 'Cleaning away previous installation...'
-"$INSTALLER" --uninstall || abort
+"$OLD_INSTALLER" --uninstall || abort
 
 printnl 'Done!'
