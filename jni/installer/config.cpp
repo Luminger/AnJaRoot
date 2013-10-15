@@ -24,7 +24,7 @@ const std::string config::installMarkPath =
 const std::string config::libandroidPath = "/system/lib/libandroid.so";
 const std::string config::installedLibraryPath = "/system/lib/libanjaroot.so";
 const std::string config::temporaryAppProcessPath =
-        "/system/bin/app_process.anjaroot";
+        "/system/bin/app_process.anjaroot.tmp";
 const std::string config::newAppProcessPath =
         "/system/bin/app_process.anjaroot";
 const std::string config::backupAppProcessPath =
@@ -34,4 +34,4 @@ const std::string config::installerPath = "/system/bin/anjarootinstaller";
 const std::string config::apkSystemPath = "/system/app/AnJaRoot.apk";
 const std::string config::wrapperScriptContent =
         "#!/system/bin/sh\n\n"
-        "LD_PRELOAD=/system/lib/libanjaroot.so /system/bin/app_process_orig $@";
+        "LD_PRELOAD=/system/lib/libanjaroot.so /system/bin/app_process.anjaroot $@";
