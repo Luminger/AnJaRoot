@@ -27,6 +27,7 @@ local.properties
 *.swo
 
 # AnJaRoot generated
-updatezip
+updatezip-install
+updatezip-uninstall
 release
 assets/AnJaRoot.zip

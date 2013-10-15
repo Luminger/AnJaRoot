@@ -3,14 +3,18 @@
     <xmlproperty file="AndroidManifest.xml" prefix="manifest" collapseAttributes="true"/>
     <property name="anjaroot.version" value="${manifest.manifest.android:versionName}"/>
     <property name="anjaroot.release.dir" location="release"/>
-    <property name="anjaroot.updatezip.dir" location="updatezip"/>
+    <property name="anjaroot.updatezip.dir.install" location="updatezip-install"/>
+    <property name="anjaroot.updatezip.dir.uninstall" location="updatezip-uninstall"/>
+    <property name="anjaroot.updatezip.cmd.install" location="scripts/update-binary.install.sh"/>
+    <property name="anjaroot.updatezip.cmd.uninstall" location="scripts/update-binary.uninstall.sh"/>
     <property file="secure.properties" />
     <target name="-pre-build">
         <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
     </target>
     <target name="-pre-clean">
         <delete dir="${anjaroot.release.dir}"/>
-        <delete dir="${anjaroot.updatezip.dir}"/>
+        <delete dir="${anjaroot.updatezip.dir.install}"/>
+        <delete dir="${anjaroot.updatezip.dir.uninstall}"/>
         <delete file="assets/AnJaRoot.zip"/>
         <exec executable="${ndk.dir}/ndk-build" failonerror="true">
             <arg value="clean"/>
@@ -31,18 +35,18 @@
         <chmod perm="ugo+x" file="libs/x86/libanjarootinstaller.so"/>
     </target>
     <target name="updatezip-without-apk" depends="copy-native-files">
-        <delete dir="${anjaroot.updatezip.dir}"/>
-        <copy todir="${anjaroot.updatezip.dir}" overwrite="true" encoding="utf-8">
+        <delete dir="${anjaroot.updatezip.dir.install}"/>
+        <copy todir="${anjaroot.updatezip.dir.install}" overwrite="true" encoding="utf-8">
             <fileset dir="libs">
                 <include name="**/anjarootinstaller"/>
                 <include name="**/libanjaroot.so"/>
             </fileset>
         </copy>
-        <mkdir dir="${anjaroot.updatezip.dir}/META-INF/com/google/android/"/>
-        <copy todir="${anjaroot.updatezip.dir}/META-INF/com/google/android/"
-            file="scripts/update-binary"/>
+        <mkdir dir="${anjaroot.updatezip.dir.install}/META-INF/com/google/android/"/>
+        <copy tofile="${anjaroot.updatezip.dir.install}/META-INF/com/google/android/update-binary"
+            file="${anjaroot.updatezip.cmd.install}"/>
         <mkdir dir="assets"/>
-        <exec executable="zip" failonerror="true" dir="${anjaroot.updatezip.dir}">
+        <exec executable="zip" failonerror="true" dir="${anjaroot.updatezip.dir.install}">
             <arg value="-r"/>
             <arg value="../assets/AnJaRoot.zip"/>
             <arg value="."/>
@@ -53,15 +57,28 @@
         <copy tofile="${anjaroot.release.dir}/AnJaRoot-${anjaroot.version}.apk" overwrite="true"
             file="bin/AnJaRoot-release.apk"/>
         <antcall target="updatezip-standalone"/>
+        <antcall target="uninstall-updatezip"/>
     </target>
     <target name="updatezip-standalone" depends="updatezip-without-apk">
         <mkdir dir="${anjaroot.release.dir}"/>
-        <copy tofile="${anjaroot.updatezip.dir}/AnJaRoot.apk" overwrite="true"
+        <copy tofile="${anjaroot.updatezip.dir.install}/AnJaRoot.apk" overwrite="true"
             file="bin/AnJaRoot-release.apk"/>
         <mkdir dir="${anjaroot.release.dir}"/>
-        <exec executable="zip" failonerror="true" dir="${anjaroot.updatezip.dir}">
+        <exec executable="zip" failonerror="true" dir="${anjaroot.updatezip.dir.install}">
             <arg value="-r"/>
             <arg value="${anjaroot.release.dir}/AnJaRoot-${anjaroot.version}-update.zip"/>
+            <arg value="."/>
+        </exec>
+    </target>
+    <target name="uninstall-updatezip">
+        <mkdir dir="${anjaroot.updatezip.dir}"/>
+        <mkdir dir="${anjaroot.release.dir}"/>
+        <mkdir dir="${anjaroot.updatezip.dir.uninstall}/META-INF/com/google/android/"/>
+        <copy tofile="${anjaroot.updatezip.dir.uninstall}/META-INF/com/google/android/update-binary"
+            file="${anjaroot.updatezip.cmd.uninstall}"/>
+        <exec executable="zip" failonerror="true" dir="${anjaroot.updatezip.dir.uninstall}">
+            <arg value="-r"/>
+            <arg value="${anjaroot.release.dir}/AnJaRoot-${anjaroot.version}-uninstall-update.zip"/>
             <arg value="."/>
         </exec>
     </target>
