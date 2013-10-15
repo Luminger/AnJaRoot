@@ -36,7 +36,9 @@ namespace hash {
             void add(std::istream& in);
             std::string toString() const;
 
-            static bool compare(const std::string& left, const std::string& right);
+            static bool compareStreams(std::istream& left, std::istream& right);
+            static bool compareFiles(const std::string& left,
+                    const std::string& right);
 
             bool operator==(const CRC32& other) const;
             bool operator!=(const CRC32& other) const;

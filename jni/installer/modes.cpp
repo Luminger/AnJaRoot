@@ -21,6 +21,7 @@
 
 #include <errno.h>
 #include <fstream>
+#include <sstream>
 #include <system_error>
 
 #include "shared/util.h"
@@ -99,7 +100,8 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     }
 
     // make sure source and destination lib have matching crc32 sums
-    bool libEqual = hash::CRC32::compare(libpath, config::installedLibraryPath);
+    bool libEqual = hash::CRC32::compareFiles(libpath, 
+            config::installedLibraryPath);
     if(!libEqual)
     {
         util::logError("Library CRC32 sums differ, reverting");
@@ -132,7 +134,7 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     }
 
     // make sure backup and orig binary have the same crc32 sum
-    bool binEqual = hash::CRC32::compare(config::originalAppProcessPath,
+    bool binEqual = hash::CRC32::compareFiles(config::originalAppProcessPath,
             config::backupAppProcessPath);
     if(!binEqual)
     {
@@ -185,7 +187,7 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
         throw;
     }
 
-    bool apkEqual = hash::CRC32::compare(apkpath, config::apkSystemPath);
+    bool apkEqual = hash::CRC32::compareFiles(apkpath, config::apkSystemPath);
     if(!apkEqual)
     {
         util::logError("CRC32 sums differ, reverting");
@@ -207,7 +209,7 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
         throw;
     }
 
-    bool installerEqual = hash::CRC32::compare(config::installerPath,
+    bool installerEqual = hash::CRC32::compareFiles(config::installerPath,
             "/proc/self/exe");
     if(!installerEqual)
     {
@@ -220,10 +222,30 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     // unlikely, we are fiddeling with the system core here. It's worth to have
     // another safety check to be sure we don't mess the device up.
     // TODO: a CRC32 check for our wrapper script would be nice also
-    bool newEqual = hash::CRC32::compare(config::backupAppProcessPath, config::newAppProcessPath);
+    bool newEqual = hash::CRC32::compareFiles(config::backupAppProcessPath,
+            config::newAppProcessPath);
     if(!newEqual)
     {
         util::logError("CRC32 sums differ, reverting");
+        uninstall();
+        return FAIL;
+    }
+
+    try
+    {
+        std::ifstream wrapper(config::originalAppProcessPath, std::ios::binary);
+        std::stringstream reference(config::wrapperScriptContent);
+        bool wrapperEqual = hash::CRC32::compareStreams(wrapper, reference);
+        if(!wrapperEqual)
+        {
+            util::logError("CRC32 sums differ of wrapper differs, reverting");
+            uninstall();
+            return FAIL;
+        }
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Failed to compare wrapper script, reverting");
         uninstall();
         return FAIL;
     }

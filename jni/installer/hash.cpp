@@ -86,26 +86,33 @@ std::string CRC32::toString() const
     return ss.str();
 }
 
-bool CRC32::compare(const std::string& left, const std::string& right)
+bool CRC32::compareStreams(std::istream& left, std::istream& right)
+{
+    hash::CRC32 leftHash(left);
+    hash::CRC32 rightHash(right);
+
+    return leftHash == rightHash;
+}
+
+bool CRC32::compareFiles(const std::string& left, const std::string& right)
 {
     try
     {
         std::ifstream leftStream(left, std::ios::binary);
         std::ifstream rightStream(right, std::ios::binary);
 
-        hash::CRC32 leftHash(leftStream);
-        hash::CRC32 rightHash(rightStream);
-
-        if(leftHash != rightHash)
+        bool equal = CRC32::compareStreams(leftStream, rightStream);
+        if(equal)
+        {
+            util::logVerbose("CRC32 sums of %s and %s are equal", left.c_str(),
+                    right.c_str());
+        }
+        else
         {
             util::logError("CRC32 sums of %s and %s differ", left.c_str(),
                     right.c_str());
-            return false;
         }
-
-        util::logVerbose("CRC32 sums of %s and %s are equal", left.c_str(),
-                right.c_str());
-        return true;
+        return equal;
     }
     catch(std::exception& e)
     {
