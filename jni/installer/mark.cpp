@@ -32,8 +32,8 @@ bool write()
 {
     try
     {
-        hash::CRC32 crc(config::library);
-        operations::writeFile(config::installMark, crc.toString());
+        hash::CRC32 crc(config::installedLibraryPath);
+        operations::writeFile(config::installMarkPath, crc.toString());
     }
     catch(std::exception& e)
     {
@@ -47,8 +47,8 @@ bool verify()
 {
     try
     {
-        std::string content = operations::readFile(config::installMark);
-        hash::CRC32 crc(config::library);
+        std::string content = operations::readFile(config::installMarkPath);
+        hash::CRC32 crc(config::installedLibraryPath);
         return crc.toString() == content;
     }
     catch(std::exception& e)
@@ -61,18 +61,18 @@ bool verify()
 
 bool exists()
 {
-    bool exists = operations::access(config::installMark, F_OK);
+    bool exists = operations::access(config::installMarkPath, F_OK);
     if(!exists)
     {
         util::logVerbose("Mark file %s doesn't exist",
-                config::installMark.c_str());
+                config::installMarkPath.c_str());
         return false;
     }
 
     struct stat st;
     try
     {
-        operations::stat(config::installMark, st);
+        operations::stat(config::installMarkPath, st);
         const time_t created = st.st_ctime;
         util::logVerbose("Mark exists, created on: %s", ctime(&created));
         return true;

@@ -19,15 +19,19 @@
 
 #include "config.h"
 
-const std::string config::installMark = "/system/etc/.anjaroot.mark";
-const std::string config::libandroid = "/system/lib/libandroid.so";
-const std::string config::library = "/system/lib/libanjaroot.so";
-const std::string config::tmpBinary = "/system/bin/app_process_tmp";
-const std::string config::newBinary = "/system/bin/app_process_orig";
-const std::string config::backupBinary = "/system/bin/app_process_backup";
-const std::string config::origBinary = "/system/bin/app_process";
-const std::string config::installerBinary = "/system/bin/anjarootinstaller";
+const std::string config::installMarkPath =
+        "/system/etc/.anjaroot.install.mark";
+const std::string config::libandroidPath = "/system/lib/libandroid.so";
+const std::string config::installedLibraryPath = "/system/lib/libanjaroot.so";
+const std::string config::temporaryAppProcessPath =
+        "/system/bin/app_process.anjaroot";
+const std::string config::newAppProcessPath =
+        "/system/bin/app_process.anjaroot";
+const std::string config::backupAppProcessPath =
+        "/system/bin/app_process.backup.anjaroot";
+const std::string config::originalAppProcessPath = "/system/bin/app_process";
+const std::string config::installerPath = "/system/bin/anjarootinstaller";
 const std::string config::apkSystemPath = "/system/app/AnJaRoot.apk";
-const std::string config::content =
+const std::string config::wrapperScriptContent =
         "#!/system/bin/sh\n\n"
         "LD_PRELOAD=/system/lib/libanjaroot.so /system/bin/app_process_orig $@";

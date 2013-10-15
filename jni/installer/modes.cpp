@@ -56,9 +56,9 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     {
         // stat app_process to recreate files with correct rights
         // as they may differ from system (depends on version/vendor)
-        operations::stat(config::origBinary, origst);
+        operations::stat(config::originalAppProcessPath, origst);
         // stat libandroid.so to have mode,uid,gid to set on our lib
-        operations::stat(config::libandroid, libst);
+        operations::stat(config::libandroidPath, libst);
     }
     catch(std::exception& e)
     {
@@ -75,7 +75,10 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
             // to overwrite it here is very low but when it happens it will
             // break the whole device as everything will crash and we can't
             // recover from that (did that multiple times to my phone)...
-            operations::unlink(config::library);
+            //
+            // As described above, this should not happen. But better save than
+            // sorry, just try to prevent major pain for the user.
+            operations::unlink(config::installedLibraryPath);
         }
         catch(std::exception& e)
         {
@@ -83,9 +86,10 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
                     e.what());
         }
 
-        operations::copy(libpath, config::library);
-        operations::chown(config::library, libst.st_uid, libst.st_gid);
-        operations::chmod(config::library, libst.st_mode);
+        operations::copy(libpath, config::installedLibraryPath);
+        operations::chown(config::installedLibraryPath, libst.st_uid,
+                libst.st_gid);
+        operations::chmod(config::installedLibraryPath, libst.st_mode);
     }
     catch(std::exception& e)
     {
@@ -95,7 +99,7 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     }
 
     // make sure source and destination lib have matching crc32 sums
-    bool libEqual = hash::CRC32::compare(libpath, config::library);
+    bool libEqual = hash::CRC32::compare(libpath, config::installedLibraryPath);
     if(!libEqual)
     {
         util::logError("Library CRC32 sums differ, reverting");
@@ -106,13 +110,14 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     // create a backup of the original app_process;
     try
     {
-        bool exists = operations::access(config::backupBinary, F_OK);
+        bool exists = operations::access(config::backupAppProcessPath, F_OK);
         if(!exists)
         {
-            operations::copy(config::origBinary, config::backupBinary);
-            operations::chown(config::backupBinary, origst.st_uid,
+            operations::copy(config::originalAppProcessPath,
+                    config::backupAppProcessPath);
+            operations::chown(config::backupAppProcessPath, origst.st_uid,
                     origst.st_gid);
-            operations::chmod(config::backupBinary, origst.st_mode);
+            operations::chmod(config::backupAppProcessPath, origst.st_mode);
         }
         else
         {
@@ -127,8 +132,8 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     }
 
     // make sure backup and orig binary have the same crc32 sum
-    bool binEqual = hash::CRC32::compare(config::origBinary,
-            config::backupBinary);
+    bool binEqual = hash::CRC32::compare(config::originalAppProcessPath,
+            config::backupAppProcessPath);
     if(!binEqual)
     {
         util::logError("CRC32 sums differ, reverting");
@@ -139,9 +144,11 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     // prepare the wrapper
     try
     {
-        operations::writeFile(config::tmpBinary, config::content);
-        operations::chown(config::tmpBinary, origst.st_uid, origst.st_gid);
-        operations::chmod(config::tmpBinary, origst.st_mode);
+        operations::writeFile(config::temporaryAppProcessPath,
+                config::wrapperScriptContent);
+        operations::chown(config::temporaryAppProcessPath, origst.st_uid,
+                origst.st_gid);
+        operations::chmod(config::temporaryAppProcessPath, origst.st_mode);
     }
     catch(std::exception& e)
     {
@@ -153,8 +160,10 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     // move everything into the right place
     try
     {
-        operations::move(config::origBinary, config::newBinary);
-        operations::move(config::tmpBinary, config::origBinary);
+        operations::move(config::originalAppProcessPath,
+                config::newAppProcessPath);
+        operations::move(config::temporaryAppProcessPath,
+                config::originalAppProcessPath);
     }
     catch(std::exception& e)
     {
@@ -187,10 +196,9 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     // copy installer to /system/bin/
     try
     {
-        operations::copy("/proc/self/exe", config::installerBinary);
-        operations::chown(config::installerBinary, origst.st_uid,
-                origst.st_gid);
-        operations::chmod(config::installerBinary, origst.st_mode);
+        operations::copy("/proc/self/exe", config::installerPath);
+        operations::chown(config::installerPath, origst.st_uid, origst.st_gid);
+        operations::chmod(config::installerPath, origst.st_mode);
     }
     catch(std::exception& e)
     {
@@ -199,7 +207,7 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
         throw;
     }
 
-    bool installerEqual = hash::CRC32::compare(config::installerBinary,
+    bool installerEqual = hash::CRC32::compare(config::installerPath,
             "/proc/self/exe");
     if(!installerEqual)
     {
@@ -212,7 +220,7 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     // unlikely, we are fiddeling with the system core here. It's worth to have
     // another safety check to be sure we don't mess the device up.
     // TODO: a CRC32 check for our wrapper script would be nice also
-    bool newEqual = hash::CRC32::compare(config::backupBinary, config::newBinary);
+    bool newEqual = hash::CRC32::compare(config::backupAppProcessPath, config::newAppProcessPath);
     if(!newEqual)
     {
         util::logError("CRC32 sums differ, reverting");
@@ -244,8 +252,8 @@ ReturnCode uninstall()
 
     try
     {
-        operations::unlink(config::library);
-        util::logVerbose("Removed %s", config::library.c_str());
+        operations::unlink(config::installedLibraryPath);
+        util::logVerbose("Removed %s", config::installedLibraryPath.c_str());
     }
     catch(std::exception& e)
     {
@@ -254,8 +262,9 @@ ReturnCode uninstall()
 
     try
     {
-        operations::unlink(config::tmpBinary);
-        util::logVerbose("Removed %s", config::tmpBinary.c_str());
+        operations::unlink(config::temporaryAppProcessPath);
+        util::logVerbose("Removed %s",
+                config::temporaryAppProcessPath.c_str());
     }
     catch(std::exception& e)
     {
@@ -264,9 +273,9 @@ ReturnCode uninstall()
 
     try
     {
-        operations::move(config::newBinary, config::origBinary);
-        util::logVerbose("Moved %s back to %s", config::newBinary.c_str(),
-                config::origBinary.c_str());
+        operations::move(config::newAppProcessPath, config::originalAppProcessPath);
+        util::logVerbose("Moved %s back to %s", config::newAppProcessPath.c_str(),
+                config::originalAppProcessPath.c_str());
     }
     catch(std::exception& e)
     {
@@ -285,8 +294,8 @@ ReturnCode uninstall()
 
     try
     {
-        operations::unlink(config::installerBinary);
-        util::logVerbose("Removed %s", config::installerBinary.c_str());
+        operations::unlink(config::installerPath);
+        util::logVerbose("Removed %s", config::installerPath.c_str());
     }
     catch(std::exception& e)
     {
@@ -295,8 +304,8 @@ ReturnCode uninstall()
 
     try
     {
-        operations::unlink(config::installMark);
-        util::logVerbose("Removed %s", config::installMark.c_str());
+        operations::unlink(config::installMarkPath);
+        util::logVerbose("Removed %s", config::installMarkPath.c_str());
     }
     catch(std::exception& e)
     {

@@ -24,16 +24,16 @@
 
 // well, this is just a better namespace...
 struct config {
-    static const std::string installMark;
-    static const std::string libandroid;
-    static const std::string library;
-    static const std::string tmpBinary;
-    static const std::string newBinary;
-    static const std::string backupBinary;
-    static const std::string origBinary;
-    static const std::string installerBinary;
+    static const std::string installMarkPath;
+    static const std::string libandroidPath;
+    static const std::string installedLibraryPath;
+    static const std::string temporaryAppProcessPath;
+    static const std::string newAppProcessPath;
+    static const std::string backupAppProcessPath;
+    static const std::string originalAppProcessPath;
+    static const std::string installerPath;
     static const std::string apkSystemPath;
-    static const std::string content;
+    static const std::string wrapperScriptContent;
 };
 
 #endif
