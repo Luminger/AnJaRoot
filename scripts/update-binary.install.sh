@@ -137,6 +137,9 @@ chmod 755 $INSTALLER || abort
 
 if [ -f "$OLD_INSTALLER" ]
 then
+    printnl 'Preparing old installer...'
+    chmod 755 $OLD_INSTALLER || abort
+
     printnl 'Cleaning away previous installation...'
     "$OLD_INSTALLER" --uninstall || abort
 else
