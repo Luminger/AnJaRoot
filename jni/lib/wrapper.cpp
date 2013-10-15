@@ -32,7 +32,9 @@
 #include "helper.h"
 #include "hook.h"
 
-static const char* className = "org/failedprojects/anjaroot/library/internal/NativeMethods";
+// can't be changed as the library is distributed with that package
+static const char* className =
+        "org/failedprojects/anjaroot/library/internal/NativeMethods";
 
 jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
 {

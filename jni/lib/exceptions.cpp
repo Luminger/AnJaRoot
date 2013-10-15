@@ -23,6 +23,7 @@
 
 namespace exceptions {
 
+// none can't be changed as the library is distributed with that package
 static const char* ClassNotFoundName = "java/lang/NoClassDefFoundError";
 static const char* MethodNotFoundName = "java/lang/NoSuchMethodError";
 static const char* NativeName = "org/failedprojects/anjaroot/library/exceptions/NativeException";
