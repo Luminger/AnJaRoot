@@ -30,7 +30,6 @@
 
 #include "exceptions.h"
 #include "helper.h"
-#include "hook.h"
 
 // can't be changed as the library is distributed with that package
 static const char* className =
@@ -239,24 +238,6 @@ jintArray jni_getversion(JNIEnv* env, jclass cls)
     return retval;
 }
 
-jbooleanArray jni_getstatus(JNIEnv* env, jclass cls)
-{
-    jbooleanArray retval = env->NewBooleanArray(3);
-    if(retval == NULL) {
-        // OOM exception thrown
-        return NULL;
-    }
-
-    jboolean buf[3] = {
-        hook::Hooked,
-        hook::AlreadyRun,
-        hook::Granted
-    };
-
-    env->SetBooleanArrayRegion(retval, 0, 3, buf);
-    return retval;
-}
-
 void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl)
 {
     // We are at apilvl 1, nothing to do here =)
@@ -271,7 +252,6 @@ static JNINativeMethod methods[] = {
     {"getresgid", "()[J", (void *) jni_getresgid},
     {"setresgid", "(JJJ)V", (void *) jni_setresgid},
     {"getversion", "()[I", (void *) jni_getversion},
-    {"getstatus", "()[Z", (void *) jni_getstatus},
     {"setcompatmode", "(I)V", (void *) jni_setcompatmode},
 };
 

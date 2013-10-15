@@ -17,8 +17,6 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "hook.h"
-
 #include <system_error>
 #include <dlfcn.h>
 #include <stdlib.h>
@@ -34,9 +32,7 @@ static const helper::Capabilities rootCapabilities(0xFFFFFFFF, 0xFFFFFFFF, 0);
 static const helper::UserIds rootUids(0, 0, 0);
 static const helper::GroupIds rootGids(0, 0, 0);
 
-bool hook::Hooked= false;
-bool hook::AlreadyRun = false;
-bool hook::Granted = false;
+bool executedHookedFunction = false;
 
 typedef int (*capset_type)(cap_user_header_t, const cap_user_data_t);
 static capset_type orig_capset;
@@ -49,7 +45,6 @@ static void constructor()
     orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_NEXT, "capset"));
     if(orig_capset != NULL)
     {
-        hook::Hooked = true;
         util::logVerbose("Found original capset()");
         return;
     }
@@ -83,15 +78,14 @@ bool isGranted(uid_t uid)
 int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
 {
     util::logVerbose("capset() called");
-    if(hook::Hooked && hook::AlreadyRun)
+    if(executedHookedFunction)
     {
         util::logVerbose("unhooked capset() called");
         return orig_capset(hdrp, datap);
     }
 
     util::logVerbose("hooked capset() called");
-    // Set alreadyRun to false to prefent later abuse of our hook
-    hook::AlreadyRun = true;
+    executedHookedFunction = true;
 
     try
     {
@@ -103,8 +97,8 @@ int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
         helper::setUserIds(rootUids);
         helper::setGroupIds(rootGids);
 
-        hook::Granted = isGranted(origUids.ruid);
-        if(!hook::Granted)
+        bool granted = isGranted(origUids.ruid);
+        if(granted)
         {
             util::logVerbose("Process is not a target");
             helper::setGroupIds(origGids);
