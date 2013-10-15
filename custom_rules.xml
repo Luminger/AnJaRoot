@@ -71,7 +71,6 @@
         </exec>
     </target>
     <target name="uninstall-updatezip">
-        <mkdir dir="${anjaroot.updatezip.dir}"/>
         <mkdir dir="${anjaroot.release.dir}"/>
         <mkdir dir="${anjaroot.updatezip.dir.uninstall}/META-INF/com/google/android/"/>
         <copy tofile="${anjaroot.updatezip.dir.uninstall}/META-INF/com/google/android/update-binary"
