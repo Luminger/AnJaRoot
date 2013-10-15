@@ -221,7 +221,6 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     // final CRC32 checks, again we may have failed hard. While that's pretty
     // unlikely, we are fiddeling with the system core here. It's worth to have
     // another safety check to be sure we don't mess the device up.
-    // TODO: a CRC32 check for our wrapper script would be nice also
     bool newEqual = hash::CRC32::compareFiles(config::backupAppProcessPath,
             config::newAppProcessPath);
     if(!newEqual)
