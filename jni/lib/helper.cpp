@@ -22,6 +22,7 @@
 #include "shared/util.h"
 
 #include "helper.h"
+#include "syscallfix.h"
 
 namespace helper {
 
@@ -85,7 +86,7 @@ UserIds getUserIds()
 {
     UserIds uids;
 
-    int ret = getresuid(&uids.ruid, &uids.euid, &uids.suid);
+    int ret = local_getresuid(&uids.ruid, &uids.euid, &uids.suid);
     if(ret != 0)
     {
         util::logError("getresuid failed: errno=%d, err=%s",
@@ -122,7 +123,7 @@ GroupIds getGroupIds()
 {
     GroupIds gids;
 
-    int ret = getresgid(&gids.rgid, &gids.egid, &gids.sgid);
+    int ret = local_getresgid(&gids.rgid, &gids.egid, &gids.sgid);
     if(ret != 0)
     {
         util::logError("getresgid failed: errno=%d, err=%s",

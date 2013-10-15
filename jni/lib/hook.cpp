@@ -41,11 +41,21 @@ bool hook::Granted = false;
 typedef int (*capset_type)(cap_user_header_t, const cap_user_data_t);
 static capset_type orig_capset;
 
- __attribute__((constructor))
+ __attribute__((constructor (65535)))
 static void constructor()
 {
     util::logVerbose("AnJaRoot %s loaded", version::asString().c_str());
 
+    orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_NEXT, "capset"));
+    if(orig_capset != NULL)
+    {
+        hook::Hooked = true;
+        util::logVerbose("Found original capset()");
+        return;
+    }
+
+    util::logError("Failed to get original capset(), abort!");
+    abort();
 }
 
 bool isGranted(uid_t uid)
@@ -70,29 +80,9 @@ bool isGranted(uid_t uid)
     return granter.isGranted(*target);
 }
 
-void prepareIfNeeded()
-{
-    if(orig_capset)
-    {
-        return;
-    }
-
-    orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_NEXT, "capset"));
-    if(orig_capset != NULL)
-    {
-        hook::Hooked = true;
-        util::logVerbose("Found original capset()");
-        return;
-    }
-
-    util::logError("Failed to get original capset(), abort!");
-    abort();
-}
-
 int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
 {
     util::logVerbose("capset() called");
-    prepareIfNeeded();
     if(hook::Hooked && hook::AlreadyRun)
     {
         util::logVerbose("unhooked capset() called");
