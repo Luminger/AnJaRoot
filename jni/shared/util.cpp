@@ -17,13 +17,44 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
+#include <fstream>
+#include <sstream>
+#include <stdio.h>
+
 #include "util.h"
+
+static std::ofstream logstream;
 
 namespace util {
 
 void log(android_LogPriority prio, const char* format, va_list vargs)
 {
-    __android_log_vprint(prio, ANJAROOT_LOGTAG, format, vargs);
+    if(logstream.is_open())
+    {
+        char buf[1024];
+        std::size_t size = vsnprintf(buf, sizeof(buf), format, vargs);
+        if(size > 0)
+        {
+            char timestr[128] = {0, };
+            time_t now;
+            struct tm* tinfo;
+
+            time(&now);
+            tinfo = localtime(&now);
+
+            strftime(timestr, sizeof(timestr), "%Y-%m-%dT%H:%M:%S%z", tinfo);
+
+            std::stringstream strstream;
+            strstream << "[" << timestr << "][" << prio << "] " << buf <<
+                std::endl;
+
+            logstream << strstream.str();
+        }
+    }
+    else
+    {
+        __android_log_vprint(prio, ANJAROOT_LOGTAG, format, vargs);
+    }
 }
 
 void logError(const char* format, ...)
@@ -44,6 +75,14 @@ void logVerbose(const char* format, ...)
     log(ANDROID_LOG_VERBOSE, format, vargs);
 
     va_end(vargs);
+}
+
+void setupFileLogging(const char* file)
+{
+    // TODO a logrotate would be cool, otherwise we have to truncate...
+    logstream.open(file, std::ios::trunc);
+    // disable buffering, we would loose data, it's static and never closed
+    logstream.rdbuf()->pubsetbuf(0, 0);
 }
 
 }

@@ -26,6 +26,7 @@ namespace util {
     void log(android_LogPriority prio, const char* format, va_list vargs);
     void logError(const char* format, ...);
     void logVerbose(const char* format, ...);
+    void setupFileLogging(const char* file);
 }
 
 #endif

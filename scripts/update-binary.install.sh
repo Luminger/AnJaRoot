@@ -55,7 +55,7 @@ APK_ZIP=$TMPDIR/AnJaRoot.apk
 APK_SYS='/data/app/org.failedprojects.anjaroot-*.apk'
 
 OLD_INSTALLER="/system/bin/anjarootinstaller"
-
+export ANJAROOT_LOG_PATH="/cache/AnJaRoot.log"
 
 # UTILITY FUNCTIONS
 printnl(){
@@ -71,11 +71,15 @@ debug(){
 }
 
 cleanup(){
-    printnl 'Cleanup...'
-    rm -r $TMPDIR
+    if [ "$DEBUG" -ne '1' ]
+    then
+        printnl 'Cleanup...'
+        rm -r $TMPDIR
+    fi
 }
 
 abort(){
+    debug "Failed command returned: $?"
     cleanup
     printnl '************************'
     printnl ' ERROR: Install failed!'
@@ -125,6 +129,12 @@ LIBRARY="$TMPDIR/$CPU_ABI/libanjaroot.so"
 debug "INSTALLER: $INSTALLER"
 debug "LIBRARY: $LIBRARY"
 
+if [ -d "$TMPDIR" ]
+then
+    printnl "Remoing leftover tmp directory..."
+    rm -r $TMPDIR || abort
+fi
+
 printnl 'Mounting /system...'
 mount /system
 
@@ -166,6 +176,8 @@ else
         abort
     fi
 fi
+
+debug "APK: $APK"
 
 printnl 'Running installer...'
 "$INSTALLER" --install --srclibpath="$LIBRARY" --apkpath="$APK"|| abort

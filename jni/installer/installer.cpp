@@ -156,6 +156,20 @@ ModeSpec processArguments(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
+    const char* logpath = getenv("ANJAROOT_LOG_PATH");
+    if(logpath)
+    {
+        try
+        {
+            util::setupFileLogging(logpath);
+        }
+        catch(std::exception& e)
+        {
+            exit(-1);
+        }
+    }
+
+
     util::logVerbose("Installer (version %s) started",
             version::asString().c_str());
 

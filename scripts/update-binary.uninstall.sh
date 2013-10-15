@@ -49,6 +49,7 @@ COMMUNICATION_FD=$2
 UPDATEZIP_PATH=$3
 
 OLD_INSTALLER="/system/bin/anjarootinstaller"
+export ANJAROOT_LOG_PATH="/cache/AnJaRoot.log"
 
 # UTILITY FUNCTIONS
 printnl(){
@@ -64,6 +65,7 @@ debug(){
 }
 
 abort(){
+    debug "Failed command returned: $?"
     cleanup
     printnl '**************************'
     printnl ' ERROR: Uninstall failed!'
