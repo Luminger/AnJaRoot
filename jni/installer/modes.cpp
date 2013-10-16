@@ -50,6 +50,15 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
         return FAIL;
     }
 
+    // this install process will break when libpath is identical to its final
+    // place, refuse to install if this happens.
+    if(libpath == config::installedLibraryPath)
+    {
+        util::logError("Provided sourcelibpath is identical to the final "
+                "place in the system. Move it somewhere else!");
+        return FAIL;
+    }
+
     struct stat origst;
     struct stat libst;
 
@@ -294,8 +303,10 @@ ReturnCode uninstall()
 
     try
     {
-        operations::move(config::newAppProcessPath, config::originalAppProcessPath);
-        util::logVerbose("Moved %s back to %s", config::newAppProcessPath.c_str(),
+        operations::move(config::newAppProcessPath,
+                config::originalAppProcessPath);
+        util::logVerbose("Moved %s back to %s",
+                config::newAppProcessPath.c_str(),
                 config::originalAppProcessPath.c_str());
     }
     catch(std::exception& e)
@@ -363,7 +374,7 @@ ReturnCode recoveryInstall(const std::string& apkpath)
     try
     {
         operations::mkdir("/cache/recovery/", 0770);
-        operations::chmod("/cache/recovery/", 0770); // dir may already be existing
+        operations::chmod("/cache/recovery/", 0770); // dir may already exist
         operations::chown("/cache/recovery/", "system", "cache");
     }
     catch(std::exception& e)
