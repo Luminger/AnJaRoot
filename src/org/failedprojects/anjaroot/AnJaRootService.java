@@ -77,7 +77,7 @@ public class AnJaRootService extends Service {
 	private class ServiceImplementation extends IAnJaRootService.Stub {
 		@Override
 		public boolean requestAccess() throws RemoteException {
-			boolean installed = AnJaRoot.isAccessPossible();
+			boolean installed = AnJaRoot.isInstalled();
 			if (!installed) {
 				Log.e(LOGTAG,
 						"AnJaRoot is not accesssable, requesting access is not allowed.");

@@ -28,34 +28,26 @@
 #include "packages.h"
 #include "helper.h"
 
+static const char* packageName = "org.failedprojects.anjaroot";
+
 static const helper::Capabilities rootCapabilities(0xFFFFFFFF, 0xFFFFFFFF, 0);
 static const helper::UserIds rootUids(0, 0, 0);
 static const helper::GroupIds rootGids(0, 0, 0);
 static bool executedHookedFunction = false;
 
 typedef int (*capset_type)(cap_user_header_t, const cap_user_data_t);
-static capset_type orig_capset;
+static capset_type orig_capset = NULL;
 
  __attribute__((constructor (65535)))
 static void constructor()
 {
     util::logVerbose("AnJaRoot %s loaded", version::asString().c_str());
-
-    orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_NEXT, "capset"));
-    if(orig_capset != NULL)
-    {
-        util::logVerbose("Found original capset()");
-        return;
-    }
-
-    util::logError("Failed to get original capset(), abort!");
-    abort();
 }
 
 bool isGranted(uid_t uid)
 {
     packages::PackageList pkgs;
-    const packages::Package* anjaroot = pkgs.findByName("org.failedprojects.anjaroot");
+    const packages::Package* anjaroot = pkgs.findByName(packageName);
 
     if(anjaroot == NULL)
     {
@@ -77,6 +69,20 @@ bool isGranted(uid_t uid)
 int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
 {
     util::logVerbose("capset() called");
+
+    if(orig_capset == NULL)
+    {
+        orig_capset = reinterpret_cast<capset_type>(dlsym(RTLD_NEXT, "capset"));
+        if(orig_capset == NULL)
+        {
+            util::logError("Failed to get original capset(), abort!");
+            abort();
+        }
+        else
+
+        util::logVerbose("Found original capset()");
+    }
+
     if(executedHookedFunction)
     {
         util::logVerbose("unhooked capset() called");

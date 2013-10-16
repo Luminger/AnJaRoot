@@ -4,17 +4,23 @@ import org.failedprojects.anjaroot.library.AnJaRoot;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 
-public class MainActivity extends FragmentActivity {
+public class MainActivity extends ActionBarActivity {
+	private ActionBar ab;
+
 	@Override
 	protected void onCreate(Bundle arg0) {
 		super.onCreate(arg0);
 
 		setContentView(R.layout.activity_main);
 
+		ab = getSupportActionBar();
+		ab.setTitle(R.string.anjaroot);
+
 		Fragment fragment;
-		boolean installed = AnJaRoot.isAccessPossible();
+		boolean installed = AnJaRoot.isInstalled();
 		if (installed) {
 			fragment = PackagesFragment.newInstance();
 		} else {

@@ -157,7 +157,10 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 		pa.clear();
 
 		storage.forceReload();
-		pa.addAll(storage.getPackages());
+
+		for (String pkg : storage.getPackages()) {
+			pa.add(pkg);
+		}
 		storage.startObserving(this);
 	}
 
@@ -254,7 +257,10 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 			public void run() {
 				PackagesAdapter pa = (PackagesAdapter) getListAdapter();
 				pa.clear();
-				pa.addAll(storage.getPackages());
+
+				for (String pkg : storage.getPackages()) {
+					pa.add(pkg);
+				}
 			}
 		});
 	}
