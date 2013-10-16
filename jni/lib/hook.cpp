@@ -31,8 +31,7 @@
 static const helper::Capabilities rootCapabilities(0xFFFFFFFF, 0xFFFFFFFF, 0);
 static const helper::UserIds rootUids(0, 0, 0);
 static const helper::GroupIds rootGids(0, 0, 0);
-
-bool executedHookedFunction = false;
+static bool executedHookedFunction = false;
 
 typedef int (*capset_type)(cap_user_header_t, const cap_user_data_t);
 static capset_type orig_capset;
