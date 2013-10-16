@@ -90,27 +90,46 @@ abort(){
     exit 1
 }
 
+# From: http://stackoverflow.com/a/8811800/180242
+# contains(string, substring)
+#
+# Returns 0 if the specified string contains the specified substring,
+# otherwise returns 1.
+contains() {
+    string="$1"
+    substring="$2"
+    if test "${string#*$substring}" != "$string"
+    then
+        return 0    # $substring is in $string
+    else
+        return 1    # $substring is not in $string
+    fi
+}
+
 discoverArch(){
-    debug 'Trying API extract from cpu.abi'
-    getArchFromOutput $(getprop ro.product.cpu.abi)
-    debug 'Trying API extract from cpu.abi2'
-    getArchFromOutput $(getprop ro.product.cpu.abi2)
+    # copied from libc/include/sys/_system_properties.h (bionic repo), stable
+    # since Gingerbread release.
+    FILES_TO_SEARCH="/default.prop
+                     /system/build.prop
+                     /system/default.prop
+                     /data/local.prop
+                     /factory/factory.prop"
+
+    for FILE in $FILES_TO_SEARCH
+    do
+        while read LINE
+        do
+            contains $LINE "=mips" && CPU_ABI="mips"
+            contains $LINE "=armeabi" && CPU_ABI="armeabi"
+            contains $LINE "=x86" && CPU_ABI="x86"
+        done < $FILE
+    done
 
     if [ -z "$CPU_ABI" ]
     then
         printnl 'No valid ABI found!'
         abort
     fi
-}
-
-getArchFromOutput(){
-    debug "Input: $1"
-    case $1 in
-        mips|armeabi|x86)
-            CPU_ABI=$1;
-            debug 'Matched!'
-            ;;
-    esac
 }
 
 # INSTALLER
