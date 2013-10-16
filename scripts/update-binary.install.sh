@@ -41,8 +41,6 @@
 # //
 
 # GLOBAL VARIABLES
-DEBUG=0
-
 SELF=$0
 RECOVERY_VERSION=$1
 COMMUNICATION_FD=$2
@@ -55,27 +53,32 @@ APK_ZIP=$TMPDIR/AnJaRoot.apk
 APK_SYS='/data/app/org.failedprojects.anjaroot-*.apk'
 
 OLD_INSTALLER="/system/bin/anjarootinstaller"
-export ANJAROOT_LOG_PATH="/cache/AnJaRoot.log"
+
+ANJAROOT_STDOUT_PATH="/cache/AnJaRoot.stdout.log"
+ANJAROOT_STDERR_PATH="/cache/AnJaRoot.stderr.log"
+ANJAROOT_DEBUG_PATH="/cache/AnJaRoot.debug.log"
+export ANJAROOT_LOG_PATH="/cache/AnJaRoot.installer.log"
+
+# redirect stdout and stderr to logfiles
+exec 1> $ANJAROOT_STDOUT_PATH
+exec 2> $ANJAROOT_STDERR_PATH
+
+# open debug log
+exec 64> $ANJAROOT_DEBUG_PATH
 
 # UTILITY FUNCTIONS
 printnl(){
-    echo -e "ui_print $1\n" > /proc/self/fd/$COMMUNICATION_FD
-    echo -e 'ui_print\n' > /proc/self/fd/$COMMUNICATION_FD
+    echo -e "ui_print $1\n" >&$COMMUNICATION_FD
+    echo -e 'ui_print\n' >&$COMMUNICATION_FD
 }
 
 debug(){
-    if [ "$DEBUG" -eq '1' ]
-    then
-        printnl "DEBUG: $1"
-    fi
+    echo $1 >&64
 }
 
 cleanup(){
-    if [ "$DEBUG" -ne '1' ]
-    then
-        printnl 'Cleanup...'
-        rm -r $TMPDIR
-    fi
+    printnl 'Cleanup...'
+    rm -r $TMPDIR
 }
 
 abort(){
