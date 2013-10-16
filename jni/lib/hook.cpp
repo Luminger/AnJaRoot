@@ -97,7 +97,7 @@ int capset(cap_user_header_t hdrp, const cap_user_data_t datap)
         helper::setGroupIds(rootGids);
 
         bool granted = isGranted(origUids.ruid);
-        if(granted)
+        if(!granted)
         {
             util::logVerbose("Process is not a target");
             helper::setGroupIds(origGids);
