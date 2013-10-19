@@ -2,8 +2,8 @@
 <resources>
 
     <string name="anjaroot">AnJaRoot</string>
-    <string name="permission_description">Permission Description</string>
-    <string name="permission_label">Permission Label</string>
+    <string name="permission_description">unrestricted (superuser) access to device</string>
+    <string name="permission_label">AnJaRoot grants, if you confirmed this, unrestricted access to your device, including sensitive parts of your device. This permission is potentially dangerous.</string>
 
     <!-- Installer.java -->
     <string name="installer_working_title">AnJaRoot</string>
@@ -17,6 +17,7 @@
 
     <!-- packages_list_menu.xml -->
     <string name="action_delete_all">Delete all items</string>
+    <string name="action_info">Info</string>
     <string name="action_buy_donate">Buy Donate Version</string>
 
     <!-- PackagesFragment.java -->
@@ -25,7 +26,7 @@
     <string name="packages_list_delete_all_positive">Revoke</string>
     <string name="packages_list_delete_all_negative">Cancel</string>
     <string name="packages_list_delete_single_title">Confirmation</string>
-    <string name="packages_list_delete_single_msg">Revoke permission for %s? This will stop the app violently if currently running.</string>
+    <string name="packages_list_delete_single_msg">Revoke permission for %s? This will stop the app violently if it\'s currently running.</string>
     <string name="packages_list_delete_single_positive">Revoke</string>
     <string name="packages_list_delete_single_negative">Cancel</string>
 
@@ -50,11 +51,16 @@
     <string name="request_activity_deny_btn_text">Deny</string>
     <string name="request_activity_grant_btn_text">Grant</string>
     <string name="request_activity_icon_description">Requester Icon</string>
-    <string name="request_activity_title_text">%s requests AnJaRoot-Access</string>
+    <string name="request_activity_title_text">%s requests Access</string>
     <string name="request_activity_description_text">Warning: This will allow the requester to execute commands as \'root\'. If you don\'t know what this is, deny this request.\n\nDenying will prevent the app from issuing a request again within 5 seconds to prevent spam.</string>
     <string name="request_activity_app_name">%s</string>
 
     <!-- packages_list_item.xml -->
     <string name="packages_list_item_icon_description">Package Icon</string>
+
+    <!-- info_fragment.xml -->
+    <string name="info_icon_description">AnJaRoot Logo</string>
+    <string name="info_version">Version %1$s (Native: %2$s)</string>
+    <string name="info_text">AnJaRoot is licensed under the GPLv3. You can download the source, the library and other resources at http:\/\/www.anjaroot.net.</string>
 
 </resources>

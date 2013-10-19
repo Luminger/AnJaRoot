@@ -174,7 +174,7 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		return inflater.inflate(R.layout.packages_list, null);
+		return inflater.inflate(R.layout.packages_list, container, false);
 	}
 
 	@Override
@@ -213,6 +213,10 @@ public class PackagesFragment extends ListFragment implements OnChangeHandler {
 			intent.setData(Uri
 					.parse("market://details?id=org.failedprojects.anjaroot.donate"));
 			startActivity(intent);
+			return true;
+		case R.id.action_info:
+			MainActivity activity = (MainActivity) getActivity();
+			activity.openInfoFragment();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);

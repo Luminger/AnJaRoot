@@ -4,6 +4,7 @@ import org.failedprojects.anjaroot.library.AnJaRoot;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 
@@ -29,5 +30,16 @@ public class MainActivity extends ActionBarActivity {
 
 		getSupportFragmentManager().beginTransaction()
 				.replace(R.id.main_activity_layout, fragment).commit();
+	}
+
+	public void openInfoFragment() {
+		InfoFragment fragment = InfoFragment.newInstance();
+
+		FragmentTransaction trans = getSupportFragmentManager()
+				.beginTransaction();
+		trans.replace(R.id.main_activity_layout, fragment);
+		trans.addToBackStack(null);
+		trans.setCustomAnimations(R.anim.abc_fade_in, R.anim.abc_fade_out);
+		trans.commit();
 	}
 }

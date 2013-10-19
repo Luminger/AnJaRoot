@@ -46,7 +46,7 @@
         android:text="@string/request_activity_app_name" />
 
     <LinearLayout
-        style="@style/Widget.AppCompat.ActionBar.Solid"
+        style="@style/Widget.AppCompat.ActionBar"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -54,11 +54,12 @@
 
         <Button
             android:id="@+id/deny_btn"
-            style="@style/Widget.AppCompat.ActionButton"
+            style="@style/Widget.AppCompat.ActionButton.CloseMode"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="50"
-            android:text="@string/request_activity_deny_btn_text" />
+            android:text="@string/request_activity_deny_btn_text"
+            android:textColor="#FFFFFF" />
 
         <Button
             android:id="@+id/grant_btn"
@@ -66,7 +67,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="50"
-            android:text="@string/request_activity_grant_btn_text" />
+            android:text="@string/request_activity_grant_btn_text"
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 
 </RelativeLayout>

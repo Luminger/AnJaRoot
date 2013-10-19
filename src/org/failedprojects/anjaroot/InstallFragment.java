@@ -59,7 +59,7 @@ public class InstallFragment extends Fragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
-		View v = inflater.inflate(R.layout.install_fragment, null);
+		View v = inflater.inflate(R.layout.install_fragment, container, false);
 		Button b = (Button) v.findViewById(R.id.install_fragment_install_btn);
 		b.setOnClickListener(new View.OnClickListener() {
 

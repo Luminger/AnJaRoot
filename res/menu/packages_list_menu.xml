@@ -8,6 +8,12 @@
         android:title="@string/action_delete_all"
         compat:showAsAction="always"/>
     <item
+        android:id="@+id/action_info"
+        android:icon="@android:drawable/ic_menu_info_details"
+        android:orderInCategory="150"
+        android:title="@string/action_info"
+        compat:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/action_buy_donate"
         android:orderInCategory="100"
         android:title="@string/action_buy_donate"
