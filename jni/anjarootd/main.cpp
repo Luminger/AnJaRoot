@@ -68,9 +68,6 @@ void startTrace(pid_t pid)
         util::logError("Failed to attach to process: %s", strerror(errno));
         throw std::system_error(errno, std::system_category());
     }
-
-    util::logVerbose("Waiting for process to stop...");
-    wait(NULL);
 }
 
 void setupChildTrace(pid_t pid)
@@ -96,7 +93,55 @@ void endTrace(pid_t pid)
     util::logVerbose("Detached from %d", pid);
 }
 
-void runMainLoop(pid_t zygote)
+bool handleInit(int status)
+{
+    util::logVerbose("init stopped, examining signal...");
+
+    siginfo_t sig;
+    int ret = ptrace(PTRACE_GETSIGINFO, initPid, NULL, &sig);
+    if(ret == -1)
+    {
+        util::logVerbose("Failed to get siginfo from init: %s",
+                strerror(errno));
+        return false;
+    }
+
+    if(sig.si_pid == zygotePid)
+    {
+        util::logVerbose("Init got signaled about zygote, swallowing");
+        int ret = ptrace(PTRACE_CONT, initPid, NULL, NULL);
+        if(ret == -1)
+        {
+            util::logError("Failed to continue init: %s", strerror(errno));
+            throw std::system_error(errno, std::system_category());
+        }
+    }
+    else
+    {
+        util::logVerbose("Init received something not interresting");
+    }
+
+    return true;
+}
+
+bool handleZygote(int status)
+{
+    if(WIFEXITED(status))
+    {
+        util::logVerbose("Zygote exited...");
+        return false;
+    }
+    else
+    {
+        util::logError("Bug detected, zygote shouldn't signal us, "
+                "status: %d", status);
+        return false;
+    }
+
+    return true;
+}
+
+void runMainLoop()
 {
     int status;
     while(shouldRun)
@@ -113,43 +158,17 @@ void runMainLoop(pid_t zygote)
         // handle zygote
         if(pid == initPid)
         {
-            util::logVerbose("init stopped, examining signal...");
-
-            siginfo_t sig;
-            int ret = ptrace(PTRACE_GETSIGINFO, initPid, NULL, &sig);
-            if(ret == -1)
+            bool ret = handleInit(status);
+            if(ret == false)
             {
-                util::logVerbose("Failed to get siginfo from init: %s",
-                        strerror(errno));
                 break;
-            }
-
-            if(sig.si_pid == zygote)
-            {
-                util::logVerbose("Init got signaled about zygote, swallowing");
-                int ret = ptrace(PTRACE_CONT, initPid, NULL, NULL);
-                if(ret == -1)
-                {
-                    util::logError("Failed to continue init: %s", strerror(errno));
-                    throw std::system_error(errno, std::system_category());
-                }
-            }
-            else
-            {
-                util::logVerbose("Init received something not interresting");
             }
         }
-        else if(pid == zygote)
+        else if(pid == zygotePid)
         {
-            if(WIFEXITED(status))
+            bool ret = handleZygote(status);
+            if(ret == false)
             {
-                util::logVerbose("Zygote exited...");
-                break;
-            }
-            else
-            {
-                util::logError("Bug detected, zygote shouldn't signal us, "
-                        "status: %d", status);
                 break;
             }
         }
@@ -159,6 +178,7 @@ void runMainLoop(pid_t zygote)
             util::logVerbose("Zygote forked new child with pid %d", pid);
             endTrace(pid);
         }
+        // handle everything else
         else
         {
             util::logError("Bug detected, something else happened, status %d",
@@ -212,18 +232,37 @@ int main(int argc, char** argv)
     util::logVerbose("Start tracing init...");
     startTrace(initPid);
 
+    int status;
+    pid_t init = wait(&status);
+    util::logVerbose("Init: %d Stoped: %d", init, WIFSTOPPED(status));
+
+    int ret = ptrace(PTRACE_CONT, initPid, NULL, NULL);
+    if(ret == -1)
+    {
+        util::logError("Failed to continue init: %s", strerror(errno));
+        throw std::system_error(errno, std::system_category());
+    }
+
+    util::logVerbose("Init is now traced...");
+
     // TODO handle zygote crash (reconnect on zygote failure)
     try
     {
-
         zygotePid = getZygotePid();
         util::logVerbose("Zygote pid: %d", zygotePid);
+
+        pid_t pid = wait(NULL);
+        util::logVerbose("Wait returned for: %d", pid);
+        util::logError("Wait returned: %s", strerror(errno));
+        pid = wait(NULL);
+        util::logVerbose("Wait returned for: %d", pid);
+        util::logError("Wait returned: %s", strerror(errno));
 
         startTrace(zygotePid);
         util::logVerbose("Zygote forks are now traced");
 
         setupChildTrace(zygotePid);
-        runMainLoop(zygotePid);
+        runMainLoop();
     }
     catch(std::exception& e)
     {

@@ -1,8 +1,19 @@
 LOCAL_PATH := $(call my-dir)
 
+ANJAROOTDAEMON_LOGTAG := AnJaRootDaemon
 ANJAROOTNATIVE_LOGTAG := AnJaRootNative
 ANJAROOTINSTALLER_LOGTAG := AnJaRootInstaller
 
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := anjarootd
+LOCAL_SRC_FILES := anjarootd/main.cpp \
+				   shared/util.cpp
+LOCAL_LDLIBS := -llog
+LOCAL_CPP_FEATURES := exceptions
+LOCAL_CPPFLAGS := -DANJAROOT_LOGTAG="\"$(ANJAROOTDAEMON_LOGTAG)\"" \
+				  -std=c++0x -Wall
+include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := anjaroot
