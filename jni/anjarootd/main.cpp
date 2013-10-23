@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "trace.h"
 #include "shared/util.h"
 
 bool shouldRun = true;

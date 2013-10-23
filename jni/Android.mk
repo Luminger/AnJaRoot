@@ -8,6 +8,7 @@ ANJAROOTINSTALLER_LOGTAG := AnJaRootInstaller
 include $(CLEAR_VARS)
 LOCAL_MODULE := anjarootd
 LOCAL_SRC_FILES := anjarootd/main.cpp \
+				   anjarootd/trace.cpp \
 				   shared/util.cpp
 LOCAL_LDLIBS := -llog
 LOCAL_CPP_FEATURES := exceptions
