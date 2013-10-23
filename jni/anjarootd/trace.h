@@ -31,7 +31,7 @@ namespace trace {
 
             pid_t getPid() const;
             bool detach() const;
-            void restart() const;
+            void resume() const;
             void setupChildTrace() const;
             unsigned long getEventMsg() const;
 
@@ -46,6 +46,7 @@ namespace trace {
             void logDebugInfo() const;
 
             pid_t getPid() const;
+            int getStatus() const;
             bool hasExited() const;
             int getExitStatus() const;
             bool wasSignaled() const;

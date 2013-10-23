@@ -21,9 +21,6 @@
 #include <linux/user.h>
 #include <signal.h>
 #include <sys/ptrace.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/un.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -57,7 +54,7 @@ bool trace::Tracee::detach() const
     return true;
 }
 
-void trace::Tracee::restart() const
+void trace::Tracee::resume() const
 {
     int ret = ptrace(PTRACE_CONT, pid, NULL, NULL);
     if(ret == -1)
@@ -111,6 +108,11 @@ void trace::WaitResult::logDebugInfo() const
 pid_t trace::WaitResult::getPid() const
 {
     return pid;
+}
+
+int trace::WaitResult::getStatus() const
+{
+    return status;
 }
 
 bool trace::WaitResult::hasExited() const
