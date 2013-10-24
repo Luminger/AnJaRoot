@@ -144,6 +144,7 @@ bool handleZygote(trace::Tracee::List& forks, const trace::WaitResult& res,
         {
             pid_t newpid = zygote->getEventMsg();
             util::logVerbose("Zygote has forked a new child: %d", newpid);
+            res.logDebugInfo();
 
             trace::Tracee::Ptr child = trace::Tracee::Ptr(
                     new trace::Tracee(newpid));
@@ -177,12 +178,6 @@ bool handleZygote(trace::Tracee::List& forks, const trace::WaitResult& res,
             return false;
         }
     }
-    else
-    {
-        util::logError("Bug detected, zygote shouldn't signal us");
-        res.logDebugInfo();
-        return false;
-    }
 
     return true;
 }
@@ -194,33 +189,56 @@ bool handleTracee(trace::Tracee::List::iterator tracee,
 
     if(res.hasExited())
     {
-        util::logVerbose("Child exited");
+        util::logVerbose("Zygote child exited");
         res.logDebugInfo();
 
-        tracee->get()->detach();
         forks.erase(tracee);
         return true;
     }
     else if(res.inSyscall())
     {
-        util::logVerbose("Child signaled syscall");
+        util::logVerbose("Zygote child signaled syscall");
 
-        tracee->get()->detach();
         forks.erase(tracee);
 
         return true;
     }
     else if(res.getStopSignal() == SIGSTOP)
     {
-        util::logVerbose("Child was stopped by SIGSTOP");
+        util::logVerbose("Zygote child was stopped by SIGSTOP");
         tracee->get()->waitForSyscallResume();
+        return true;
+    }
+    else if(res.wasSignaled() && res.getTermSignal() != 0)
+    {
+        util::logVerbose("Zygote Child received term signal %d, detaching",
+                res.getTermSignal());
+
+        auto comperator = [&] (trace::Tracee::Ptr tracee)
+        { return tracee->getPid() == res.getPid(); };
+        trace::Tracee::List::iterator found = std::find_if(forks.begin(),
+                forks.end(), comperator);
+
+        if(found != forks.end())
+        {
+            forks.erase(found);
+            return true;
+        }
+
+        return false;
+    }
+    else if(res.wasSignaled() && res.getStopSignal() != 0)
+    {
+        util::logVerbose("Zygote Child received stop signal %d, deliver it",
+                res.getStopSignal());
+        tracee->get()->resume(res.getStopSignal());
         return true;
     }
     else
     {
         util::logError("Bug detected in handleTracee, something else happened");
         res.logDebugInfo();
-        return false;
+        return true;
     }
 }
 
@@ -238,38 +256,44 @@ void runMainLoop(trace::Tracee::Ptr zygote, trace::Tracee::List& forks)
             continue;
         }
 
+        bool handled = true;
         // handle zygote
         if(res.getPid() == zygote->getPid())
         {
-            bool ret = handleZygote(forks, res, zygote);
-            if(ret)
-            {
-                continue;
-            }
-            break;
+            handled = handleZygote(forks, res, zygote);
         }
-
-        // handle (possible) zygotes fork stops
-        auto comperator = [&] (trace::Tracee::Ptr tracee)
-        { return tracee->getPid() == res.getPid(); };
-        trace::Tracee::List::iterator found = std::find_if(forks.begin(),
-                forks.end(), comperator);
-
-        if(found != forks.end())
+        else if(res.getStopSignal() == SIGSTOP)
         {
-            bool ret = handleTracee(found, forks, res);
-            if(ret)
-            {
-                continue;
-            }
-            break;
+            util::logVerbose("Someone with pid %d stopped, ignore him",
+                    res.getPid());
+            res.logDebugInfo();
+            handled = true;
         }
         else
         {
-            util::logError("Bug detected in mainloop, something else happened");
-            res.logDebugInfo();
-            break;
+            // handle (possible) zygotes fork stops
+            auto comperator = [&] (trace::Tracee::Ptr tracee)
+            { return tracee->getPid() == res.getPid(); };
+            trace::Tracee::List::iterator found = std::find_if(forks.begin(),
+                    forks.end(), comperator);
+
+            if(found != forks.end())
+            {
+                handled = handleTracee(found, forks, res);
+            }
+            else
+            {
+                util::logError("Bug detected in mainloop, something else happened");
+                res.logDebugInfo();
+                break;
+            }
         }
+
+        if(handled)
+        {
+            continue;
+        }
+        break;
     }
 }
 
