@@ -27,7 +27,7 @@
 #include "trace.h"
 #include "shared/util.h"
 
-trace::Tracee::Tracee(pid_t pid_) : pid(pid_), inSyscall(false)
+trace::Tracee::Tracee(pid_t pid_) : pid(pid_)
 {
 }
 
@@ -174,6 +174,11 @@ int trace::WaitResult::getStopSignal() const
 int trace::WaitResult::getEvent() const
 {
     return status >> 16;
+}
+
+bool trace::WaitResult::inSyscall() const
+{
+    return getStopSignal() == (SIGTRAP | 0x80);
 }
 
 trace::Tracee::Ptr trace::attach(pid_t pid)

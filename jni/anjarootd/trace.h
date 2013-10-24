@@ -43,7 +43,6 @@ namespace trace {
 
         private:
             pid_t pid;
-            bool inSyscall;
     };
 
     class WaitResult
@@ -62,6 +61,7 @@ namespace trace {
             bool hasStopped() const;
             int getStopSignal() const;
             int getEvent() const;
+            bool inSyscall() const;
 
         private:
             pid_t pid;

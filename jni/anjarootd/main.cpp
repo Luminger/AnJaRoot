@@ -181,15 +181,22 @@ bool handleTracee(trace::Tracee::List::iterator tracee,
         res.logDebugInfo();
 
         tracee->get()->detach();
-
         forks.erase(tracee);
         return true;
     }
+    else if(res.inSyscall())
+    {
+        util::logVerbose("Child signaled syscall");
 
-    // handle syscalls here
-    tracee->get()->detach();
-    forks.erase(tracee);
-    return true;
+        tracee->get()->setupSyscallTraceAndResume();
+        return true;
+    }
+    else
+    {
+        util::logError("Bug detected, something else happened");
+        res.logDebugInfo();
+        return false;
+    }
 }
 
 void runMainLoop(trace::Tracee::Ptr zygote, trace::Tracee::List& forks)
