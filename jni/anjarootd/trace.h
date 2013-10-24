@@ -20,23 +20,30 @@
 #ifndef _ANJAROOTD_PTRACE_H_
 #define _ANJAROOTD_PTRACE_H_
 
+#include <memory>
+#include <vector>
 #include <unistd.h>
 
 namespace trace {
     class Tracee
     {
         public:
+            typedef std::shared_ptr<Tracee> Ptr;
+            typedef std::vector<Ptr> List;
+
             Tracee(pid_t pid_);
             ~Tracee();
 
             pid_t getPid() const;
             bool detach() const;
             void resume() const;
+            void setupSyscallTraceAndResume() const;
             void setupChildTrace() const;
             unsigned long getEventMsg() const;
 
         private:
             pid_t pid;
+            bool inSyscall;
     };
 
     class WaitResult
@@ -61,7 +68,7 @@ namespace trace {
             int status;
     };
 
-    Tracee attach(pid_t);
+    Tracee::Ptr attach(pid_t);
     WaitResult waitChilds();
 }
 

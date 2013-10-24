@@ -27,7 +27,7 @@
 #include "trace.h"
 #include "shared/util.h"
 
-trace::Tracee::Tracee(pid_t pid_) : pid(pid_)
+trace::Tracee::Tracee(pid_t pid_) : pid(pid_), inSyscall(false)
 {
 }
 
@@ -60,6 +60,27 @@ void trace::Tracee::resume() const
     if(ret == -1)
     {
         util::logError("Failed to continue %d: %s", pid, strerror(errno));
+        throw std::system_error(errno, std::system_category());
+    }
+}
+
+void trace::Tracee::setupSyscallTraceAndResume() const
+{
+    // TODO: we don't need to do that on every resume...
+    int ret = ptrace(PTRACE_SETOPTIONS, pid, NULL,
+            reinterpret_cast<void*>(PTRACE_O_TRACESYSGOOD));
+    if(ret == -1)
+    {
+        util::logError("Failed to setup syscall signaling on %d: %s",
+                pid, strerror(errno));
+        throw std::system_error(errno, std::system_category());
+    }
+
+    ret = ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+    if(ret == -1)
+    {
+        util::logError("Failed to syscall resume %d: %s",
+                pid, strerror(errno));
         throw std::system_error(errno, std::system_category());
     }
 }
@@ -155,7 +176,7 @@ int trace::WaitResult::getEvent() const
     return status >> 16;
 }
 
-trace::Tracee trace::attach(pid_t pid)
+trace::Tracee::Ptr trace::attach(pid_t pid)
 {
     util::logVerbose("Attaching to %d...", pid);
     int ret = ptrace(PTRACE_ATTACH, pid, NULL, NULL);
@@ -165,7 +186,7 @@ trace::Tracee trace::attach(pid_t pid)
         throw std::system_error(errno, std::system_category());
     }
 
-    return Tracee(pid);
+    return Tracee::Ptr(new Tracee(pid));
 }
 
 trace::WaitResult trace::waitChilds()
