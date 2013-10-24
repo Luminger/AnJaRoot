@@ -37,6 +37,7 @@ namespace trace {
             pid_t getPid() const;
             bool detach() const;
             void resume(int signal = 0) const;
+            void waitForSyscallResume() const;
             void setupSyscallTraceAndResume() const;
             void setupChildTrace() const;
             unsigned long getEventMsg() const;

@@ -154,7 +154,6 @@ bool handleZygote(trace::Tracee::List& forks, const trace::WaitResult& res,
         {
             siginfo_t siginfo = zygote->getSignalInfo();
 
-
             util::logVerbose("SIGCHLD from %d for zygote received, deliver it",
                     siginfo.si_pid);
 
@@ -214,7 +213,7 @@ bool handleTracee(trace::Tracee::List::iterator tracee,
     else if(res.getStopSignal() == SIGSTOP)
     {
         util::logVerbose("Child was stopped by SIGSTOP");
-        tracee->get()->setupSyscallTraceAndResume();
+        tracee->get()->waitForSyscallResume();
         return true;
     }
     else

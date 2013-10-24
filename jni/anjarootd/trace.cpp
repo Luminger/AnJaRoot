@@ -64,9 +64,8 @@ void trace::Tracee::resume(int signal) const
     }
 }
 
-void trace::Tracee::setupSyscallTraceAndResume() const
+void trace::Tracee::waitForSyscallResume() const
 {
-    // TODO: we don't need to do that on every resume...
     int ret = ptrace(PTRACE_SETOPTIONS, pid, NULL,
             reinterpret_cast<void*>(PTRACE_O_TRACESYSGOOD));
     if(ret == -1)
@@ -75,8 +74,11 @@ void trace::Tracee::setupSyscallTraceAndResume() const
                 pid, strerror(errno));
         throw std::system_error(errno, std::system_category());
     }
+}
 
-    ret = ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+void trace::Tracee::setupSyscallTraceAndResume() const
+{
+    int ret = ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
     if(ret == -1)
     {
         util::logError("Failed to syscall resume %d: %s",
