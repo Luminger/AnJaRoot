@@ -36,10 +36,11 @@ namespace trace {
 
             pid_t getPid() const;
             bool detach() const;
-            void resume() const;
+            void resume(int signal = 0) const;
             void setupSyscallTraceAndResume() const;
             void setupChildTrace() const;
             unsigned long getEventMsg() const;
+            siginfo_t getSignalInfo() const;
 
         private:
             pid_t pid;

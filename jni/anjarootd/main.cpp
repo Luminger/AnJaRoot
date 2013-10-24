@@ -148,9 +148,27 @@ bool handleZygote(trace::Tracee::List& forks, const trace::WaitResult& res,
             trace::Tracee::Ptr child = trace::Tracee::Ptr(
                     new trace::Tracee(newpid));
             forks.push_back(child);
-
-            child->setupSyscallTraceAndResume();
             zygote->resume();
+        }
+        else if(res.getStopSignal() == SIGCHLD)
+        {
+            siginfo_t siginfo = zygote->getSignalInfo();
+
+
+            util::logVerbose("SIGCHLD from %d for zygote received, deliver it",
+                    siginfo.si_pid);
+
+            auto comperator = [&] (trace::Tracee::Ptr tracee)
+            { return tracee->getPid() == res.getPid(); };
+            trace::Tracee::List::iterator found = std::find_if(forks.begin(),
+                    forks.end(), comperator);
+
+            if(found != forks.end())
+            {
+                forks.erase(found);
+            }
+
+            zygote->resume(SIGCHLD);
         }
         else
         {
@@ -188,12 +206,20 @@ bool handleTracee(trace::Tracee::List::iterator tracee,
     {
         util::logVerbose("Child signaled syscall");
 
+        tracee->get()->detach();
+        forks.erase(tracee);
+
+        return true;
+    }
+    else if(res.getStopSignal() == SIGSTOP)
+    {
+        util::logVerbose("Child was stopped by SIGSTOP");
         tracee->get()->setupSyscallTraceAndResume();
         return true;
     }
     else
     {
-        util::logError("Bug detected, something else happened");
+        util::logError("Bug detected in handleTracee, something else happened");
         res.logDebugInfo();
         return false;
     }
@@ -217,10 +243,11 @@ void runMainLoop(trace::Tracee::Ptr zygote, trace::Tracee::List& forks)
         if(res.getPid() == zygote->getPid())
         {
             bool ret = handleZygote(forks, res, zygote);
-            if(ret == false)
+            if(ret)
             {
-                break;
+                continue;
             }
+            break;
         }
 
         // handle (possible) zygotes fork stops
@@ -232,14 +259,15 @@ void runMainLoop(trace::Tracee::Ptr zygote, trace::Tracee::List& forks)
         if(found != forks.end())
         {
             bool ret = handleTracee(found, forks, res);
-            if(ret == false)
+            if(ret)
             {
-                break;
+                continue;
             }
+            break;
         }
         else
         {
-            util::logError("Bug detected, something else happened");
+            util::logError("Bug detected in mainloop, something else happened");
             res.logDebugInfo();
             break;
         }
@@ -250,7 +278,7 @@ int main(int argc, char** argv)
 {
     setupSignalHandling();
 
-    trace::Tracee zygote = trace::Tracee(0);
+    trace::Tracee::Ptr zygote;
     trace::Tracee::List zygoteForks;
 
     // TODO handle zygote crash (reconnect on zygote failure)
@@ -259,7 +287,7 @@ int main(int argc, char** argv)
         pid_t zygotePid = getZygotePid();
         util::logVerbose("Zygote pid: %d", zygotePid);
 
-        trace::Tracee::Ptr zygote = trace::attach(zygotePid);
+        zygote = trace::attach(zygotePid);
         trace::WaitResult res = trace::waitChilds();
 
         if(res.getPid() != zygote->getPid())
@@ -279,8 +307,6 @@ int main(int argc, char** argv)
         util::logError("Failed: %s", e.what());
         return -1;
     }
-
-    zygote.detach();
 
     return 0;
 }

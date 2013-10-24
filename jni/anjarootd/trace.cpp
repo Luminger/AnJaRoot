@@ -54,9 +54,9 @@ bool trace::Tracee::detach() const
     return true;
 }
 
-void trace::Tracee::resume() const
+void trace::Tracee::resume(int signal) const
 {
-    int ret = ptrace(PTRACE_CONT, pid, NULL, NULL);
+    int ret = ptrace(PTRACE_CONT, pid, NULL, reinterpret_cast<void*>(signal));
     if(ret == -1)
     {
         util::logError("Failed to continue %d: %s", pid, strerror(errno));
@@ -111,6 +111,20 @@ unsigned long trace::Tracee::getEventMsg() const
     return result;
 }
 
+siginfo_t trace::Tracee::getSignalInfo() const
+{
+    siginfo_t result;
+    int ret = ptrace(PTRACE_GETSIGINFO, pid, NULL, &result);
+    if(ret == -1)
+    {
+        util::logError("Failed to get signal info from %d: %s", pid,
+                strerror(errno));
+        throw std::system_error(errno, std::system_category());
+    }
+
+    return result;
+}
+
 trace::WaitResult::WaitResult(pid_t pid_, int status_) : pid(pid_),
     status(status_)
 {
@@ -118,12 +132,12 @@ trace::WaitResult::WaitResult(pid_t pid_, int status_) : pid(pid_),
 
 void trace::WaitResult::logDebugInfo() const
 {
-    util::logError("PID: %d STATUS: %d EVENT: %d", pid, status, getEvent());
+    util::logError("PID: %d STATUS: %d EVENT: %d INSYSCALL: %d", pid, status,
+            getEvent(), inSyscall());
     util::logError("WIFEXITED: %d WEXITSTATUS: %d WIFSIGNALED: %d",
             hasExited(), getExitStatus(), wasSignaled());
     util::logError("WTERMSIG: %d WCOREDUMP: %d WIFSTOPPED: %d WSTOPSIG: %d",
             getTermSignal(), wasCoredumped(), hasStopped(), getStopSignal());
-    WIFEXITED(status), WEXITSTATUS(status), WIFSIGNALED(status), WTERMSIG(status), WCOREDUMP(status), WIFSTOPPED(status), WSTOPSIG(status);
 }
 
 pid_t trace::WaitResult::getPid() const
