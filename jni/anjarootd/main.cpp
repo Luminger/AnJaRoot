@@ -16,14 +16,13 @@
  * You should have received a copy of the GNU General Public License along with
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
-#include <algorithm>
 #include <system_error>
 
-#include <sys/ptrace.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
 
+#include "anjarootdaemon.h"
 #include "trace.h"
 #include "shared/util.h"
 
@@ -128,218 +127,18 @@ pid_t getZygotePid()
     return creds.pid;
 }
 
-bool handleZygote(trace::Tracee::List& forks, const trace::WaitResult& res,
-        trace::Tracee::Ptr zygote)
-{
-    if(res.hasExited())
-    {
-        util::logVerbose("Zygote exited...");
-        return false;
-    }
-
-    if(res.hasStopped())
-    {
-        util::logVerbose("Zygote stopped");
-
-        if(res.getEvent() == PTRACE_EVENT_FORK)
-        {
-            pid_t newpid = zygote->getEventMsg();
-            util::logVerbose("Zygote has forked a new child: %d", newpid);
-            res.logDebugInfo();
-
-            trace::Tracee::List::iterator found =
-                trace::Tracee::searchTraceeInList(newpid, forks);
-            if(found != forks.end())
-            {
-                // We have already received the SIGSTOP, continue the child
-                util::logVerbose("Zygote delivered fork event for known child");
-                found->get()->resume();
-            }
-            else
-            {
-                // Event received first, child will be continued in its handler
-                util::logVerbose("Zygote delivered fork event for a unknown "
-                        "child, will wait for its SIGSTOP");
-                trace::Tracee::Ptr child = trace::Tracee::Ptr(
-                        new trace::Tracee(newpid));
-                forks.push_back(child);
-            }
-
-            zygote->resume();
-        }
-        else if(res.getStopSignal() == SIGCHLD)
-        {
-            siginfo_t siginfo = zygote->getSignalInfo();
-
-            util::logVerbose("SIGCHLD from %d for zygote received, deliver it",
-                    siginfo.si_pid);
-
-            // TODO well, is that correct? We should check if the child has
-            // really exited, don't we?
-            trace::Tracee::List::iterator found =
-                trace::Tracee::searchTraceeInList(res.getPid(), forks);
-            if(found != forks.end())
-            {
-                found->get()->detach();
-                forks.erase(found);
-            }
-
-            zygote->resume(SIGCHLD);
-        }
-        // TODO deliver all other signals also to the zygote
-        else
-        {
-            util::logError("Bug detected, zygote shouldn't get stoped without "
-                    "child");
-            res.logDebugInfo();
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool handleTracee(trace::Tracee::List::iterator tracee,
-        trace::Tracee::List& forks, const trace::WaitResult& res)
-{
-    util::logVerbose("Zygote child %d waited...", res.getPid());
-
-    if(res.hasExited())
-    {
-        util::logVerbose("Zygote child exited");
-        res.logDebugInfo();
-
-        tracee->get()->detach();
-        forks.erase(tracee);
-        return true;
-    }
-    else if(res.inSyscall())
-    {
-        util::logVerbose("Zygote child signaled syscall");
-
-        tracee->get()->detach();
-        forks.erase(tracee);
-
-        return true;
-    }
-    else if(res.getStopSignal() == SIGSTOP)
-    {
-        util::logVerbose("Zygote child was stopped by SIGSTOP");
-
-        // we don't know if we have already setup the syscall tracing here
-        tracee->get()->setupSyscallTrace();
-        tracee->get()->waitForSyscallResume();
-        return true;
-    }
-    else if(res.wasSignaled() && res.getTermSignal() != 0)
-    {
-        util::logVerbose("Zygote Child received term signal %d, detaching",
-                res.getTermSignal());
-
-        auto comperator = [&] (trace::Tracee::Ptr tracee)
-        { return tracee->getPid() == res.getPid(); };
-        trace::Tracee::List::iterator found = std::find_if(forks.begin(),
-                forks.end(), comperator);
-
-        if(found != forks.end())
-        {
-            found->get()->detach();
-            forks.erase(found);
-            return true;
-        }
-
-        return false;
-    }
-    else if(res.wasSignaled() && res.getStopSignal() != 0)
-    {
-        util::logVerbose("Zygote Child received stop signal %d, deliver it",
-                res.getStopSignal());
-        tracee->get()->resume(res.getStopSignal());
-        return true;
-    }
-    else
-    {
-        util::logError("Bug detected in handleTracee, something else happened");
-        res.logDebugInfo();
-        return true;
-    }
-}
-
-void runMainLoop(trace::Tracee::Ptr zygote, trace::Tracee::List& forks)
-{
-    while(shouldRun)
-    {
-        util::logVerbose("Waiting for child action...");
-        trace::WaitResult res = trace::waitChilds();
-
-        if(res.getPid() == -1)
-        {
-            util::logVerbose("wait failed...");
-            res.logDebugInfo();
-            continue;
-        }
-
-        bool handled = true;
-        // handle zygote
-        if(res.getPid() == zygote->getPid())
-        {
-            handled = handleZygote(forks, res, zygote);
-        }
-        else
-        {
-            // handle (possible) zygotes fork stops
-            auto comperator = [&] (trace::Tracee::Ptr tracee)
-            { return tracee->getPid() == res.getPid(); };
-            trace::Tracee::List::iterator found = std::find_if(forks.begin(),
-                    forks.end(), comperator);
-
-            if(found != forks.end())
-            {
-                handled = handleTracee(found, forks, res);
-            }
-            else if(res.getStopSignal() == SIGSTOP)
-            {
-                // someone stopped we don't know about till now
-                util::logVerbose("Someone unknown stopped, add to internal list");
-                res.logDebugInfo();
-
-                trace::Tracee::Ptr child = trace::Tracee::Ptr(
-                        new trace::Tracee(res.getPid()));
-                child->setupSyscallTrace();
-                forks.push_back(child);
-
-                handled = true;
-            }
-            else
-            {
-                util::logError("Bug detected in mainloop, something else happened");
-                res.logDebugInfo();
-                handled = false;
-            }
-        }
-
-        if(handled)
-        {
-            continue;
-        }
-        break;
-    }
-}
-
 int main(int argc, char** argv)
 {
     setupSignalHandling();
 
-    trace::Tracee::Ptr zygote;
-    trace::Tracee::List zygoteForks;
-
+    // TODO we only want to run once, ensure that
     // TODO handle zygote crash (reconnect on zygote failure)
     try
     {
         pid_t zygotePid = getZygotePid();
         util::logVerbose("Zygote pid: %d", zygotePid);
 
-        zygote = trace::attach(zygotePid);
+        trace::Tracee::Ptr zygote = trace::attach(zygotePid);
         trace::WaitResult res = trace::waitChilds();
 
         if(res.getPid() != zygote->getPid())
@@ -352,18 +151,13 @@ int main(int argc, char** argv)
         util::logVerbose("Zygote forks are now traced");
         zygote->resume();
 
-        runMainLoop(zygote, zygoteForks);
+        AnJaRootDaemon(zygote).run(shouldRun);
     }
     catch(std::exception& e)
     {
         util::logError("Failed: %s", e.what());
         return -1;
     }
-
-    // detach from everybody
-    zygote->detach();
-    std::for_each(zygoteForks.begin(), zygoteForks.end(),
-            [] (trace::Tracee::Ptr x) { x->detach(); });
 
     return 0;
 }
