@@ -45,7 +45,8 @@ trace::Tracee::List::iterator AnJaRootDaemon::searchTracee(pid_t pid)
 
 void AnJaRootDaemon::run(const bool& shouldRun)
 {
-    while(shouldRun)
+    bool handled = true;
+    while(shouldRun && handled)
     {
         trace::WaitResult res = trace::waitChilds();
         if(res.getPid() == -1)
@@ -57,11 +58,9 @@ void AnJaRootDaemon::run(const bool& shouldRun)
                 res.logDebugInfo();
             }
 
-            continue;
+            handled = true;
         }
-
-        bool handled;
-        if(res.getPid() == zygote->getPid())
+        else if(res.getPid() == zygote->getPid())
         {
             handled = handleZygote(res);
         }
@@ -69,13 +68,6 @@ void AnJaRootDaemon::run(const bool& shouldRun)
         {
             handled = handleZygoteChild(res);
         }
-
-        if(handled)
-        {
-            continue;
-        }
-
-        break;
     }
 }
 
@@ -98,18 +90,10 @@ bool AnJaRootDaemon::handleZygote(const trace::WaitResult& res)
         return false;
     }
 
-    if(!res.hasStopped())
-    {
-        util::logVerbose("Whoops, zygote didn't stop?!?");
-        res.logDebugInfo();
-        return false;
-    }
-
     if(res.getEvent() == PTRACE_EVENT_FORK)
     {
         pid_t newpid = zygote->getEventMsg();
         util::logVerbose("Zygote has forked a new child: %d", newpid);
-        res.logDebugInfo();
 
         trace::Tracee::List::iterator found = searchTracee(newpid);
         if(found != zygoteForks.end())
@@ -213,18 +197,18 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
         return true;
     }
 
-    if(res.getStopSignal() == SIGSTOP)
+    if(res.hasStopped())
     {
-        util::logVerbose("Zygote child was stopped by SIGSTOP");
+        if(res.getStopSignal() == SIGSTOP)
+        {
+            util::logVerbose("Zygote child was stopped by SIGSTOP");
 
-        // we don't know if we have already setup the syscall tracing here
-        tracee->get()->setupSyscallTrace();
-        tracee->get()->waitForSyscallResume();
-        return true;
-    }
+            // we don't know if we have already setup the syscall tracing here
+            tracee->get()->setupSyscallTrace();
+            tracee->get()->waitForSyscallResume();
+            return true;
+        }
 
-    if(res.getStopSignal() != 0)
-    {
         util::logVerbose("Zygote child received stop signal %d, deliver it",
                 res.getStopSignal());
         tracee->get()->resume(res.getStopSignal());
@@ -235,4 +219,3 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
     res.logDebugInfo();
     return false;
 }
-
