@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License along with
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
+#include <algorithm>
 #include <system_error>
 #include <errno.h>
 #include <linux/user.h>
@@ -27,13 +28,20 @@
 #include "trace.h"
 #include "shared/util.h"
 
+trace::Tracee::List::iterator trace::Tracee::searchTraceeInList(pid_t pid,
+        trace::Tracee::List& list)
+{
+    auto comperator = [=] (Ptr tracee)
+    { return tracee->getPid() == pid; };
+    return std::find_if(list.begin(), list.end(), comperator);
+}
+
 trace::Tracee::Tracee(pid_t pid_) : pid(pid_)
 {
 }
 
 trace::Tracee::~Tracee()
 {
-    detach();
 }
 
 pid_t trace::Tracee::getPid() const
@@ -66,22 +74,22 @@ void trace::Tracee::resume(int signal) const
 
 void trace::Tracee::waitForSyscallResume() const
 {
-    int ret = ptrace(PTRACE_SETOPTIONS, pid, NULL,
-            reinterpret_cast<void*>(PTRACE_O_TRACESYSGOOD));
+    int ret = ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
     if(ret == -1)
     {
-        util::logError("Failed to setup syscall signaling on %d: %s",
+        util::logError("Failed to syscall resume %d: %s",
                 pid, strerror(errno));
         throw std::system_error(errno, std::system_category());
     }
 }
 
-void trace::Tracee::setupSyscallTraceAndResume() const
+void trace::Tracee::setupSyscallTrace() const
 {
-    int ret = ptrace(PTRACE_SYSCALL, pid, NULL, NULL);
+    int ret = ptrace(PTRACE_SETOPTIONS, pid, NULL,
+            reinterpret_cast<void*>(PTRACE_O_TRACESYSGOOD));
     if(ret == -1)
     {
-        util::logError("Failed to syscall resume %d: %s",
+        util::logError("Failed to setup syscall signaling on %d: %s",
                 pid, strerror(errno));
         throw std::system_error(errno, std::system_category());
     }
@@ -215,4 +223,11 @@ trace::WaitResult trace::waitChilds()
     int status;
     pid_t pid = wait(&status);
     return WaitResult(pid, status);
+}
+
+trace::WaitResult trace::waitChild(pid_t pid)
+{
+    int status;
+    pid_t retpid = waitpid(pid, &status, NULL);
+    return WaitResult(retpid, status);
 }

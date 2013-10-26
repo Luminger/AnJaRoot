@@ -13,7 +13,7 @@ LOCAL_SRC_FILES := anjarootd/main.cpp \
 LOCAL_LDLIBS := -llog
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_CPPFLAGS := -DANJAROOT_LOGTAG="\"$(ANJAROOTDAEMON_LOGTAG)\"" \
-				  -std=c++0x -Wall
+				  -std=c++11 -Wall
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
@@ -45,7 +45,7 @@ endif
 LOCAL_LDLIBS := -llog -ldl
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_CPPFLAGS := -DANJAROOT_LOGTAG="\"$(ANJAROOTNATIVE_LOGTAG)\"" \
-				  -std=c++0x -Wall
+				  -std=c++11 -Wall
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -70,5 +70,5 @@ LOCAL_LDLIBS := -llog -ldl -lz
 LOCAL_STATIC_LIBRARIES := minizip
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_CPPFLAGS := -DANJAROOT_LOGTAG="\"$(ANJAROOTINSTALLER_LOGTAG)\"" \
-				  -std=c++0x -Wall
+				  -std=c++11 -Wall
 include $(BUILD_EXECUTABLE)

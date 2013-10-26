@@ -31,6 +31,8 @@ namespace trace {
             typedef std::shared_ptr<Tracee> Ptr;
             typedef std::vector<Ptr> List;
 
+            static List::iterator searchTraceeInList(pid_t pid, List& list);
+
             Tracee(pid_t pid_);
             ~Tracee();
 
@@ -38,7 +40,7 @@ namespace trace {
             bool detach() const;
             void resume(int signal = 0) const;
             void waitForSyscallResume() const;
-            void setupSyscallTraceAndResume() const;
+            void setupSyscallTrace() const;
             void setupChildTrace() const;
             unsigned long getEventMsg() const;
             siginfo_t getSignalInfo() const;
@@ -70,8 +72,9 @@ namespace trace {
             int status;
     };
 
-    Tracee::Ptr attach(pid_t);
+    Tracee::Ptr attach(pid_t pid);
     WaitResult waitChilds();
+    WaitResult waitChild(pid_t pid);
 }
 
 #endif
