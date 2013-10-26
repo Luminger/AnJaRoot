@@ -22,7 +22,10 @@
 #include <errno.h>
 #include <sys/ptrace.h>
 
+#include <asm/unistd.h>
+
 #include "anjarootdaemon.h"
+#include "hook.h"
 #include "shared/util.h"
 
 AnJaRootDaemon::AnJaRootDaemon(trace::Tracee::Ptr zygote_) : zygote(zygote_)
@@ -85,7 +88,6 @@ bool AnJaRootDaemon::handleZygote(const trace::WaitResult& res)
         util::logVerbose("Zygote received termination signal: %d",
                 res.getTermSignal());
 
-        zygote->resume(res.getTermSignal());
         zygote->detach();
         return false;
     }
@@ -100,7 +102,8 @@ bool AnJaRootDaemon::handleZygote(const trace::WaitResult& res)
         {
             // We have already received the SIGSTOP, continue the child
             util::logVerbose("Zygote delivered fork event for known child");
-            found->get()->resume();
+            found->get()->setupSyscallTrace();
+            found->get()->waitForSyscallResume();
         }
         else
         {
@@ -181,7 +184,6 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
         util::logVerbose("Zygote child received termination signal: %d",
                 res.getTermSignal());
 
-        tracee->get()->resume(res.getTermSignal());
         tracee->get()->detach();
         zygoteForks.erase(tracee);
         return true;
@@ -189,10 +191,34 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
 
     if(res.inSyscall())
     {
-        util::logVerbose("Zygote child signaled syscall");
+        long syscallnum = hook::getSyscallNumber(res.getPid());
+        if(syscallnum == -1)
+        {
+            util::logVerbose("Error fetching syscall number");
+            return false;
+        }
 
-        tracee->get()->detach();
-        zygoteForks.erase(tracee);
+        if(syscallnum == -2)
+        {
+            // this was a syscall exit, we don't care
+            tracee->get()->waitForSyscallResume();
+            return true;
+        }
+
+        if(syscallnum == __NR_capset)
+        {
+            hook::changePermittedCapabilities(res.getPid());
+
+            util::logVerbose("Found capset call, detaching");
+            tracee->get()->detach();
+            zygoteForks.erase(tracee);
+            return true;
+        }
+        else
+        {
+            tracee->get()->waitForSyscallResume();
+            return true;
+        }
 
         return true;
     }

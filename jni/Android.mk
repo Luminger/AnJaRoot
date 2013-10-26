@@ -10,8 +10,14 @@ LOCAL_MODULE := anjarootd
 LOCAL_SRC_FILES := anjarootd/main.cpp \
 				   anjarootd/trace.cpp \
 				   anjarootd/anjarootdaemon.cpp \
+				   anjarootd/packages.cpp \
 				   shared/util.cpp \
 				   shared/version.cpp
+
+ifeq ($(TARGET_ARCH),arm)
+LOCAL_SRC_FILES += anjarootd/arch-arm/hook.cpp
+endif
+
 LOCAL_LDLIBS := -llog
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_CPPFLAGS := -DANJAROOT_LOGTAG="\"$(ANJAROOTDAEMON_LOGTAG)\"" \
