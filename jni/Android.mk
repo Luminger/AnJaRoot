@@ -10,7 +10,8 @@ LOCAL_MODULE := anjarootd
 LOCAL_SRC_FILES := anjarootd/main.cpp \
 				   anjarootd/trace.cpp \
 				   anjarootd/anjarootdaemon.cpp \
-				   shared/util.cpp
+				   shared/util.cpp \
+				   shared/version.cpp
 LOCAL_LDLIBS := -llog
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_CPPFLAGS := -DANJAROOT_LOGTAG="\"$(ANJAROOTDAEMON_LOGTAG)\"" \
@@ -54,6 +55,8 @@ LOCAL_MODULE := minizip
 LOCAL_SRC_FILES := minizip/ioapi.c \
 				   minizip/unzip.c \
 				   minizip/zip.c
+# clang doesn't like how zlib uses parentheses, disable the warning
+LOCAL_CFLAGS := -Wno-parentheses-equality
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)

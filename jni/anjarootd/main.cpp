@@ -25,19 +25,19 @@
 #include "anjarootdaemon.h"
 #include "trace.h"
 #include "shared/util.h"
+#include "shared/version.h"
 
 bool shouldRun = true;
 
 void signalHandler(int signum)
 {
+    // Zygote doesn't use the android logging methods in its signal handler, so
+    // we don't do either. It's just too risky...
     if(signum == SIGINT || signum == SIGTERM)
     {
-        util::logVerbose("SIGINT/SIGTERM catched, shutting down...");
         shouldRun = false;
         return;
     }
-
-    util::logError("Catched signal '%d' which shouldn't lang here", signum);
 }
 
 void setupSignalHandling()
@@ -64,6 +64,7 @@ void setupSignalHandling()
     }
 }
 
+// TODO move to AnJaRootDaemon class
 uid_t getUidFromPid(uid_t pid)
 {
     // There is no real "official" and/or good way, so we just stat the
@@ -131,26 +132,29 @@ int main(int argc, char** argv)
 {
     setupSignalHandling();
 
+    util::logVerbose("AnJaRootDaemon (version %s) started",
+            version::asString().c_str());
+
+    // TODO perform a daemonize
     // TODO we only want to run once, ensure that
     // TODO handle zygote crash (reconnect on zygote failure)
     try
     {
         pid_t zygotePid = getZygotePid();
-        util::logVerbose("Zygote pid: %d", zygotePid);
-
         trace::Tracee::Ptr zygote = trace::attach(zygotePid);
-        trace::WaitResult res = trace::waitChilds();
 
-        if(res.getPid() != zygote->getPid())
+        trace::WaitResult res = trace::waitChild(zygotePid);
+        if(!res.hasStopped() || res.getStopSignal() != SIGSTOP)
         {
             util::logError("Failed to wait for zygote");
-            return -1;
+            res.logDebugInfo();
+            return -2;
         }
 
         zygote->setupChildTrace();
-        util::logVerbose("Zygote forks are now traced");
         zygote->resume();
 
+        util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
         AnJaRootDaemon(zygote).run(shouldRun);
     }
     catch(std::exception& e)

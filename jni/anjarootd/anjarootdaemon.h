@@ -33,8 +33,7 @@ class AnJaRootDaemon
     private:
         trace::Tracee::List::iterator searchTracee(pid_t pid);
         bool handleZygote(const trace::WaitResult& res);
-        bool handleKnownZygoteChild(const trace::WaitResult& res,
-                trace::Tracee::List::iterator tracee);
+        bool handleZygoteChild(const trace::WaitResult& res);
 
         trace::Tracee::Ptr zygote;
         trace::Tracee::List zygoteForks;
