@@ -88,7 +88,7 @@ bool AnJaRootDaemon::handleZygote(const trace::WaitResult& res)
         return false;
     }
 
-    if(res.getTermSignal() != 0)
+    if(res.wasSignaled())
     {
         util::logVerbose("Zygote received termination signal: %d",
                 res.getTermSignal());
@@ -192,7 +192,7 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
         return true;
     }
 
-    if(res.getTermSignal() != 0)
+    if(res.wasSignaled())
     {
         util::logVerbose("Zygote child received termination signal: %d",
                 res.getTermSignal());
