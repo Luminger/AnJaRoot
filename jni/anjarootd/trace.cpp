@@ -28,14 +28,6 @@
 #include "trace.h"
 #include "shared/util.h"
 
-trace::Tracee::List::iterator trace::Tracee::searchTraceeInList(pid_t pid,
-        trace::Tracee::List& list)
-{
-    auto comperator = [=] (Ptr tracee)
-    { return tracee->getPid() == pid; };
-    return std::find_if(list.begin(), list.end(), comperator);
-}
-
 trace::Tracee::Tracee(pid_t pid_) : pid(pid_)
 {
 }

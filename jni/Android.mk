@@ -9,6 +9,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := anjarootd
 LOCAL_SRC_FILES := anjarootd/main.cpp \
 				   anjarootd/trace.cpp \
+				   anjarootd/anjarootdaemon.cpp \
 				   shared/util.cpp
 LOCAL_LDLIBS := -llog
 LOCAL_CPP_FEATURES := exceptions

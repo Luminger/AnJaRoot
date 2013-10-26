@@ -31,7 +31,6 @@ namespace trace {
             typedef std::shared_ptr<Tracee> Ptr;
             typedef std::vector<Ptr> List;
 
-            static List::iterator searchTraceeInList(pid_t pid, List& list);
 
             Tracee(pid_t pid_);
             ~Tracee();
