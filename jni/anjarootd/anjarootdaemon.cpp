@@ -19,10 +19,9 @@
 
 #include <algorithm>
 
+#include <asm/unistd.h>
 #include <errno.h>
 #include <sys/ptrace.h>
-
-#include <asm/unistd.h>
 
 #include "anjarootdaemon.h"
 #include "hook.h"
@@ -166,7 +165,7 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
 
         util::logError("Bug detected in handleZygoteChild (untracked child)");
         res.logDebugInfo();
-        return false;
+        return true;
     }
 
     if(res.hasExited())
@@ -191,12 +190,10 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
 
     if(res.inSyscall())
     {
-        util::logVerbose("Child signaled syscall: %d", res.getPid());
         long syscallnum = hook::getSyscallNumber(*tracee);
         if(syscallnum == -1)
         {
             // this was a syscall exit, we don't care
-            util::logVerbose("This was a syscall exit, we don't care");
             tracee->get()->waitForSyscallResume();
             return true;
         }
@@ -204,14 +201,12 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
         {
             hook::changePermittedCapabilities(*tracee);
 
-            util::logVerbose("Changed capset call, detaching");
             tracee->get()->detach();
             zygoteForks.erase(tracee);
             return true;
         }
         else
         {
-            util::logVerbose("A syscall we don't care about: %ld", syscallnum);
             tracee->get()->waitForSyscallResume();
             return true;
         }

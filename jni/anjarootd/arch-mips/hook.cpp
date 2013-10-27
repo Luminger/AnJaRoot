@@ -18,12 +18,16 @@
  */
 
 #include <system_error>
+#include <asm/unistd.h>
 #include <errno.h>
 #include <string.h>
 #include <sys/ptrace.h>
 
 #include "shared/util.h"
 #include "../hook.h"
+
+#define REG_V0 2
+#define REG_A0 4
 
 int hook::getSyscallNumber(trace::Tracee::Ptr tracee)
 {
@@ -36,11 +40,12 @@ int hook::getSyscallNumber(trace::Tracee::Ptr tracee)
 
     errno = 0;
     long syscallnum = ptrace(PTRACE_PEEKUSER, tracee->getPid(),
-            (void*)(4*ORIG_EAX), NULL);
+            (void*)REG_V0, NULL);
     if(errno)
     {
-        util::logError("Failed to get eax, err %d: %s", errno,
+        util::logError("Failed to get register, err %d: %s", errno,
                 strerror(errno));
+        throw std::system_error(errno, std::system_category());
     }
 
     tracee->setSyscallBegin(true);
@@ -49,9 +54,9 @@ int hook::getSyscallNumber(trace::Tracee::Ptr tracee)
 
 bool hook::changePermittedCapabilities(trace::Tracee::Ptr tracee)
 {
-    // ebx holds the addr of the cap_user_header_t*, we don't care
+    // a0 holds the addr of the cap_user_header_t*, we don't care
     // about it here - we naivly trust that the syscall would succeed.
-    // ecx holds the addr of the cap_user_data_t*, which is defined
+    // a1 holds the addr of the cap_user_data_t*, which is defined
     // as (on every supported arch):
     //
     // typedef struct __user_cap_data_struct {
@@ -60,17 +65,20 @@ bool hook::changePermittedCapabilities(trace::Tracee::Ptr tracee)
     //     __u32 inheritable;
     // } *cap_user_data_t;
     //
+
     errno = 0;
-    long dataaddr = ptrace(PTRACE_PEEKUSER, tracee->getPid(), (void*)(4*ECX),
-            NULL);
+    long dataaddr = ptrace(PTRACE_PEEKUSER, tracee->getPid(),
+            (void*)(REG_A0 + 1), NULL);
     if(errno)
     {
-        util::logError("Failed to get ecx, err %d: %s", errno,
+        util::logError("Failed to get register, err %d: %s", errno,
                 strerror(errno));
-        return false;
+        throw std::system_error(errno, std::system_category());
     }
 
-    long ret = ptrace(PTRACE_POKEDATA, tracee->getPid(),
+    long ret;
+
+    ret = ptrace(PTRACE_POKEDATA, tracee->getPid(),
             (void*)(dataaddr + sizeof(__u32)), (void*)0xFFFFFEFF);
     if(ret == -1)
     {

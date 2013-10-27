@@ -28,16 +28,15 @@
 int hook::getSyscallNumber(trace::Tracee::Ptr tracee)
 {
     // This function is a copy from strace (syscall.c), adopted to our needs.
-    long syscallnum = -1;
-    struct pt_regs regs;
-
     if(tracee->isSyscallBegin())
     {
         tracee->setSyscallBegin(false);
         return -1;
     }
 
-    int ret = ptrace(PTRACE_GETREGS, tracee->getPid(), NULL, (void *)&regs);
+    long syscallnum = -1;
+    struct pt_regs regs;
+    long ret = ptrace(PTRACE_GETREGS, tracee->getPid(), NULL, (void *)&regs);
     if(ret == -1)
     {
         util::logError("Failed to get registers, err %d: %s", errno,
@@ -104,7 +103,7 @@ bool hook::changePermittedCapabilities(trace::Tracee::Ptr tracee)
 {
     // First we need to read (again) the registers.
     struct pt_regs regs;
-    int ret = ptrace(PTRACE_GETREGS, tracee->getPid(), NULL, (void *)&regs);
+    long ret = ptrace(PTRACE_GETREGS, tracee->getPid(), NULL, (void *)&regs);
     if(ret == -1)
     {
         util::logError("Failed to get registers, err %d: %s", errno,
@@ -125,7 +124,7 @@ bool hook::changePermittedCapabilities(trace::Tracee::Ptr tracee)
     //
     long dataaddr = regs.uregs[1];
     ret = ptrace(PTRACE_POKEDATA, tracee->getPid(),
-            (void*)(dataaddr + sizeof(__u32)), (void*)0xFFFFFFFF);
+            (void*)(dataaddr + sizeof(__u32)), (void*)0xFFFFFEFF);
     if(ret == -1)
     {
         util::logError("Failed to set permitted value, err %d: %s", errno,
