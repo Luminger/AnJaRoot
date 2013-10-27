@@ -24,8 +24,8 @@
 
 namespace hook
 {
-    long getSyscallNumber(pid_t pid);
-    int changePermittedCapabilities(pid_t pid);
+    int getSyscallNumber(pid_t pid);
+    bool changePermittedCapabilities(pid_t pid);
 }
 
 #endif

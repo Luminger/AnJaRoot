@@ -194,22 +194,15 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
         long syscallnum = hook::getSyscallNumber(res.getPid());
         if(syscallnum == -1)
         {
-            util::logVerbose("Error fetching syscall number");
-            return false;
-        }
-
-        if(syscallnum == -2)
-        {
             // this was a syscall exit, we don't care
             tracee->get()->waitForSyscallResume();
             return true;
         }
-
-        if(syscallnum == __NR_capset)
+        else if(syscallnum == __NR_capset)
         {
             hook::changePermittedCapabilities(res.getPid());
 
-            util::logVerbose("Found capset call, detaching");
+            util::logVerbose("Changed capset call, detaching");
             tracee->get()->detach();
             zygoteForks.erase(tracee);
             return true;
