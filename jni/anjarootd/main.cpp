@@ -148,25 +148,33 @@ int main(int argc, char** argv)
     }
 
     // TODO we only want to run once, ensure that
-    // TODO handle zygote crash (reconnect on zygote failure)
     try
     {
-        pid_t zygotePid = getZygotePid();
-        trace::Tracee::Ptr zygote = trace::attach(zygotePid);
-
-        trace::WaitResult res = trace::waitChild(zygotePid);
-        if(!res.hasStopped() || res.getStopSignal() != SIGSTOP)
+        while(shouldRun)
         {
-            util::logError("Failed to wait for zygote");
-            res.logDebugInfo();
-            return -2;
+            pid_t zygotePid = getZygotePid();
+            trace::Tracee::Ptr zygote = trace::attach(zygotePid);
+
+            trace::WaitResult res = trace::waitChild(zygotePid);
+            if(!res.hasStopped() || res.getStopSignal() != SIGSTOP)
+            {
+                util::logError("Failed to wait for zygote");
+                res.logDebugInfo();
+                return -2;
+            }
+
+            zygote->setupChildTrace();
+            zygote->resume();
+
+            util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
+            AnJaRootDaemon(zygote).run(shouldRun);
+
+            if(shouldRun)
+            {
+                util::logVerbose("MainLoop exited, wait 1sec and restart");
+                sleep(1);
+            }
         }
-
-        zygote->setupChildTrace();
-        zygote->resume();
-
-        util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
-        AnJaRootDaemon(zygote).run(shouldRun);
     }
     catch(std::exception& e)
     {
