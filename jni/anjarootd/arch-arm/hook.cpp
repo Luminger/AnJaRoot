@@ -25,13 +25,19 @@
 #include "shared/util.h"
 #include "../hook.h"
 
-int hook::getSyscallNumber(pid_t pid)
+int hook::getSyscallNumber(trace::Tracee::Ptr tracee)
 {
     // This function is a copy from strace (syscall.c), adopted to our needs.
     long syscallnum = -1;
     struct pt_regs regs;
 
-    int ret = ptrace(PTRACE_GETREGS, pid, NULL, (void *)&regs);
+    if(tracee->isSyscallBegin())
+    {
+        tracee->setSyscallBegin(false);
+        return -1;
+    }
+
+    int ret = ptrace(PTRACE_GETREGS, tracee->getPid(), NULL, (void *)&regs);
     if(ret == -1)
     {
         util::logError("Failed to get registers, err %d: %s", errno,
@@ -42,6 +48,8 @@ int hook::getSyscallNumber(pid_t pid)
     // we are only interested in syscall entries
     if(regs.ARM_ip == 0)
     {
+        tracee->setSyscallBegin(true);
+
         if (regs.ARM_cpsr & 0x20)
         {
             // Get the Thumb-mode system call number
@@ -51,7 +59,7 @@ int hook::getSyscallNumber(pid_t pid)
         {
             //Get the ARM-mode system call number
             errno = 0;
-            syscallnum = ptrace(PTRACE_PEEKTEXT, pid,
+            syscallnum = ptrace(PTRACE_PEEKTEXT, tracee->getPid(),
                     (void *)(regs.ARM_pc - 4), NULL);
             if(errno)
             {
@@ -87,15 +95,16 @@ int hook::getSyscallNumber(pid_t pid)
         return syscallnum;
     }
 
-    // signal syscall exit
+    // signal syscall exit, we should never end here
+    util::logError("Reached end of getSyscallNumber(), shouldn't happen");
     return -1;
 }
 
-bool hook::changePermittedCapabilities(pid_t pid)
+bool hook::changePermittedCapabilities(trace::Tracee::Ptr tracee)
 {
     // First we need to read (again) the registers.
     struct pt_regs regs;
-    int ret = ptrace(PTRACE_GETREGS, pid, NULL, (void *)&regs);
+    int ret = ptrace(PTRACE_GETREGS, tracee->getPid(), NULL, (void *)&regs);
     if(ret == -1)
     {
         util::logError("Failed to get registers, err %d: %s", errno,
@@ -115,11 +124,11 @@ bool hook::changePermittedCapabilities(pid_t pid)
     // } *cap_user_data_t;
     //
     long dataaddr = regs.uregs[1];
-    ret = ptrace(PTRACE_POKEDATA, pid,
+    ret = ptrace(PTRACE_POKEDATA, tracee->getPid(),
             (void*)(dataaddr + sizeof(__u32)), (void*)0xFFFFFFFF);
     if(ret == -1)
     {
-        util::logError("Failed to get registers, err %d: %s", errno,
+        util::logError("Failed to set permitted value, err %d: %s", errno,
                 strerror(errno));
         return false;
     }

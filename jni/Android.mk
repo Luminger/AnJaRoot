@@ -11,13 +11,9 @@ LOCAL_SRC_FILES := anjarootd/main.cpp \
 				   anjarootd/trace.cpp \
 				   anjarootd/anjarootdaemon.cpp \
 				   anjarootd/packages.cpp \
+				   anjarootd/arch-$(TARGET_ARCH)/hook.cpp \
 				   shared/util.cpp \
 				   shared/version.cpp
-
-ifeq ($(TARGET_ARCH),arm)
-LOCAL_SRC_FILES += anjarootd/arch-arm/hook.cpp
-endif
-
 LOCAL_LDLIBS := -llog
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_CPPFLAGS := -DANJAROOT_LOGTAG="\"$(ANJAROOTDAEMON_LOGTAG)\"" \
@@ -32,24 +28,10 @@ LOCAL_SRC_FILES :=	lib/wrapper.cpp \
 					lib/packages.cpp \
 					lib/helper.cpp \
 					lib/syscallfix.cpp \
+					lib/arch-$(TARGET_ARCH)/local_getresuid.S \
+				   	lib/arch-$(TARGET_ARCH)/local_getresgid.S \
 					shared/util.cpp \
 					shared/version.cpp
-
-ifeq ($(TARGET_ARCH),arm)
-LOCAL_SRC_FILES += lib/arch-arm/local_getresuid.S \
-				   lib/arch-arm/local_getresgid.S
-endif
-
-ifeq ($(TARGET_ARCH),x86)
-LOCAL_SRC_FILES += lib/arch-x86/local_getresuid.S \
-				   lib/arch-x86/local_getresgid.S
-endif
-
-ifeq ($(TARGET_ARCH),mips)
-LOCAL_SRC_FILES += lib/arch-mips/local_getresuid.S \
-				   lib/arch-mips/local_getresgid.S
-endif
-
 LOCAL_LDLIBS := -llog -ldl
 LOCAL_CPP_FEATURES := exceptions
 LOCAL_CPPFLAGS := -DANJAROOT_LOGTAG="\"$(ANJAROOTNATIVE_LOGTAG)\"" \

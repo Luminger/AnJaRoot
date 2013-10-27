@@ -43,8 +43,12 @@ namespace trace {
             unsigned long getEventMsg() const;
             siginfo_t getSignalInfo() const;
 
+            bool isSyscallBegin() const;
+            void setSyscallBegin(bool value);
+
         private:
             pid_t pid;
+            bool syscallBegin;
     };
 
     class WaitResult

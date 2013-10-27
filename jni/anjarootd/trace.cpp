@@ -28,7 +28,7 @@
 #include "trace.h"
 #include "shared/util.h"
 
-trace::Tracee::Tracee(pid_t pid_) : pid(pid_)
+trace::Tracee::Tracee(pid_t pid_) : pid(pid_), syscallBegin(false)
 {
 }
 
@@ -125,6 +125,16 @@ siginfo_t trace::Tracee::getSignalInfo() const
     }
 
     return result;
+}
+
+bool trace::Tracee::isSyscallBegin() const
+{
+    return syscallBegin;
+}
+
+void trace::Tracee::setSyscallBegin(bool value)
+{
+    syscallBegin = value;
 }
 
 trace::WaitResult::WaitResult(pid_t pid_, int status_) : pid(pid_),

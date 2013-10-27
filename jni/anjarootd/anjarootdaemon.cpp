@@ -191,16 +191,18 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
 
     if(res.inSyscall())
     {
-        long syscallnum = hook::getSyscallNumber(res.getPid());
+        util::logVerbose("Child signaled syscall: %d", res.getPid());
+        long syscallnum = hook::getSyscallNumber(*tracee);
         if(syscallnum == -1)
         {
             // this was a syscall exit, we don't care
+            util::logVerbose("This was a syscall exit, we don't care");
             tracee->get()->waitForSyscallResume();
             return true;
         }
         else if(syscallnum == __NR_capset)
         {
-            hook::changePermittedCapabilities(res.getPid());
+            hook::changePermittedCapabilities(*tracee);
 
             util::logVerbose("Changed capset call, detaching");
             tracee->get()->detach();
@@ -209,6 +211,7 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
         }
         else
         {
+            util::logVerbose("A syscall we don't care about: %ld", syscallnum);
             tracee->get()->waitForSyscallResume();
             return true;
         }

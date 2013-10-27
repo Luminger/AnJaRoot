@@ -20,12 +20,12 @@
 #ifndef _ANJAROOTD_HOOK_H_
 #define _ANJAROTOD_HOOK_H_
 
-#include <unistd.h>
+#include "trace.h"
 
 namespace hook
 {
-    int getSyscallNumber(pid_t pid);
-    bool changePermittedCapabilities(pid_t pid);
+    int getSyscallNumber(trace::Tracee::Ptr tracee);
+    bool changePermittedCapabilities(trace::Tracee::Ptr tracee);
 }
 
 #endif
