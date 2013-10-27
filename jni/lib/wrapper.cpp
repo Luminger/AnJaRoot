@@ -91,24 +91,10 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
 
     if(SetCapCompatMode)
     {
-        if(effective & (1 << CAP_SETPCAP))
-        {
-            util::logVerbose("Rewriting effective: 0x%X => 0x%X", effective,
-                    effective & 0xFFFFFEFF);
-            effective &= 0xFFFFFEFF;
-        }
-        if(permitted & (1 << CAP_SETPCAP))
-        {
-            util::logVerbose("Rewriting permitted: 0x%X => 0x%X", permitted,
-                    permitted & 0xFFFFFEFF);
-            permitted &= 0xFFFFFEFF;
-        }
-        if(inheritable & (1 << CAP_SETPCAP))
-        {
-            util::logVerbose("Rewriting inheritable: 0x%X => 0x%X", inheritable,
-                    inheritable & 0xFFFFFEFF);
-            inheritable &= 0xFFFFFEFF;
-        }
+        int mask = 0xFFFFFFFF & (~(1 << CAP_SETPCAP));
+        effective &= mask;
+        permitted &= mask;
+        inheritable &= mask;
     }
 
     try
