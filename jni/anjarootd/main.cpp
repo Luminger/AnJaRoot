@@ -135,7 +135,18 @@ int main(int argc, char** argv)
     util::logVerbose("AnJaRootDaemon (version %s) started",
             version::asString().c_str());
 
-    // TODO perform a daemonize
+    // simple and stupid version - I don't care as long as it's only one arg
+    if(argc == 2 && std::string(argv[1]) == "-d")
+    {
+        int ret = daemon(0, 0);
+        if(ret == -1)
+        {
+            util::logError("Failed to daemonize, error %d: %s", errno,
+                    strerror(errno));
+            return -3;
+        }
+    }
+
     // TODO we only want to run once, ensure that
     // TODO handle zygote crash (reconnect on zygote failure)
     try
