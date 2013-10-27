@@ -27,7 +27,7 @@ namespace version {
 static const int Major = 1;
 static const int Minor = 0;
 static const int Patch = 0;
-static const int Api = 1;
+static const int Api = 2;
 
 std::string asString();
 
