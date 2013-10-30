@@ -128,6 +128,43 @@ pid_t getZygotePid()
     return creds.pid;
 }
 
+void claimLockSocket()
+{
+    // Android hasn't any good scratch place for pidfile (like /var or /tmp),
+    // maybe we could do this in the /cache partition, but I have mixed
+    // feelings about it.
+    //
+    // So we don't write a PidFile to ensure we are alone, we use a Unix Domain
+    // Socket for this. We just need to bind to it and leave it open till we
+    // die (kernel will cleanup after us). Check for an already running
+    // instance is simple: If the bind failes, there is already an instance,
+    // otherwise we are the only instance now.
+    //
+    // We don't care about the socket after the bind call, it may be reused as
+    // a communication channel later (if needed).
+    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    if(fd == -1)
+    {
+        util::logError("Failed to create lock socket: %s", strerror(errno));
+        throw std::system_error(errno, std::system_category());
+    }
+
+    struct sockaddr_un addr = {0, };
+    addr.sun_family = AF_UNIX;
+    strcpy(addr.sun_path, "/dev/socket/anjarootd");
+
+    int ret = bind(fd, reinterpret_cast<struct sockaddr*>(&addr),
+            sizeof(addr.sun_family) + sizeof(addr.sun_path));
+    if(ret == -1)
+    {
+        util::logError("Failed to bind to lock socket: %s", strerror(errno));
+        close(fd);
+        throw std::system_error(errno, std::system_category());
+    }
+
+    // we don't close the socket here on purpose, it's our lock!
+}
+
 int main(int argc, char** argv)
 {
     setupSignalHandling();
@@ -147,9 +184,10 @@ int main(int argc, char** argv)
         }
     }
 
-    // TODO we only want to run once, ensure that
     try
     {
+        claimLockSocket();
+
         while(shouldRun)
         {
             pid_t zygotePid = getZygotePid();
