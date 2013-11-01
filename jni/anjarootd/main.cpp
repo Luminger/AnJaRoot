@@ -18,10 +18,6 @@
  */
 #include <system_error>
 
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/un.h>
-
 #include "anjarootdaemon.h"
 #include "trace.h"
 #include "shared/util.h"
