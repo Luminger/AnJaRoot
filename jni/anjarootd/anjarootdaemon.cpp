@@ -19,7 +19,6 @@
 #include <algorithm>
 #include <system_error>
 
-#include <asm/unistd.h>
 #include <errno.h>
 #include <sys/ptrace.h>
 #include <sys/socket.h>
@@ -249,30 +248,17 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
         return true;
     }
 
-    // TODO we don't have logmsgs here on purpose, it would result in major
-    // spam with little information at all. A cmdline switch or environment
-    // variable would be nice to have for enabling otherwise disabled log lines
     if(res.inSyscall())
     {
-        long syscallnum = hook::getSyscallNumber(*tracee);
-        if(syscallnum == -1)
+        bool detach = hook::performHookActions(*tracee);
+        if(detach)
         {
-            // this was a syscall exit, we don't care
-            tracee->get()->waitForSyscallResume();
-            return true;
-        }
-        else if(syscallnum == __NR_capset)
-        {
-            hook::changePermittedCapabilities(*tracee);
-
             tracee->get()->detach();
             zygoteForks.erase(tracee);
-            return true;
         }
         else
         {
             tracee->get()->waitForSyscallResume();
-            return true;
         }
 
         return true;

@@ -24,9 +24,13 @@
 
 namespace hook
 {
+    extern const char* GranterPackageName;
+
+    bool performHookActions(trace::Tracee::Ptr tracee);
     int getSyscallNumber(trace::Tracee::Ptr tracee);
     bool changePermittedCapabilities(trace::Tracee::Ptr tracee);
     uid_t getUidFromPid(pid_t pid);
+    bool isUidGranted(uid_t uid);
 }
 
 #endif

@@ -18,15 +18,22 @@
  */
 #include <system_error>
 
+#include <asm/unistd.h>
 #include <errno.h>
 #include <sys/stat.h>
 
 #include "hook.h"
+#include "packages.h"
 #include "shared/util.h"
 
 // functions which require plarform dependant code (like getSyscallNumber) are
 // implemented in the arch-xxx directories and build as needed. Only
 // independant stuff is placed here.
+//
+
+// TODO make this package name configureable at buildtime, people would want to
+// change it to enable custom builds without source changes
+const char* hook::GranterPackageName = "org.failedprojects.anjaroot";
 
 uid_t hook::getUidFromPid(pid_t pid)
 {
@@ -53,3 +60,60 @@ uid_t hook::getUidFromPid(pid_t pid)
     return st.st_uid;
 }
 
+bool hook::isUidGranted(uid_t uid)
+{
+    packages::PackageList pkgs;
+    const packages::Package* anjaroot = pkgs.findByName(GranterPackageName);
+
+    if(anjaroot == NULL)
+    {
+        util::logError("Couldn't get anjaroot package");
+        return false;
+    }
+
+    const packages::Package* target = pkgs.findByUid(uid);
+    if(target == NULL)
+    {
+        util::logError("Couldn't get target package");
+        return false;
+    }
+
+    packages::GrantedPackageList granter(*anjaroot);
+    return granter.isGranted(*target);
+}
+
+// TODO we don't have logmsgs here on purpose, it would result in major
+// spam with little information at all. A cmdline switch or environment
+// variable would be nice to have for enabling otherwise disabled log lines
+//
+// we return true if the caller can now detach from the tracee
+bool hook::performHookActions(trace::Tracee::Ptr tracee)
+{
+    long syscallnum = getSyscallNumber(tracee);
+    if(syscallnum == -1)
+    {
+        // TODO create conditional logging for this case (syscall exit)
+        return false;
+    }
+
+    if(syscallnum == __NR_capset)
+    {
+        uid_t uid = getUidFromPid(tracee->getPid());
+        bool granted = isUidGranted(uid);
+        if(granted)
+        {
+            util::logVerbose("Child with pid %d is a target, "
+                    "changing capabilities", tracee->getPid());
+            changePermittedCapabilities(tracee);
+        }
+        else
+        {
+            util::logVerbose("Child with pid %d is not a target, "
+                    "no action performed", tracee->getPid());
+        }
+
+        return true;
+    }
+
+    return false;
+}
