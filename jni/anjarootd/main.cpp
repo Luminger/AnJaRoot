@@ -167,8 +167,6 @@ void claimLockSocket()
 
 int main(int argc, char** argv)
 {
-    setupSignalHandling();
-
     util::logVerbose("AnJaRootDaemon (version %s) started",
             version::asString().c_str());
 
@@ -186,23 +184,13 @@ int main(int argc, char** argv)
 
     try
     {
+        setupSignalHandling();
         claimLockSocket();
 
         while(shouldRun)
         {
             pid_t zygotePid = getZygotePid();
             trace::Tracee::Ptr zygote = trace::attach(zygotePid);
-
-            trace::WaitResult res = trace::waitChild(zygotePid);
-            if(!res.hasStopped() || res.getStopSignal() != SIGSTOP)
-            {
-                util::logError("Failed to wait for zygote");
-                res.logDebugInfo();
-                return -2;
-            }
-
-            zygote->setupChildTrace();
-            zygote->resume();
 
             util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
             AnJaRootDaemon(zygote).run(shouldRun);

@@ -51,18 +51,18 @@ void AnJaRootDaemon::run(const bool& shouldRun)
     while(shouldRun && handled)
     {
         trace::WaitResult res = trace::waitChilds();
-        if(res.getPid() == -1)
-        {
-            if(errno != EINTR)
-            {
+        switch(errno)
+            case 0:
+            case EINTR:
+                continue;
+            default:
                 util::logVerbose("Wait failed with %d: %s", errno,
                         strerror(errno));
                 res.logDebugInfo();
-            }
-
-            handled = true;
+                continue;
         }
-        else if(res.getPid() == zygote->getPid())
+
+        if(res.getPid() == zygote->getPid())
         {
             handled = handleZygote(res);
         }
@@ -131,10 +131,20 @@ bool AnJaRootDaemon::handleZygote(const trace::WaitResult& res)
                 found->get()->detach();
                 zygoteForks.erase(found);
             }
+            util::logVerbose("Zygote received SIGCHILD for %d", siginfo.si_pid);
+        }
+        else if(res.getStopSignal() == SIGSTOP)
+        {
+            util::logVerbose("Zygote received SIGSTOP, seting up child trace");
+            zygote->setupChildTrace();
+            zygote->resume();
+        }
+        else
+        {
+            util::logVerbose("Zygote resumed with signal %d", res.getStopSignal());
+            zygote->resume(res.getStopSignal());
         }
 
-        zygote->resume(res.getStopSignal());
-        util::logVerbose("Zygote resumed with signal %d", res.getStopSignal());
         return true;
     }
 
@@ -188,6 +198,9 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
         return true;
     }
 
+    // TODO we don't have logmsgs here on purpose, it would result in major
+    // spam with little information at all. A cmdline switch or environment
+    // variable would be nice to have for enabling otherwise disabled log lines
     if(res.inSyscall())
     {
         long syscallnum = hook::getSyscallNumber(*tracee);
