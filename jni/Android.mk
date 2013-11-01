@@ -25,8 +25,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := anjaroot
 LOCAL_SRC_FILES :=	lib/wrapper.cpp \
 					lib/exceptions.cpp \
-					lib/hook.cpp \
-					lib/packages.cpp \
 					lib/helper.cpp \
 					lib/syscallfix.cpp \
 					lib/arch-$(TARGET_ARCH)/local_getresuid.S \
