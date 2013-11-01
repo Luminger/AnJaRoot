@@ -102,6 +102,10 @@ void AnJaRootDaemon::run(const bool& shouldRun)
         trace::WaitResult res = trace::waitChilds();
         switch(errno)
         {
+            case ECHILD:
+                util::logVerbose("We have no children :(");
+                res.logDebugInfo();
+                break;
             case 0:
             case EINTR:
                 continue;
