@@ -209,7 +209,6 @@ bool trace::WaitResult::inSyscall() const
 
 trace::Tracee::Ptr trace::attach(pid_t pid)
 {
-    util::logVerbose("Attaching to %d...", pid);
     int ret = ptrace(PTRACE_ATTACH, pid, NULL, NULL);
     if(ret == -1)
     {

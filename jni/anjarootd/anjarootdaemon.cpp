@@ -30,15 +30,24 @@
 
 AnJaRootDaemon::AnJaRootDaemon()
 {
-    pid_t zygotePid = getZygotePid();
-    zygote = trace::attach(zygotePid);
-    util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
+    try
+    {
+        pid_t zygotePid = getZygotePid();
+        zygote = trace::attach(zygotePid);
+        util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Failed to attach to zygote: %s", e.what());
+    }
 }
 
 AnJaRootDaemon::~AnJaRootDaemon()
 {
+    util::logVerbose("Detaching from zygote children...");
     std::for_each(zygoteForks.begin(), zygoteForks.end(),
             [] (trace::Tracee::Ptr x) { x->detach(); });
+    util::logVerbose("Detaching from zygote...");
     zygote->detach();
 }
 
@@ -96,6 +105,12 @@ trace::Tracee::List::iterator AnJaRootDaemon::searchTracee(pid_t pid)
 
 void AnJaRootDaemon::run(const bool& shouldRun)
 {
+    if(!zygote)
+    {
+        util::logError("Not attached to zygote, exiting mainloop");
+        return;
+    }
+
     bool handled = true;
     while(shouldRun && handled)
     {
@@ -183,6 +198,7 @@ bool AnJaRootDaemon::handleZygote(const trace::WaitResult& res)
                 zygoteForks.erase(found);
             }
             util::logVerbose("Zygote received SIGCHILD for %d", siginfo.si_pid);
+            zygote->resume(res.getStopSignal());
         }
         else if(res.getStopSignal() == SIGSTOP)
         {
