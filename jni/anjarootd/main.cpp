@@ -151,7 +151,7 @@ void claimLockSocket()
 
     struct sockaddr_un addr = {0, };
     addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, "/dev/socket/anjarootd");
+    strcpy(addr.sun_path, "\0anjarootd");
 
     int ret = bind(fd, reinterpret_cast<struct sockaddr*>(&addr),
             sizeof(addr.sun_family) + sizeof(addr.sun_path));
