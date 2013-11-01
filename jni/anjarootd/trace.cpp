@@ -216,7 +216,7 @@ trace::Tracee::Ptr trace::attach(pid_t pid)
         throw std::system_error(errno, std::system_category());
     }
 
-    return Tracee::Ptr(new Tracee(pid));
+    return std::make_shared<Tracee>(pid);
 }
 
 trace::WaitResult trace::waitChilds()

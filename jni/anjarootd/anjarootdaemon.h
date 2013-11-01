@@ -20,15 +20,19 @@
 #ifndef _ANJAROOTD_ANJAROOTDAEMON_H_
 #define _ANJAROOTD_ANJAROOTDAEMON_H_
 
+#include <memory>
+
 #include "trace.h"
 
 class AnJaRootDaemon
 {
     public:
+        typedef std::shared_ptr<AnJaRootDaemon> Ptr;
+
         AnJaRootDaemon();
         ~AnJaRootDaemon();
 
-        void run(const bool& shouldRun);
+        void handleChilds();
 
     private:
         pid_t getZygotePid() const;

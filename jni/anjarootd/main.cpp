@@ -113,7 +113,7 @@ int main(int argc, char** argv)
         {
             util::logError("Failed to daemonize, error %d: %s", errno,
                     strerror(errno));
-            return -3;
+            return 1;
         }
     }
 
@@ -121,22 +121,31 @@ int main(int argc, char** argv)
     {
         setupSignalHandling();
         claimLockSocket();
-
-        while(shouldRun)
-        {
-            AnJaRootDaemon().run(shouldRun);
-
-            if(shouldRun)
-            {
-                util::logVerbose("MainLoop exited, wait 1sec and restart");
-                sleep(1);
-            }
-        }
     }
     catch(std::exception& e)
     {
-        util::logError("Failed: %s", e.what());
-        return -1;
+        util::logError("Failed to initialize: %s", e.what());
+        return 1;
+    }
+
+    AnJaRootDaemon::Ptr daemon;
+    while(shouldRun)
+    {
+        try
+        {
+            if(!daemon)
+            {
+                daemon = std::make_shared<AnJaRootDaemon>();
+            }
+
+            daemon->handleChilds();
+        }
+        catch(std::exception& e)
+        {
+            util::logError("Failed: %s", e.what());
+            daemon.reset();
+            sleep(1);
+        }
     }
 
     return 0;

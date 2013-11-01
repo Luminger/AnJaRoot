@@ -30,16 +30,10 @@
 
 AnJaRootDaemon::AnJaRootDaemon()
 {
-    try
-    {
-        pid_t zygotePid = getZygotePid();
-        zygote = trace::attach(zygotePid);
-        util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
-    }
-    catch(std::exception& e)
-    {
-        util::logError("Failed to attach to zygote: %s", e.what());
-    }
+    // both methods will throw if something is wrong
+    pid_t zygotePid = getZygotePid();
+    zygote = trace::attach(zygotePid);
+    util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
 }
 
 AnJaRootDaemon::~AnJaRootDaemon()
@@ -103,39 +97,25 @@ trace::Tracee::List::iterator AnJaRootDaemon::searchTracee(pid_t pid)
     return std::find_if(zygoteForks.begin(), zygoteForks.end(), comperator);
 }
 
-void AnJaRootDaemon::run(const bool& shouldRun)
+void AnJaRootDaemon::handleChilds()
 {
-    if(!zygote)
+    trace::WaitResult res = trace::waitChilds();
+    if(errno == ECHILD)
     {
-        util::logError("Not attached to zygote, exiting mainloop");
-        return;
+        util::logVerbose("We have no children :(");
+        res.logDebugInfo();
     }
-
-    bool handled = true;
-    while(shouldRun && handled)
+    else if(errno == EINTR)
     {
-        trace::WaitResult res = trace::waitChilds();
-        if(errno == ECHILD)
-        {
-            util::logVerbose("We have no children :(");
-            res.logDebugInfo();
-            break;
-        }
-
-        if(errno == EINTR)
-        {
-            util::logVerbose("We got interrupted in wait(), restart wait()");
-            continue;
-        }
-
-        if(res.getPid() == zygote->getPid())
-        {
-            handled = handleZygote(res);
-        }
-        else
-        {
-            handled = handleZygoteChild(res);
-        }
+        util::logVerbose("We got interrupted in wait()");
+    }
+    else if(res.getPid() == zygote->getPid())
+    {
+        handleZygote(res);
+    }
+    else
+    {
+        handleZygoteChild(res);
     }
 }
 
@@ -175,8 +155,7 @@ bool AnJaRootDaemon::handleZygote(const trace::WaitResult& res)
             // Event received first, child will be continued in its handler
             util::logVerbose("Zygote delivered fork event for a unknown "
                     "child, will wait for its SIGSTOP");
-            trace::Tracee::Ptr child = trace::Tracee::Ptr(
-                    new trace::Tracee(newpid));
+            trace::Tracee::Ptr child = std::make_shared<trace::Tracee>(newpid);
             zygoteForks.push_back(child);
         }
 
@@ -233,8 +212,8 @@ bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
             // to it or not
             util::logVerbose("Someone unknown stopped, add to internal list");
 
-            trace::Tracee::Ptr child = trace::Tracee::Ptr(
-                    new trace::Tracee(res.getPid()));
+            pid_t newpid = res.getPid();
+            trace::Tracee::Ptr child = std::make_shared<trace::Tracee>(newpid);
             child->setupSyscallTrace();
             zygoteForks.push_back(child);
             return true;
