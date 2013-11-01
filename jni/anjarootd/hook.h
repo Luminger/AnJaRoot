@@ -26,6 +26,7 @@ namespace hook
 {
     int getSyscallNumber(trace::Tracee::Ptr tracee);
     bool changePermittedCapabilities(trace::Tracee::Ptr tracee);
+    uid_t getUidFromPid(pid_t pid);
 }
 
 #endif

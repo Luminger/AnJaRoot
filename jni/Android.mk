@@ -11,6 +11,7 @@ LOCAL_SRC_FILES := anjarootd/main.cpp \
 				   anjarootd/trace.cpp \
 				   anjarootd/anjarootdaemon.cpp \
 				   anjarootd/packages.cpp \
+				   anjarootd/hook.cpp \
 				   anjarootd/arch-$(TARGET_ARCH)/hook.cpp \
 				   shared/util.cpp \
 				   shared/version.cpp

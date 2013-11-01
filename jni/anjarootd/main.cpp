@@ -19,7 +19,6 @@
 #include <system_error>
 
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <sys/un.h>
 
 #include "anjarootdaemon.h"
@@ -62,25 +61,6 @@ void setupSignalHandling()
         util::logError("Failed to setup SIGTERM handler: %s", strerror(errno));
         throw std::system_error(errno, std::system_category());
     }
-}
-
-// TODO move to AnJaRootDaemon class
-uid_t getUidFromPid(uid_t pid)
-{
-    // There is no real "official" and/or good way, so we just stat the
-    // /proc/<pid> directory which is owned by the process.
-    char path[32] = {0, };
-    snprintf(path, sizeof(path), "/proc/%d", pid);
-
-    struct stat st;
-    int ret = stat(path, &st);
-    if(ret == -1)
-    {
-        util::logError("Failed to stat %s: %s", path, strerror(errno));
-        throw std::system_error(errno, std::system_category());
-    }
-
-    return st.st_uid;
 }
 
 void claimLockSocket()
