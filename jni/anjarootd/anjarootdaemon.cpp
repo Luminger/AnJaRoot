@@ -100,20 +100,17 @@ void AnJaRootDaemon::run(const bool& shouldRun)
     while(shouldRun && handled)
     {
         trace::WaitResult res = trace::waitChilds();
-        switch(errno)
+        if(errno == ECHILD)
         {
-            case ECHILD:
-                util::logVerbose("We have no children :(");
-                res.logDebugInfo();
-                break;
-            case 0:
-            case EINTR:
-                continue;
-            default:
-                util::logVerbose("Wait failed with %d: %s", errno,
-                        strerror(errno));
-                res.logDebugInfo();
-                continue;
+            util::logVerbose("We have no children :(");
+            res.logDebugInfo();
+            break;
+        }
+
+        if(errno == EINTR)
+        {
+            util::logVerbose("We got interrupted in wait(), restart wait()");
+            continue;
         }
 
         if(res.getPid() == zygote->getPid())
