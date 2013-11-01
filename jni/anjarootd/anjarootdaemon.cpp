@@ -23,7 +23,6 @@
 #include <errno.h>
 #include <sys/ptrace.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <sys/un.h>
 
 #include "anjarootdaemon.h"
