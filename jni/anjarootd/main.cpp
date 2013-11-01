@@ -83,51 +83,6 @@ uid_t getUidFromPid(uid_t pid)
     return st.st_uid;
 }
 
-pid_t getZygotePid()
-{
-    // So... we could iterate through /proc/ to find a process name zygote and
-    // read one of the status files where format is not guaranteed for specifig
-    // Linux version... Or we could grab the zygote socket in
-    // /dev/socket/zygote and ask the socket for the remote pid!
-    //
-    // I would say that's a clever (portable!) hack
-    int fd = socket(AF_UNIX, SOCK_STREAM, 0);
-    if(fd == -1)
-    {
-        util::logError("Failed to create zygote socket: %s", strerror(errno));
-        throw std::system_error(errno, std::system_category());
-    }
-
-    struct sockaddr_un addr = {0, };
-    addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, "/dev/socket/zygote");
-
-    int ret = connect(fd, reinterpret_cast<struct sockaddr *>(&addr),
-            sizeof(addr.sun_family) + sizeof(addr.sun_path));
-    if(ret == -1)
-    {
-        util::logError("Failed to connect to zygote socket: %s",
-                strerror(errno));
-        close(fd);
-        throw std::system_error(errno, std::system_category());
-    }
-
-    struct ucred creds = {0, };
-    socklen_t len = sizeof(creds);
-    ret = getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &creds, &len);
-
-    if(ret == -1)
-    {
-        util::logError("Failed to get socket credentials: %s", strerror(errno));
-        close(fd);
-        throw std::system_error(errno, std::system_category());
-    }
-
-    close(fd);
-
-    return creds.pid;
-}
-
 void claimLockSocket()
 {
     // Android hasn't any good scratch place for pidfile (like /var or /tmp),
@@ -189,11 +144,7 @@ int main(int argc, char** argv)
 
         while(shouldRun)
         {
-            pid_t zygotePid = getZygotePid();
-            trace::Tracee::Ptr zygote = trace::attach(zygotePid);
-
-            util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
-            AnJaRootDaemon(zygote).run(shouldRun);
+            AnJaRootDaemon().run(shouldRun);
 
             if(shouldRun)
             {

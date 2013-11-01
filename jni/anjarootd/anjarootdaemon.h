@@ -25,12 +25,13 @@
 class AnJaRootDaemon
 {
     public:
-        AnJaRootDaemon(trace::Tracee::Ptr zygote_);
+        AnJaRootDaemon();
         ~AnJaRootDaemon();
 
         void run(const bool& shouldRun);
 
     private:
+        pid_t getZygotePid() const;
         trace::Tracee::List::iterator searchTracee(pid_t pid);
         bool handleZygote(const trace::WaitResult& res);
         bool handleZygoteChild(const trace::WaitResult& res);
