@@ -21,7 +21,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#include "anjarootdaemon.h"
+#include "childhandler.h"
 #include "trace.h"
 #include "shared/util.h"
 #include "shared/version.h"
@@ -128,22 +128,22 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    AnJaRootDaemon::Ptr daemon;
+    ChildHandler::Ptr handler;
     while(shouldRun)
     {
         try
         {
-            if(!daemon)
+            if(!handler)
             {
-                daemon = std::make_shared<AnJaRootDaemon>();
+                handler = std::make_shared<ChildHandler>();
             }
 
-            daemon->handleChilds();
+            handler->handleChilds();
         }
         catch(std::exception& e)
         {
             util::logError("Failed: %s", e.what());
-            daemon.reset();
+            handler.reset();
             sleep(1);
         }
     }

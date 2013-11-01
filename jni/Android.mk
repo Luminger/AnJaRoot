@@ -9,7 +9,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := anjarootd
 LOCAL_SRC_FILES := anjarootd/main.cpp \
 				   anjarootd/trace.cpp \
-				   anjarootd/anjarootdaemon.cpp \
+				   anjarootd/childhandler.cpp \
 				   anjarootd/packages.cpp \
 				   anjarootd/hook.cpp \
 				   anjarootd/arch-$(TARGET_ARCH)/hook.cpp \

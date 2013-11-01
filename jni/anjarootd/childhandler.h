@@ -17,20 +17,20 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _ANJAROOTD_ANJAROOTDAEMON_H_
-#define _ANJAROOTD_ANJAROOTDAEMON_H_
+#ifndef _ANJAROOTD_CHILDHANDLER_H_
+#define _ANJAROOTD_CHILDHANDLER_H_
 
 #include <memory>
 
 #include "trace.h"
 
-class AnJaRootDaemon
+class ChildHandler
 {
     public:
-        typedef std::shared_ptr<AnJaRootDaemon> Ptr;
+        typedef std::shared_ptr<ChildHandler> Ptr;
 
-        AnJaRootDaemon();
-        ~AnJaRootDaemon();
+        ChildHandler();
+        ~ChildHandler();
 
         void handleChilds();
 

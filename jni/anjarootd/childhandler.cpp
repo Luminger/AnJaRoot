@@ -24,11 +24,11 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#include "anjarootdaemon.h"
+#include "childhandler.h"
 #include "hook.h"
 #include "shared/util.h"
 
-AnJaRootDaemon::AnJaRootDaemon()
+ChildHandler::ChildHandler()
 {
     // both methods will throw if something is wrong
     pid_t zygotePid = getZygotePid();
@@ -36,7 +36,7 @@ AnJaRootDaemon::AnJaRootDaemon()
     util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
 }
 
-AnJaRootDaemon::~AnJaRootDaemon()
+ChildHandler::~ChildHandler()
 {
     util::logVerbose("Detaching from zygote children...");
     std::for_each(zygoteForks.begin(), zygoteForks.end(),
@@ -45,12 +45,12 @@ AnJaRootDaemon::~AnJaRootDaemon()
     zygote->detach();
 }
 
-pid_t AnJaRootDaemon::getZygotePid() const
+pid_t ChildHandler::getZygotePid() const
 {
-    // So... we could iterate through /proc/ to find a process name zygote and
-    // read one of the status files where format is not guaranteed for specifig
-    // Linux version... Or we could grab the zygote socket in
-    // /dev/socket/zygote and ask the socket for the remote pid!
+    // So... we could iterate through /proc/ to find a process named zygote and
+    // read one of the status files where the format is not guaranteed to stay
+    // stable in different kernel releases... Or we could grab the zygote socket
+    // from /dev/socket/zygote and ask the socket for the remote pid!
     //
     // I would say that's a clever (portable!) hack
     int fd = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -90,14 +90,14 @@ pid_t AnJaRootDaemon::getZygotePid() const
     return creds.pid;
 }
 
-trace::Tracee::List::iterator AnJaRootDaemon::searchTracee(pid_t pid)
+trace::Tracee::List::iterator ChildHandler::searchTracee(pid_t pid)
 {
     auto comperator = [=] (trace::Tracee::Ptr tracee)
     { return tracee->getPid() == pid; };
     return std::find_if(zygoteForks.begin(), zygoteForks.end(), comperator);
 }
 
-void AnJaRootDaemon::handleChilds()
+void ChildHandler::handleChilds()
 {
     trace::WaitResult res = trace::waitChilds();
     if(errno == ECHILD)
@@ -119,7 +119,7 @@ void AnJaRootDaemon::handleChilds()
     }
 }
 
-bool AnJaRootDaemon::handleZygote(const trace::WaitResult& res)
+bool ChildHandler::handleZygote(const trace::WaitResult& res)
 {
     if(res.hasExited())
     {
@@ -199,7 +199,7 @@ bool AnJaRootDaemon::handleZygote(const trace::WaitResult& res)
     return false;
 }
 
-bool AnJaRootDaemon::handleZygoteChild(const trace::WaitResult& res)
+bool ChildHandler::handleZygoteChild(const trace::WaitResult& res)
 {
     // first find out if we already know about this child
     trace::Tracee::List::iterator tracee = searchTracee(res.getPid());
