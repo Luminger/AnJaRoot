@@ -46,7 +46,7 @@ bool trace::Tracee::detach() const
     int ret = ptrace(PTRACE_DETACH, pid, NULL, NULL);
     if(ret == -1)
     {
-        util::logError("Failed to deattach from %d: %s", pid, strerror(errno));
+        util::logError("Failed to detach from %d: %s", pid, strerror(errno));
         return false;
     }
 

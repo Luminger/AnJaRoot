@@ -23,7 +23,8 @@
 #include <sys/un.h>
 
 #include "anjarootdaemon.h"
-#include "childhandler.h"
+#include "zygotehandler.h"
+#include "zygotechildhandler.h"
 #include "trace.h"
 #include "shared/util.h"
 #include "shared/version.h"
@@ -183,22 +184,41 @@ int AnJaRootDaemon::run(int argc, char** argv)
         return 1;
     }
 
-    ChildHandler::Ptr handler;
     while(shouldRun)
     {
         try
         {
-            if(!handler)
-            {
-                handler = std::make_shared<ChildHandler>();
-            }
+            ZygoteChildHandler zygoteChilds;
+            ZygoteHandler zygote(zygoteChilds);
 
-            handler->handleChilds();
+            bool handled = true;
+            while(shouldRun && handled)
+            {
+                trace::WaitResult res = trace::waitChilds();
+                if(errno == ECHILD)
+                {
+                    util::logVerbose("We have no children :(");
+                    res.logDebugInfo();
+                    handled = false;
+                }
+                else if(errno == EINTR)
+                {
+                    util::logVerbose("We got interrupted in wait()");
+                    handled = true;
+                }
+                else if(res.getPid() == zygote.getPid())
+                {
+                    handled = zygote.handle(res);
+                }
+                else
+                {
+                    handled = zygoteChilds.handle(res);
+                }
+            }
         }
         catch(std::exception& e)
         {
             util::logError("Failed: %s", e.what());
-            handler.reset();
             sleep(1);
         }
     }

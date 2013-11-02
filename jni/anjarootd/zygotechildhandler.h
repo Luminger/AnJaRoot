@@ -17,31 +17,26 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _ANJAROOTD_CHILDHANDLER_H_
-#define _ANJAROOTD_CHILDHANDLER_H_
-
-#include <memory>
+#ifndef _ANJAROOTD_ZYGOTECHILDHANDLER_H_
+#define _ANJAROOTD_ZYGOTECHILDHANDLER_H_
 
 #include "trace.h"
 
-class ChildHandler
+class ZygoteChildHandler
 {
     public:
-        typedef std::shared_ptr<ChildHandler> Ptr;
+        ZygoteChildHandler();
+        ~ZygoteChildHandler();
 
-        ChildHandler();
-        ~ChildHandler();
-
-        void handleChilds();
+        bool handle(const trace::WaitResult& res);
+        trace::Tracee::Ptr getChildByPid(pid_t pid);
+        void removeChildByPid(pid_t pid);
+        void addChildByPid(pid_t pid);
 
     private:
-        pid_t getZygotePid() const;
-        trace::Tracee::List::iterator searchTracee(pid_t pid);
-        bool handleZygote(const trace::WaitResult& res);
-        bool handleZygoteChild(const trace::WaitResult& res);
+        trace::Tracee::List::iterator searchChildByPid(pid_t pid);
 
-        trace::Tracee::Ptr zygote;
-        trace::Tracee::List zygoteForks;
+        trace::Tracee::List childs;
 };
 
 #endif

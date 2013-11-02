@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License along with
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
-#include <algorithm>
+
 #include <system_error>
 
 #include <errno.h>
@@ -24,11 +24,11 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#include "childhandler.h"
-#include "hook.h"
+#include "zygotehandler.h"
 #include "shared/util.h"
 
-ChildHandler::ChildHandler()
+ZygoteHandler::ZygoteHandler(ZygoteChildHandler& childhandler_) :
+    childhandler(childhandler_)
 {
     // both methods will throw if something is wrong
     pid_t zygotePid = getZygotePid();
@@ -36,16 +36,13 @@ ChildHandler::ChildHandler()
     util::logVerbose("Attached to zygote (pid: %d)", zygotePid);
 }
 
-ChildHandler::~ChildHandler()
+ZygoteHandler::~ZygoteHandler()
 {
-    util::logVerbose("Detaching from zygote children...");
-    std::for_each(zygoteForks.begin(), zygoteForks.end(),
-            [] (trace::Tracee::Ptr x) { x->detach(); });
     util::logVerbose("Detaching from zygote...");
     zygote->detach();
 }
 
-pid_t ChildHandler::getZygotePid() const
+pid_t ZygoteHandler::getZygotePid() const
 {
     // So... we could iterate through /proc/ to find a process named zygote and
     // read one of the status files where the format is not guaranteed to stay
@@ -90,36 +87,12 @@ pid_t ChildHandler::getZygotePid() const
     return creds.pid;
 }
 
-trace::Tracee::List::iterator ChildHandler::searchTracee(pid_t pid)
+pid_t ZygoteHandler::getPid() const
 {
-    auto comperator = [=] (trace::Tracee::Ptr tracee)
-    { return tracee->getPid() == pid; };
-    return std::find_if(zygoteForks.begin(), zygoteForks.end(), comperator);
+    return zygote->getPid();
 }
 
-void ChildHandler::handleChilds()
-{
-    trace::WaitResult res = trace::waitChilds();
-    if(errno == ECHILD)
-    {
-        util::logVerbose("We have no children :(");
-        res.logDebugInfo();
-    }
-    else if(errno == EINTR)
-    {
-        util::logVerbose("We got interrupted in wait()");
-    }
-    else if(res.getPid() == zygote->getPid())
-    {
-        handleZygote(res);
-    }
-    else
-    {
-        handleZygoteChild(res);
-    }
-}
-
-bool ChildHandler::handleZygote(const trace::WaitResult& res)
+bool ZygoteHandler::handle(const trace::WaitResult& res)
 {
     if(res.hasExited())
     {
@@ -142,21 +115,20 @@ bool ChildHandler::handleZygote(const trace::WaitResult& res)
         pid_t newpid = zygote->getEventMsg();
         util::logVerbose("Zygote has forked a new child: %d", newpid);
 
-        trace::Tracee::List::iterator found = searchTracee(newpid);
-        if(found != zygoteForks.end())
+        trace::Tracee::Ptr child = childhandler.getChildByPid(newpid);
+        if(child)
         {
             // We have already received the SIGSTOP, continue the child
             util::logVerbose("Zygote delivered fork event for known child");
-            found->get()->setupSyscallTrace();
-            found->get()->waitForSyscallResume();
+            child->setupSyscallTrace();
+            child->waitForSyscallResume();
         }
         else
         {
             // Event received first, child will be continued in its handler
             util::logVerbose("Zygote delivered fork event for a unknown "
                     "child, will wait for its SIGSTOP");
-            trace::Tracee::Ptr child = std::make_shared<trace::Tracee>(newpid);
-            zygoteForks.push_back(child);
+            childhandler.addChildByPid(newpid);
         }
 
         zygote->resume();
@@ -170,13 +142,8 @@ bool ChildHandler::handleZygote(const trace::WaitResult& res)
             siginfo_t siginfo = zygote->getSignalInfo();
             // well, that's not always correct - SIGCHLDs aren't only send on
             // child death, but for now we assume that - it's easier
-            trace::Tracee::List::iterator found = searchTracee(siginfo.si_pid);
-            if(found != zygoteForks.end())
-            {
-                found->get()->detach();
-                zygoteForks.erase(found);
-            }
             util::logVerbose("Zygote received SIGCHILD for %d", siginfo.si_pid);
+            childhandler.removeChildByPid(siginfo.si_pid);
             zygote->resume(res.getStopSignal());
         }
         else if(res.getStopSignal() == SIGSTOP)
@@ -195,90 +162,6 @@ bool ChildHandler::handleZygote(const trace::WaitResult& res)
     }
 
     util::logError("Bug detected in handleZygote");
-    res.logDebugInfo();
-    return false;
-}
-
-bool ChildHandler::handleZygoteChild(const trace::WaitResult& res)
-{
-    // first find out if we already know about this child
-    trace::Tracee::List::iterator tracee = searchTracee(res.getPid());
-    if(tracee == zygoteForks.end())
-    {
-        if(res.getStopSignal() == SIGSTOP)
-        {
-            // TODO: someone stopped we don't know about till now? Maybe we can
-            // check who's the parent of the child to decide if we should attach
-            // to it or not
-            util::logVerbose("Someone unknown stopped, add to internal list");
-
-            pid_t newpid = res.getPid();
-            trace::Tracee::Ptr child = std::make_shared<trace::Tracee>(newpid);
-            child->setupSyscallTrace();
-            zygoteForks.push_back(child);
-            return true;
-        }
-
-        util::logError("Bug detected in handleZygoteChild (untracked child)");
-        res.logDebugInfo();
-        return true;
-    }
-
-    if(res.hasExited())
-    {
-        util::logVerbose("Zygote child exited with status: %d",
-                res.getExitStatus());
-
-        tracee->get()->detach();
-        zygoteForks.erase(tracee);
-        return true;
-    }
-
-    if(res.wasSignaled())
-    {
-        util::logVerbose("Zygote child received termination signal: %d",
-                res.getTermSignal());
-
-        tracee->get()->detach();
-        zygoteForks.erase(tracee);
-        return true;
-    }
-
-    if(res.inSyscall())
-    {
-        bool detach = hook::performHookActions(*tracee);
-        if(detach)
-        {
-            tracee->get()->detach();
-            zygoteForks.erase(tracee);
-        }
-        else
-        {
-            tracee->get()->waitForSyscallResume();
-        }
-
-        return true;
-    }
-
-    if(res.hasStopped())
-    {
-        if(res.getStopSignal() == SIGSTOP)
-        {
-            util::logVerbose("Zygote child was stopped by SIGSTOP");
-
-            // we don't know if we have already setup the syscall tracing here
-            tracee->get()->setupSyscallTrace();
-            tracee->get()->waitForSyscallResume();
-            return true;
-        }
-
-        util::logVerbose("Zygote child received stop signal %d, deliver it",
-                res.getStopSignal());
-        tracee->get()->resume(res.getStopSignal());
-        return true;
-    }
-
-    util::logError("Bug detected in handleZygoteChild");
     res.logDebugInfo();
     return false;
 }
