@@ -169,6 +169,11 @@ bool trace::WaitResult::hasExited() const
 
 int trace::WaitResult::getExitStatus() const
 {
+    if(!hasExited())
+    {
+        util::logError("getExitStatus() called, but hasExited() is false");
+    }
+
     return WEXITSTATUS(status);
 }
 
@@ -179,11 +184,21 @@ bool trace::WaitResult::wasSignaled() const
 
 int trace::WaitResult::getTermSignal() const
 {
+    if(!wasSignaled())
+    {
+        util::logError("getTermSignal() called, but wasSignaled() is false");
+    }
+
     return WTERMSIG(status);
 }
 
 bool trace::WaitResult::wasCoredumped() const
 {
+    if(!wasSignaled())
+    {
+        util::logError("wasCoredumped() called, but wasSignaled() is false");
+    }
+
     return WCOREDUMP(status);
 }
 
@@ -194,6 +209,11 @@ bool trace::WaitResult::hasStopped() const
 
 int trace::WaitResult::getStopSignal() const
 {
+    if(!hasStopped())
+    {
+        util::logError("getStopSignal() called, but hasStopped() is false");
+    }
+
     return WSTOPSIG(status);
 }
 
