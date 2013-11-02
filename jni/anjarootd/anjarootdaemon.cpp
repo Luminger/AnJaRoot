@@ -19,29 +19,34 @@
 #include <system_error>
 #include <iostream>
 
-#include <getopt.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
+#include "anjarootdaemon.h"
 #include "childhandler.h"
 #include "trace.h"
 #include "shared/util.h"
 #include "shared/version.h"
 
-const char* shortopts = "rvh";
-const struct option longopts[] = {
+bool AnJaRootDaemon::shouldRun = true;
+const char* AnJaRootDaemon::shortopts = "rvh";
+const struct option AnJaRootDaemon::longopts[] = {
     {"replace",         no_argument,       0, 'r'},
     {"version",         no_argument,       0, 'v'},
     {"help",            no_argument,       0, 'h'},
     {0, 0, 0, 0},
 };
 
-bool shouldRun = true;
-bool replaceDebuggerd = false;
-bool printVersion = false;
-bool printHelp = false;
+AnJaRootDaemon::AnJaRootDaemon() : replaceDebuggerd(false),
+    showVersion(false), showUsage(false)
+{
+}
 
-void printUsage(const char* progname)
+AnJaRootDaemon::~AnJaRootDaemon()
+{
+}
+
+void AnJaRootDaemon::printUsage(const char* progname) const
 {
     std::cerr << "Usage: " << progname << " [OPTIONS]" << std::endl;
     std::cerr << std::endl << "Valid Options:" << std::endl;
@@ -50,7 +55,7 @@ void printUsage(const char* progname)
     std::cerr << "\t-v, --version\t\t\tprint version" << std::endl;
 }
 
-void processArguments(int argc, char** argv)
+void AnJaRootDaemon::processArguments(int argc, char** argv)
 {
     int c, option_index = 0;
     while(true)
@@ -69,18 +74,18 @@ void processArguments(int argc, char** argv)
                 break;
             case 'v':
                 util::logVerbose("opt: -v");
-                printVersion = true;
+                showVersion = true;
                 return;
             case 'h':
             default:
                 util::logVerbose("opt: -h (or unknown)");
-                printHelp = true;
+                showUsage = true;
                 return;
         }
     }
 }
 
-void signalHandler(int signum)
+void AnJaRootDaemon::signalHandler(int signum)
 {
     // Zygote doesn't use the android logging methods in its signal handler, so
     // we don't do either. It's just too risky...
@@ -91,13 +96,13 @@ void signalHandler(int signum)
     }
 }
 
-void setupSignalHandling()
+void AnJaRootDaemon::setupSignalHandling() const
 {
     util::logVerbose("Setting up signal handlers...");
 
     struct sigaction sa;
     sigemptyset(&sa.sa_mask);
-    sa.sa_handler = signalHandler;
+    sa.sa_handler = AnJaRootDaemon::signalHandler;
     sa.sa_flags = 0;
 
     int ret = sigaction(SIGINT, &sa, NULL);
@@ -115,7 +120,7 @@ void setupSignalHandling()
     }
 }
 
-void claimLockSocket()
+void AnJaRootDaemon::claimLockSocket() const
 {
     // Android hasn't any good scratch place for pidfile (like /var or /tmp),
     // maybe we could do this in the /cache partition, but I have mixed
@@ -152,19 +157,16 @@ void claimLockSocket()
     // we don't close the socket here on purpose, it's our lock!
 }
 
-int main(int argc, char** argv)
+int AnJaRootDaemon::run(int argc, char** argv)
 {
-    util::logVerbose("AnJaRootDaemon (version %s) started",
-            version::asString().c_str());
-
     processArguments(argc, argv);
-    if(printHelp)
+    if(showUsage)
     {
         printUsage(argv[0]);
         return 0;
     }
 
-    if(printVersion)
+    if(showVersion)
     {
         std::cout << "Version: " << version::asString() << std::endl;
         return 0;
@@ -202,4 +204,12 @@ int main(int argc, char** argv)
     }
 
     return 0;
+}
+
+int main(int argc, char** argv)
+{
+    util::logVerbose("AnJaRootDaemon (version %s) started",
+            version::asString().c_str());
+
+    return AnJaRootDaemon().run(argc, argv);
 }

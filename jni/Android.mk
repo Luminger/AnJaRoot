@@ -7,7 +7,7 @@ ANJAROOTINSTALLER_LOGTAG := AnJaRootInstaller
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := anjarootd
-LOCAL_SRC_FILES := anjarootd/main.cpp \
+LOCAL_SRC_FILES := anjarootd/anjarootdaemon.cpp \
 				   anjarootd/trace.cpp \
 				   anjarootd/childhandler.cpp \
 				   anjarootd/packages.cpp \
