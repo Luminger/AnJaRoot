@@ -44,12 +44,15 @@ bool ZygoteChildHandler::handle(const trace::WaitResult& res)
         {
             // TODO: someone stopped we don't know about till now? Maybe we can
             // check who's the parent of the child to decide if we should attach
-            // to it or not
-            util::logVerbose("Someone unknown stopped, add to internal list");
-
+            // to it or not. We could parse proc, but that's ugly as hell...
             pid_t newpid = res.getPid();
+
+            util::logVerbose("SIGSTOP for untracked child %d received, "
+                    "starting trace", newpid);
+
             trace::Tracee::Ptr child = std::make_shared<trace::Tracee>(newpid);
             child->setupSyscallTrace();
+            child->waitForSyscallResume();
             childs.push_back(child);
             return true;
         }
@@ -97,16 +100,6 @@ bool ZygoteChildHandler::handle(const trace::WaitResult& res)
 
     if(res.hasStopped())
     {
-        if(res.getStopSignal() == SIGSTOP)
-        {
-            util::logVerbose("Zygote child was stopped by SIGSTOP");
-
-            // we don't know if we have already setup the syscall tracing here
-            found->get()->setupSyscallTrace();
-            found->get()->waitForSyscallResume();
-            return true;
-        }
-
         util::logVerbose("Zygote child received stop signal %d, deliver it",
                 res.getStopSignal());
         found->get()->resume(res.getStopSignal());
@@ -127,11 +120,6 @@ trace::Tracee::Ptr ZygoteChildHandler::getChildByPid(pid_t pid)
     }
 
     return NULL;
-}
-
-void ZygoteChildHandler::addChildByPid(pid_t pid)
-{
-    childs.push_back(std::make_shared<trace::Tracee>(pid));
 }
 
 void ZygoteChildHandler::removeChildByPid(pid_t pid)

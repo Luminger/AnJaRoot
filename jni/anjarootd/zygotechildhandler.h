@@ -31,7 +31,6 @@ class ZygoteChildHandler
         bool handle(const trace::WaitResult& res);
         trace::Tracee::Ptr getChildByPid(pid_t pid);
         void removeChildByPid(pid_t pid);
-        void addChildByPid(pid_t pid);
 
     private:
         trace::Tracee::List::iterator searchChildByPid(pid_t pid);

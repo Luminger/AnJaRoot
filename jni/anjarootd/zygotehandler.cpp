@@ -115,22 +115,6 @@ bool ZygoteHandler::handle(const trace::WaitResult& res)
         pid_t newpid = zygote->getEventMsg();
         util::logVerbose("Zygote has forked a new child: %d", newpid);
 
-        trace::Tracee::Ptr child = childhandler.getChildByPid(newpid);
-        if(child)
-        {
-            // We have already received the SIGSTOP, continue the child
-            util::logVerbose("Zygote delivered fork event for known child");
-            child->setupSyscallTrace();
-            child->waitForSyscallResume();
-        }
-        else
-        {
-            // Event received first, child will be continued in its handler
-            util::logVerbose("Zygote delivered fork event for a unknown "
-                    "child, will wait for its SIGSTOP");
-            childhandler.addChildByPid(newpid);
-        }
-
         zygote->resume();
         return true;
     }
