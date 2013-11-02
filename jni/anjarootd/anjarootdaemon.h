@@ -17,16 +17,33 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _ANJAROOT_INSTALLER_H
-#define _ANJAROOT_INSTALLER_H
+#ifndef _ANJAROOTD_ANJAROOTDAEMON_H_
+#define _ANJAROOTD_ANJAROOTDAEMON_H_
 
-#include <string>
-#include <utility>
-#include <tuple>
+#include <getopt.h>
 
-#include "modes.h"
+class AnJaRootDaemon
+{
+    public:
+        AnJaRootDaemon();
+        ~AnJaRootDaemon();
 
-typedef std::tuple<modes::OperationMode, std::string, std::string,
-        std::string> ModeSpec;
+        int run(int argc, char** argv);
+
+    private:
+        static const char* shortopts;
+        static const option longopts[];
+        static bool shouldRun;
+
+        static void signalHandler(int signum);
+
+        void printUsage(const char* progname) const;
+        void processArguments(int argc, char** argv);
+        void claimLockSocket() const;
+        void setupSignalHandling() const;
+
+        bool showVersion;
+        bool showUsage;
+};
 
 #endif

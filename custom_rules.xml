@@ -9,7 +9,7 @@
     <property name="anjaroot.updatezip.uninstall.cmd" location="scripts/update-binary.uninstall.sh"/>
     <property name="anjaroot.updatezip.install.name" location="${anjaroot.release.dir}/AnJaRoot-${anjaroot.version}-install-update.zip"/>
     <property name="anjaroot.updatezip.uninstall.name" location="${anjaroot.release.dir}/AnJaRoot-${anjaroot.version}-uninstall-update.zip"/>
-    <property file="secure.properties" />
+    <property file="../secure.properties" />
     <target name="-pre-build">
         <exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
     </target>
@@ -29,18 +29,23 @@
         <copy todir="libs" overwrite="true" encoding="utf-8">
             <fileset dir="libs">
                 <include name="**/anjarootinstaller"/>
+                <include name="**/anjarootd"/>
             </fileset>
             <mapper type="regexp" from="(.*)/(.*)" to="\1/lib\2.so"/>
         </copy>
         <chmod perm="ugo+x" file="libs/mips/libanjarootinstaller.so"/>
         <chmod perm="ugo+x" file="libs/armeabi/libanjarootinstaller.so"/>
         <chmod perm="ugo+x" file="libs/x86/libanjarootinstaller.so"/>
+        <chmod perm="ugo+x" file="libs/mips/libanjarootd.so"/>
+        <chmod perm="ugo+x" file="libs/armeabi/libanjarootd.so"/>
+        <chmod perm="ugo+x" file="libs/x86/libanjarootd.so"/>
     </target>
     <target name="install-updatezip-without-apk" depends="copy-native-files">
         <delete dir="${anjaroot.updatezip.install.dir}"/>
         <copy todir="${anjaroot.updatezip.install.dir}" overwrite="true" encoding="utf-8">
             <fileset dir="libs">
                 <include name="**/anjarootinstaller"/>
+                <include name="**/anjarootd"/>
                 <include name="**/libanjaroot.so"/>
             </fileset>
         </copy>

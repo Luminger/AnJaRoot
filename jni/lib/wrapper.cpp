@@ -24,6 +24,7 @@
 #include <jni.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/capability.h>
 
 #include "shared/util.h"
 #include "shared/version.h"
@@ -34,6 +35,8 @@
 // can't be changed as the library is distributed with that package
 static const char* className =
         "org/failedprojects/anjaroot/library/internal/NativeMethods";
+
+bool SetCapCompatMode = false;
 
 jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
 {
@@ -46,6 +49,25 @@ jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
     try
     {
         helper::Capabilities caps = helper::getCapabilities(pid);
+
+        if(SetCapCompatMode)
+        {
+            if(caps.effective == 0xFFFFFEFF)
+            {
+                caps.effective = 0xFFFFFFFF;
+            }
+
+            if(caps.permitted == 0xFFFFFEFF)
+            {
+                caps.permitted = 0xFFFFFFFF;
+            }
+
+            if(caps.inheritable == 0xFFFFFEFF)
+            {
+                caps.inheritable = 0xFFFFFFFF;
+            }
+        }
+
         jlong buf[3] = {caps.effective, caps.permitted, caps.inheritable};
         env->SetLongArrayRegion(retval, 0, 3, buf);
         return retval;
@@ -84,6 +106,14 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
     {
         exceptions::throwOutOfBoundsException(env, "Inheritable out of bounds");
         return;
+    }
+
+    if(SetCapCompatMode)
+    {
+        int mask = 0xFFFFFFFF & (~(1 << CAP_SETPCAP));
+        effective &= mask;
+        permitted &= mask;
+        inheritable &= mask;
     }
 
     try
@@ -242,6 +272,12 @@ void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl)
 {
     // We are at apilvl 1, nothing to do here =)
     util::logVerbose("Library API level: %d", apilvl);
+
+    if(apilvl < 2)
+    {
+        util::logVerbose("Enabling CAP_SETCAP compat mode");
+        SetCapCompatMode = true;
+    }
 }
 
 static JNINativeMethod methods[] = {

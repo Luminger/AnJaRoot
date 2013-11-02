@@ -27,13 +27,10 @@ struct config {
     static const std::string installMarkPath;
     static const std::string libandroidPath;
     static const std::string installedLibraryPath;
-    static const std::string temporaryAppProcessPath;
-    static const std::string newAppProcessPath;
-    static const std::string backupAppProcessPath;
-    static const std::string originalAppProcessPath;
+    static const std::string originalDebuggerdPath;
+    static const std::string newDebuggerdPath;
     static const std::string installerPath;
     static const std::string apkSystemPath;
-    static const std::string wrapperScriptContent;
 };
 
 #endif

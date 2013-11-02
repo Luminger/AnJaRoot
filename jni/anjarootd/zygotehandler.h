@@ -17,16 +17,26 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _ANJAROOT_INSTALLER_H
-#define _ANJAROOT_INSTALLER_H
+#ifndef _ANJAROOTD_ZYGOTEHANDLER_H_
+#define _ANJAROOTD_ZYGOTEHANDLER_H_
 
-#include <string>
-#include <utility>
-#include <tuple>
+#include "trace.h"
+#include "zygotechildhandler.h"
 
-#include "modes.h"
+class ZygoteHandler
+{
+    public:
+        ZygoteHandler(ZygoteChildHandler& childhandler_);
+        ~ZygoteHandler();
 
-typedef std::tuple<modes::OperationMode, std::string, std::string,
-        std::string> ModeSpec;
+        pid_t getPid() const;
+        bool handle(const trace::WaitResult& res);
+
+    private:
+        pid_t getZygotePid() const;
+
+        trace::Tracee::Ptr zygote;
+        ZygoteChildHandler& childhandler;
+};
 
 #endif
