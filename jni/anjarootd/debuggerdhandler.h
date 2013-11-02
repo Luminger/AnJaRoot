@@ -32,6 +32,8 @@ class DebuggerdHandler
         bool handle(const trace::WaitResult& res);
 
     private:
+        static const char* executableName;
+
         pid_t pid;
 };
 

@@ -189,9 +189,9 @@ int AnJaRootDaemon::run(int argc, char** argv)
     {
         try
         {
+            DebuggerdHandler debuggerd(replaceDebuggerd);
             ZygoteChildHandler zygoteChilds;
             ZygoteHandler zygote(zygoteChilds);
-            DebuggerdHandler debuggerd(replaceDebuggerd);
 
             bool handled = true;
             while(shouldRun && handled)
