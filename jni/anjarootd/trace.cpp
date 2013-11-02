@@ -146,10 +146,30 @@ void trace::WaitResult::logDebugInfo() const
 {
     util::logError("PID: %d STATUS: %d EVENT: %d INSYSCALL: %d", pid, status,
             getEvent(), inSyscall());
-    util::logError("WIFEXITED: %d WEXITSTATUS: %d WIFSIGNALED: %d",
-            hasExited(), getExitStatus(), wasSignaled());
-    util::logError("WTERMSIG: %d WCOREDUMP: %d WIFSTOPPED: %d WSTOPSIG: %d",
-            getTermSignal(), wasCoredumped(), hasStopped(), getStopSignal());
+
+    if(hasExited())
+    {
+        util::logError("WIFEXITED: %d WEXITSTATUS: %d",
+                hasExited(), getExitStatus());
+    }
+
+    if(wasSignaled())
+    {
+        util::logError("WIFSIGNALED: %d WTERMSIG: %d",
+                wasSignaled(), getTermSignal());
+    }
+
+    if(hasExited())
+    {
+        util::logError("WIFEXITED: %d WEXITSTATUS: %d WCOREDUMP: %d",
+                hasExited(), getExitStatus(), wasCoredumped());
+    }
+
+    if(hasStopped())
+    {
+        util::logError("WIFSTOPPED: %d WSTOPSIG: %d",
+                hasStopped(), getStopSignal());
+    }
 }
 
 pid_t trace::WaitResult::getPid() const
