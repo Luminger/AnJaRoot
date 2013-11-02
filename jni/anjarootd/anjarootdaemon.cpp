@@ -31,16 +31,14 @@
 #include "shared/version.h"
 
 bool AnJaRootDaemon::shouldRun = true;
-const char* AnJaRootDaemon::shortopts = "rvh";
+const char* AnJaRootDaemon::shortopts = "vh";
 const struct option AnJaRootDaemon::longopts[] = {
-    {"replace",         no_argument,       0, 'r'},
     {"version",         no_argument,       0, 'v'},
     {"help",            no_argument,       0, 'h'},
     {0, 0, 0, 0},
 };
 
-AnJaRootDaemon::AnJaRootDaemon() : replaceDebuggerd(false),
-    showVersion(false), showUsage(false)
+AnJaRootDaemon::AnJaRootDaemon() : showVersion(false), showUsage(false)
 {
 }
 
@@ -52,7 +50,6 @@ void AnJaRootDaemon::printUsage(const char* progname) const
 {
     std::cerr << "Usage: " << progname << " [OPTIONS]" << std::endl;
     std::cerr << std::endl << "Valid Options:" << std::endl;
-    std::cerr << "\t-r, --replace\t\t\trun a replacement debuggerd" << std::endl;
     std::cerr << "\t-h, --help\t\t\tprint this usage message" << std::endl;
     std::cerr << "\t-v, --version\t\t\tprint version" << std::endl;
 }
@@ -70,10 +67,6 @@ void AnJaRootDaemon::processArguments(int argc, char** argv)
 
         switch(c)
         {
-            case 'r':
-                util::logVerbose("opt: -r");
-                replaceDebuggerd = true;
-                break;
             case 'v':
                 util::logVerbose("opt: -v");
                 showVersion = true;
@@ -189,7 +182,7 @@ int AnJaRootDaemon::run(int argc, char** argv)
     {
         try
         {
-            DebuggerdHandler debuggerd(replaceDebuggerd);
+            DebuggerdHandler debuggerd;
             ZygoteChildHandler zygoteChilds;
             ZygoteHandler zygote(zygoteChilds);
 

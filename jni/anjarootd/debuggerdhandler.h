@@ -25,7 +25,7 @@
 class DebuggerdHandler
 {
     public:
-        DebuggerdHandler(bool shouldSpawn);
+        DebuggerdHandler();
         ~DebuggerdHandler();
 
         pid_t getPid() const;

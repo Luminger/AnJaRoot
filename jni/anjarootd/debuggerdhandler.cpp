@@ -25,13 +25,8 @@
 
 const char* DebuggerdHandler::executableName = "debuggerd.orig";
 
-DebuggerdHandler::DebuggerdHandler(bool shouldSpawn) : pid(0)
+DebuggerdHandler::DebuggerdHandler() : pid(0)
 {
-    if(!shouldSpawn)
-    {
-        return;
-    }
-
     pid = fork();
     if(pid > 0)
     {

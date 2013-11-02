@@ -42,7 +42,6 @@ class AnJaRootDaemon
         void claimLockSocket() const;
         void setupSignalHandling() const;
 
-        bool replaceDebuggerd;
         bool showVersion;
         bool showUsage;
 };
