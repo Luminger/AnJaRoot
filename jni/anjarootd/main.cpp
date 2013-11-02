@@ -17,7 +17,9 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 #include <system_error>
+#include <iostream>
 
+#include <getopt.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -26,7 +28,57 @@
 #include "shared/util.h"
 #include "shared/version.h"
 
+const char* shortopts = "rvh";
+const struct option longopts[] = {
+    {"replace",         no_argument,       0, 'r'},
+    {"version",         no_argument,       0, 'v'},
+    {"help",            no_argument,       0, 'h'},
+    {0, 0, 0, 0},
+};
+
 bool shouldRun = true;
+bool replaceDebuggerd = false;
+bool printVersion = false;
+bool printHelp = false;
+
+void printUsage(const char* progname)
+{
+    std::cerr << "Usage: " << progname << " [OPTIONS]" << std::endl;
+    std::cerr << std::endl << "Valid Options:" << std::endl;
+    std::cerr << "\t-r, --replace\t\t\trun a replacement debuggerd" << std::endl;
+    std::cerr << "\t-h, --help\t\t\tprint this usage message" << std::endl;
+    std::cerr << "\t-v, --version\t\t\tprint version" << std::endl;
+}
+
+void processArguments(int argc, char** argv)
+{
+    int c, option_index = 0;
+    while(true)
+    {
+        c = getopt_long (argc, argv, shortopts, longopts, &option_index);
+        if(c == -1)
+        {
+            break;
+        }
+
+        switch(c)
+        {
+            case 'r':
+                util::logVerbose("opt: -r");
+                replaceDebuggerd = true;
+                break;
+            case 'v':
+                util::logVerbose("opt: -v");
+                printVersion = true;
+                return;
+            case 'h':
+            default:
+                util::logVerbose("opt: -h (or unknown)");
+                printHelp = true;
+                return;
+        }
+    }
+}
 
 void signalHandler(int signum)
 {
@@ -105,16 +157,17 @@ int main(int argc, char** argv)
     util::logVerbose("AnJaRootDaemon (version %s) started",
             version::asString().c_str());
 
-    // simple and stupid version - I don't care as long as it's only one arg
-    if(argc == 2 && std::string(argv[1]) == "-d")
+    processArguments(argc, argv);
+    if(printHelp)
     {
-        int ret = daemon(0, 0);
-        if(ret == -1)
-        {
-            util::logError("Failed to daemonize, error %d: %s", errno,
-                    strerror(errno));
-            return 1;
-        }
+        printUsage(argv[0]);
+        return 0;
+    }
+
+    if(printVersion)
+    {
+        std::cout << "Version: " << version::asString() << std::endl;
+        return 0;
     }
 
     try
