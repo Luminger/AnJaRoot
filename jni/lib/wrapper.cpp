@@ -49,6 +49,25 @@ jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
     try
     {
         helper::Capabilities caps = helper::getCapabilities(pid);
+
+        if(SetCapCompatMode)
+        {
+            if(caps.effective == 0xFFFFFEFF)
+            {
+                caps.effective = 0xFFFFFFFF;
+            }
+
+            if(caps.permitted == 0xFFFFFEFF)
+            {
+                caps.permitted = 0xFFFFFFFF;
+            }
+
+            if(caps.inheritable == 0xFFFFFEFF)
+            {
+                caps.inheritable = 0xFFFFFFFF;
+            }
+        }
+
         jlong buf[3] = {caps.effective, caps.permitted, caps.inheritable};
         env->SetLongArrayRegion(retval, 0, 3, buf);
         return retval;
