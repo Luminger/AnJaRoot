@@ -19,7 +19,7 @@
 
 #include "debuggerdhandler.h"
 
-DebuggerdHandler::DebuggerdHandler() : pid(0)
+DebuggerdHandler::DebuggerdHandler(bool shouldSpawn) : pid(0)
 {
 }
 
