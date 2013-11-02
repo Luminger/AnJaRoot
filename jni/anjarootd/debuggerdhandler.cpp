@@ -23,14 +23,14 @@
 #include "debuggerdhandler.h"
 #include "shared/util.h"
 
-const char* DebuggerdHandler::executableName = "debuggerd.orig";
+const char* DebuggerdHandler::executablePath = "/system/bin/debuggerd.orig";
 
 DebuggerdHandler::DebuggerdHandler() : pid(0)
 {
     pid = fork();
-    if(pid > 0)
+    if(pid == 0)
     {
-        execlp(executableName, executableName, NULL);
+        execl(executablePath, executablePath, NULL);
 
         // if we land here, exec failed...
         util::logError("Failed to exec %d: %s", errno, strerror(errno));
