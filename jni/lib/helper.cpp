@@ -58,7 +58,7 @@ Capabilities getCapabilities(pid_t pid)
 
 void setCapabilities(const Capabilities& caps)
 {
-    util::logVerbose("setCapabilities: effective=0x%X permitted=0x%X "
+    util::logVerbose("setCapabilities: effective=0x%X, permitted=0x%X, "
             "inheritable=0x%X", caps.effective, caps.permitted,
             caps.inheritable);
 

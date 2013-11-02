@@ -147,8 +147,10 @@ printnl 'Getting device ABI...'
 discoverArch
 
 INSTALLER="$TMPDIR/$CPU_ABI/anjarootinstaller"
+DAEMON="$TMPDIR/$CPU_ABI/anjarootd"
 LIBRARY="$TMPDIR/$CPU_ABI/libanjaroot.so"
 debug "INSTALLER: $INSTALLER"
+debug "DAEMON: $DAEMON"
 debug "LIBRARY: $LIBRARY"
 
 if [ -d "$TMPDIR" ]
@@ -164,9 +166,6 @@ printnl 'Unpacking data...'
 mkdir $TMPDIR || abort
 unzip -o $UPDATEZIP_PATH -d $TMPDIR || abort
 
-printnl 'Preparing installer...'
-chmod 755 $INSTALLER || abort
-
 if [ -f "$OLD_INSTALLER" ]
 then
     printnl 'Preparing old installer...'
@@ -174,9 +173,6 @@ then
 
     printnl 'Cleaning away previous installation...'
     "$OLD_INSTALLER" --uninstall || abort
-else
-    printnl 'Cleaning away (possible) previous installation...'
-    "$INSTALLER" --uninstall || abort
 fi
 
 if [ -f "$APK_ZIP" ]
@@ -201,8 +197,12 @@ fi
 
 debug "APK: $APK"
 
+printnl 'Preparing installer...'
+chmod 755 $INSTALLER || abort
+
 printnl 'Running installer...'
-"$INSTALLER" --install --srclibpath="$LIBRARY" --apkpath="$APK"|| abort
+"$INSTALLER" --install --srclibpath="$LIBRARY" --daemonpath="$DAEMON" \
+    --apkpath="$APK" || abort
 
 cleanup
 

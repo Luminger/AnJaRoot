@@ -17,16 +17,20 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#ifndef _ANJAROOT_INSTALLER_H
-#define _ANJAROOT_INSTALLER_H
+#ifndef _ANJAROOTD_HOOK_H_
+#define _ANJAROTOD_HOOK_H_
 
-#include <string>
-#include <utility>
-#include <tuple>
+#include "trace.h"
 
-#include "modes.h"
+namespace hook
+{
+    extern const char* GranterPackageName;
 
-typedef std::tuple<modes::OperationMode, std::string, std::string,
-        std::string> ModeSpec;
+    bool performHookActions(trace::Tracee::Ptr tracee);
+    int getSyscallNumber(trace::Tracee::Ptr tracee);
+    bool changePermittedCapabilities(trace::Tracee::Ptr tracee);
+    uid_t getUidFromPid(pid_t pid);
+    bool isUidGranted(uid_t uid);
+}
 
 #endif

@@ -48,9 +48,10 @@
 #include "modes.h"
 #include "operations.h"
 
-const char* shortopts = "s:a:icurymvh";
+const char* shortopts = "s:d:a:icurymvh";
 const struct option longopts[] = {
     {"srclibpath",      required_argument, 0, 's'},
+    {"daemonpath",      required_argument, 0, 'd'},
     {"apkpath",         required_argument, 0, 'a'},
     {"install",         no_argument,       0, 'i'},
     {"check",           no_argument,       0, 'c'},
@@ -69,10 +70,11 @@ void printUsage(const char* progname)
     std::cerr << std::endl << "Valid Options:" << std::endl;
     std::cerr << "\t-h, --help\t\t\tprint this usage message" << std::endl;
     std::cerr << "\t-v, --version\t\t\tprint version" << std::endl;
-    std::cerr << "\t-s, --srclibpath [PATH] \tset source lib path" << std::endl;
-    std::cerr << "\t-a, --apkpath [PATH] \tset apk path" << std::endl;
+    std::cerr << "\t-s, --srclibpath [PATH] \tsource lib path" << std::endl;
+    std::cerr << "\t-d, --daemonpath [PATH] \tsource daemon path" << std::endl;
+    std::cerr << "\t-a, --apkpath [PATH] \tsource apk path" << std::endl;
     std::cerr << std::endl << "Valid Modes:" << std::endl;
-    std::cerr << "\t-i, --install\t\t\tdo install (needs -s to be set)" << std::endl;
+    std::cerr << "\t-i, --install\t\t\tdo install" << std::endl;
     std::cerr << "\t-u, --uninstall\t\t\tdo uninstall" << std::endl;
     std::cerr << "\t-r, --recovery\t\t\tdo recovery install" << std::endl;
     std::cerr << "\t-y, --reboot-recovery\t boot into recovery" << std::endl;
@@ -83,6 +85,7 @@ void printUsage(const char* progname)
 ModeSpec processArguments(int argc, char** argv)
 {
     std::string sourcelib;
+    std::string daemonpath;
     std::string apk;
     modes::OperationMode mode = modes::InvalidMode;
 
@@ -97,6 +100,10 @@ ModeSpec processArguments(int argc, char** argv)
 
         switch(c)
         {
+            case 'd':
+                util::logVerbose("Opt: -d set to '%s'", optarg);
+                daemonpath = optarg;
+                break;
             case 's':
                 util::logVerbose("Opt: -s set to '%s'", optarg);
                 sourcelib = optarg;
@@ -132,26 +139,27 @@ ModeSpec processArguments(int argc, char** argv)
             case 'v':
                 util::logVerbose("opt: -v");
                 mode = modes::VersionMode;
-                return std::make_tuple(modes::VersionMode, "", "");
+                return std::make_tuple(modes::VersionMode, "", "", "");
             case 'h':
                 util::logVerbose("opt: -h");
-                return std::make_tuple(modes::HelpMode, "", "");
+                return std::make_tuple(modes::HelpMode, "", "", "");
             default:
-                return std::make_tuple(modes::InvalidMode, "", "");
+                return std::make_tuple(modes::InvalidMode, "", "", "");
         }
     }
 
-    if(mode == modes::InstallMode && (sourcelib.empty() || apk.empty()))
+    if(mode == modes::InstallMode && (sourcelib.empty() ||
+            daemonpath.empty() || apk.empty()))
     {
         mode = modes::InvalidMode;
     }
 
-    if(mode == modes::RecoveryInstallMode &&  apk.empty())
+    if(mode == modes::RecoveryInstallMode && apk.empty())
     {
         mode = modes::InvalidMode;
     }
 
-    return std::make_tuple(mode, sourcelib, apk);
+    return std::make_tuple(mode, sourcelib, daemonpath, apk);
 }
 
 int main(int argc, char** argv)
@@ -197,7 +205,8 @@ int main(int argc, char** argv)
     {
         if(mode == modes::InstallMode)
         {
-            ret = modes::install(std::get<1>(spec), std::get<2>(spec));
+            ret = modes::install(std::get<1>(spec), std::get<2>(spec),
+                    std::get<3>(spec));
         }
         else if(mode == modes::UninstallMode)
         {
@@ -205,7 +214,7 @@ int main(int argc, char** argv)
         }
         else if(mode == modes::RecoveryInstallMode)
         {
-            ret = modes::recoveryInstall(std::get<2>(spec));
+            ret = modes::recoveryInstall(std::get<3>(spec));
         }
         else if(mode == modes::CheckMode)
         {

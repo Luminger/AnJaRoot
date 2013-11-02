@@ -33,14 +33,9 @@
 
 namespace modes {
 
-ReturnCode install(const std::string& libpath, const std::string& apkpath)
+ReturnCode install(const std::string& libpath, const std::string& daemonpath,
+        const std::string& apkpath)
 {
-    // BEWARE This operation is damn critical - if we overwrite the library
-    //        with the our copy operation it will truncate the file and this
-    //        will result in a full system crash as EVERY process has our lib
-    //        loaded. We have to make sure the library is still around for the
-    //        processes which are using it.
-
     util::logVerbose("Running install mode");
 
     // check if there is an install mark
@@ -51,10 +46,26 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     }
 
     // this install process will break when libpath is identical to its final
-    // place, refuse to install if this happens.
+    // place, refuse to install if this happens
     if(libpath == config::installedLibraryPath)
     {
         util::logError("Provided sourcelibpath is identical to the final "
+                "place in the system. Move it somewhere else!");
+        return FAIL;
+    }
+
+    // same for daemonpath...
+    if(daemonpath == config::originalDebuggerdPath)
+    {
+        util::logError("Provided daemonpath is identical to the final "
+                "place in the system. Move it somewhere else!");
+        return FAIL;
+    }
+
+    // ...and the apk
+    if(apkpath == config::apkSystemPath)
+    {
+        util::logError("Provided apkpath is identical to the final "
                 "place in the system. Move it somewhere else!");
         return FAIL;
     }
@@ -64,9 +75,9 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
 
     try
     {
-        // stat app_process to recreate files with correct rights
+        // stat debuggerd to recreate files with correct rights
         // as they may differ from system (depends on version/vendor)
-        operations::stat(config::originalAppProcessPath, origst);
+        operations::stat(config::originalDebuggerdPath, origst);
         // stat libandroid.so to have mode,uid,gid to set on our lib
         operations::stat(config::libandroidPath, libst);
     }
@@ -76,7 +87,7 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
         throw;
     }
 
-    // copy our lib
+    // copy libanjaroot.so
     try
     {
         try
@@ -109,7 +120,7 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
     }
 
     // make sure source and destination lib have matching crc32 sums
-    bool libEqual = hash::CRC32::compareFiles(libpath, 
+    bool libEqual = hash::CRC32::compareFiles(libpath,
             config::installedLibraryPath);
     if(!libEqual)
     {
@@ -118,69 +129,42 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
         return FAIL;
     }
 
-    // create a backup of the original app_process;
+    // move debuggerd away so we can place our daemon
     try
     {
-        bool exists = operations::access(config::backupAppProcessPath, F_OK);
-        if(!exists)
-        {
-            operations::copy(config::originalAppProcessPath,
-                    config::backupAppProcessPath);
-            operations::chown(config::backupAppProcessPath, origst.st_uid,
-                    origst.st_gid);
-            operations::chmod(config::backupAppProcessPath, origst.st_mode);
-        }
-        else
-        {
-            util::logVerbose("Backup exists, will not overwrite it");
-        }
+        operations::move(config::originalDebuggerdPath,
+                config::newDebuggerdPath);
     }
     catch(std::exception& e)
     {
-        util::logError("Failed to create app_process backup, reverting");
+        util::logError("Failed to move debuggerd away, reverting");
         uninstall();
         throw;
     }
 
-    // make sure backup and orig binary have the same crc32 sum
-    bool binEqual = hash::CRC32::compareFiles(config::originalAppProcessPath,
-            config::backupAppProcessPath);
-    if(!binEqual)
+    // copy daemon to /system/bin/
+    try
     {
-        util::logError("CRC32 sums differ, reverting");
+        operations::copy(daemonpath, config::originalDebuggerdPath);
+        operations::chown(config::originalDebuggerdPath, origst.st_uid,
+                origst.st_gid);
+        operations::chmod(config::originalDebuggerdPath, origst.st_mode);
+    }
+    catch(std::exception& e)
+    {
+        util::logError("Failed to install anjarootd, reverting");
+        uninstall();
+        throw;
+    }
+
+    // make sure original anjarootd and its copy have matching crc32 sums
+    bool daemonEqual = hash::CRC32::compareFiles(daemonpath,
+            config::originalDebuggerdPath);
+    if(!daemonEqual)
+    {
+        util::logError("anjarootd CRC32 sums differ, reverting");
         uninstall();
         return FAIL;
-    }
-
-    // prepare the wrapper
-    try
-    {
-        operations::writeFile(config::temporaryAppProcessPath,
-                config::wrapperScriptContent);
-        operations::chown(config::temporaryAppProcessPath, origst.st_uid,
-                origst.st_gid);
-        operations::chmod(config::temporaryAppProcessPath, origst.st_mode);
-    }
-    catch(std::exception& e)
-    {
-        util::logError("Failed to create wrapper script, reverting");
-        uninstall();
-        throw;
-    }
-
-    // move everything into the right place
-    try
-    {
-        operations::move(config::originalAppProcessPath,
-                config::newAppProcessPath);
-        operations::move(config::temporaryAppProcessPath,
-                config::originalAppProcessPath);
-    }
-    catch(std::exception& e)
-    {
-        util::logError("Failed to move wrapper in place, reverting");
-        uninstall();
-        throw;
     }
 
     // copy apk to /system/apk/
@@ -227,37 +211,6 @@ ReturnCode install(const std::string& libpath, const std::string& apkpath)
         return FAIL;
     }
 
-    // final CRC32 checks, again we may have failed hard. While that's pretty
-    // unlikely, we are fiddeling with the system core here. It's worth to have
-    // another safety check to be sure we don't mess the device up.
-    bool newEqual = hash::CRC32::compareFiles(config::backupAppProcessPath,
-            config::newAppProcessPath);
-    if(!newEqual)
-    {
-        util::logError("CRC32 sums differ, reverting");
-        uninstall();
-        return FAIL;
-    }
-
-    try
-    {
-        std::ifstream wrapper(config::originalAppProcessPath, std::ios::binary);
-        std::stringstream reference(config::wrapperScriptContent);
-        bool wrapperEqual = hash::CRC32::compareStreams(wrapper, reference);
-        if(!wrapperEqual)
-        {
-            util::logError("CRC32 sums differ of wrapper differs, reverting");
-            uninstall();
-            return FAIL;
-        }
-    }
-    catch(std::exception& e)
-    {
-        util::logError("Failed to compare wrapper script, reverting");
-        uninstall();
-        return FAIL;
-    }
-
     // place the install mark
     bool markPlaced = mark::write();
     if(!markPlaced)
@@ -292,22 +245,11 @@ ReturnCode uninstall()
 
     try
     {
-        operations::unlink(config::temporaryAppProcessPath);
-        util::logVerbose("Removed %s",
-                config::temporaryAppProcessPath.c_str());
-    }
-    catch(std::exception& e)
-    {
-        util::logError("Failed to remove tmp wrapper script: %s", e.what());
-    }
-
-    try
-    {
-        operations::move(config::newAppProcessPath,
-                config::originalAppProcessPath);
+        operations::move(config::newDebuggerdPath,
+                config::originalDebuggerdPath);
         util::logVerbose("Moved %s back to %s",
-                config::newAppProcessPath.c_str(),
-                config::originalAppProcessPath.c_str());
+                config::newDebuggerdPath.c_str(),
+                config::originalDebuggerdPath.c_str());
     }
     catch(std::exception& e)
     {
