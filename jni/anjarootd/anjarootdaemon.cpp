@@ -23,6 +23,7 @@
 #include <sys/un.h>
 
 #include "anjarootdaemon.h"
+#include "debuggerdhandler.h"
 #include "zygotehandler.h"
 #include "zygotechildhandler.h"
 #include "trace.h"
@@ -190,6 +191,7 @@ int AnJaRootDaemon::run(int argc, char** argv)
         {
             ZygoteChildHandler zygoteChilds;
             ZygoteHandler zygote(zygoteChilds);
+            DebuggerdHandler debuggerd;
 
             bool handled = true;
             while(shouldRun && handled)
@@ -209,6 +211,10 @@ int AnJaRootDaemon::run(int argc, char** argv)
                 else if(res.getPid() == zygote.getPid())
                 {
                     handled = zygote.handle(res);
+                }
+                else if(res.getPid() == debuggerd.getPid())
+                {
+                    handled = debuggerd.handle(res);
                 }
                 else
                 {
