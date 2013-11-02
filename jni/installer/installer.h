@@ -26,6 +26,7 @@
 
 #include "modes.h"
 
-typedef std::tuple<modes::OperationMode, std::string, std::string> ModeSpec;
+typedef std::tuple<modes::OperationMode, std::string, std::string,
+        std::string> ModeSpec;
 
 #endif
