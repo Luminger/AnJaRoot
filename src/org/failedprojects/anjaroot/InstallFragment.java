@@ -60,17 +60,18 @@ public class InstallFragment extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 		View v = inflater.inflate(R.layout.install_fragment, container, false);
-		Button b = (Button) v.findViewById(R.id.install_fragment_install_btn);
-		b.setOnClickListener(new View.OnClickListener() {
+		Button recoveryInstallButton = (Button) v
+				.findViewById(R.id.install_fragment_install_recovery_btn);
+		recoveryInstallButton.setOnClickListener(new View.OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(
 						getActivity());
-				builder.setTitle(R.string.install_fragment_install_dialog_title);
-				builder.setMessage(R.string.install_fragment_install_dialog_msg);
+				builder.setTitle(R.string.install_fragment_install_recovery_dialog_title);
+				builder.setMessage(R.string.install_fragment_install_recovery_dialog_msg);
 				builder.setPositiveButton(
-						R.string.install_fragment_install_dialog_positive,
+						R.string.install_fragment_install_recovery_dialog_positive,
 						new OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
@@ -80,31 +81,84 @@ public class InstallFragment extends Fragment {
 							}
 						});
 				builder.setNegativeButton(
-						R.string.install_fragment_install_dialog_negative, null);
+						R.string.install_fragment_install_recovery_dialog_negative,
+						null);
 				builder.create().show();
 			}
 		});
 
-		Button rb = (Button) v.findViewById(R.id.install_fragment_reboot_btn);
-		rb.setOnClickListener(new View.OnClickListener() {
+		Button recoveryRebootButton = (Button) v
+				.findViewById(R.id.install_fragment_reboot_recovery_btn);
+		recoveryRebootButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(
 						getActivity());
-				builder.setTitle(R.string.install_fragment_reboot_title);
-				builder.setMessage(R.string.install_fragment_reboot_msg);
+				builder.setTitle(R.string.install_fragment_reboot_recovery_title);
+				builder.setMessage(R.string.install_fragment_reboot_recovery_msg);
 				builder.setPositiveButton(
-						R.string.install_fragment_reboot_positive,
+						R.string.install_fragment_reboot_recovery_positive,
 						new OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog,
 									int which) {
-								installer
-										.doRecoveryReboot(recoveryRebootHandler);
+								installer.doRecoveryReboot(rebootHandler);
 							}
 						});
 				builder.setNegativeButton(
-						R.string.install_fragment_reboot_negative, null);
+						R.string.install_fragment_reboot_recovery_negative,
+						null);
+				builder.create().show();
+			}
+		});
+
+		Button systemInstallButton = (Button) v
+				.findViewById(R.id.install_fragment_install_system_btn);
+		systemInstallButton.setOnClickListener(new View.OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(
+						getActivity());
+				builder.setTitle(R.string.install_fragment_install_recovery_dialog_title);
+				builder.setMessage(R.string.install_fragment_install_system_dialog_msg);
+				builder.setPositiveButton(
+						R.string.install_fragment_install_system_dialog_positive,
+						new OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								installer.doSystemInstall(systemInstallHandler);
+							}
+						});
+				builder.setNegativeButton(
+						R.string.install_fragment_install_system_dialog_negative,
+						null);
+				builder.create().show();
+			}
+		});
+
+		Button systemRebootButton = (Button) v
+				.findViewById(R.id.install_fragment_reboot_system_btn);
+		systemRebootButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(
+						getActivity());
+				builder.setTitle(R.string.install_fragment_reboot_system_title);
+				builder.setMessage(R.string.install_fragment_reboot_system_msg);
+				builder.setPositiveButton(
+						R.string.install_fragment_reboot_system_positive,
+						new OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog,
+									int which) {
+								installer.doSystemReboot(rebootHandler);
+							}
+						});
+				builder.setNegativeButton(
+						R.string.install_fragment_reboot_recovery_negative,
+						null);
 				builder.create().show();
 			}
 		});
@@ -120,16 +174,41 @@ public class InstallFragment extends Fragment {
 		dialog.show();
 	}
 
-	void showRebootInterface() {
+	void showRebootRecoveryInterface() {
 		View v = getView();
-		v.findViewById(R.id.install_fragment_install_btn).setVisibility(
+		v.findViewById(R.id.install_fragment_install_recovery_btn)
+				.setVisibility(View.GONE);
+		v.findViewById(R.id.install_fragment_install_system_btn).setVisibility(
 				View.GONE);
 		v.findViewById(R.id.install_fragment_install_text).setVisibility(
 				View.GONE);
+		v.findViewById(R.id.install_fragment_reboot_system_btn).setVisibility(
+				View.GONE);
+		v.findViewById(R.id.install_fragment_reboot_system_text).setVisibility(
+				View.GONE);
 
-		v.findViewById(R.id.install_fragment_reboot_btn).setVisibility(
+		v.findViewById(R.id.install_fragment_reboot_recovery_btn)
+				.setVisibility(View.VISIBLE);
+		v.findViewById(R.id.install_fragment_reboot_recovery_text)
+				.setVisibility(View.VISIBLE);
+	}
+
+	void showRebootSystemInterface() {
+		View v = getView();
+		v.findViewById(R.id.install_fragment_install_recovery_btn)
+				.setVisibility(View.GONE);
+		v.findViewById(R.id.install_fragment_install_system_btn).setVisibility(
+				View.GONE);
+		v.findViewById(R.id.install_fragment_install_text).setVisibility(
+				View.GONE);
+		v.findViewById(R.id.install_fragment_reboot_recovery_btn)
+				.setVisibility(View.GONE);
+		v.findViewById(R.id.install_fragment_reboot_recovery_text)
+				.setVisibility(View.GONE);
+
+		v.findViewById(R.id.install_fragment_reboot_system_btn).setVisibility(
 				View.VISIBLE);
-		v.findViewById(R.id.install_fragment_reboot_text).setVisibility(
+		v.findViewById(R.id.install_fragment_reboot_system_text).setVisibility(
 				View.VISIBLE);
 	}
 
@@ -146,7 +225,7 @@ public class InstallFragment extends Fragment {
 
 			int rid;
 			if (result) {
-				showRebootInterface();
+				showRebootRecoveryInterface();
 				rid = R.string.installer_toast_success;
 			} else {
 				rid = R.string.installer_toast_failure;
@@ -155,7 +234,30 @@ public class InstallFragment extends Fragment {
 		}
 	};
 
-	Installer.Handler recoveryRebootHandler = new Installer.Handler() {
+	Installer.Handler systemInstallHandler = new Installer.Handler() {
+
+		@Override
+		public void preExecute() {
+			showProgressDialog();
+		}
+
+		@Override
+		public void postExecute(boolean result) {
+			dismissProgressDialog();
+
+			int rid;
+			if (result) {
+				showRebootSystemInterface();
+				rid = R.string.installer_toast_success;
+			} else {
+				rid = R.string.installer_toast_failure;
+			}
+			Toast.makeText(getActivity(), rid, Toast.LENGTH_LONG).show();
+
+		}
+	};
+
+	Installer.Handler rebootHandler = new Installer.Handler() {
 
 		@Override
 		public void preExecute() {

@@ -32,19 +32,30 @@
 
     <!-- install_fragment.xml -->
     <string name="install_fragment_install_text">AnJaRoot is currently not installed on your device.</string>
-    <string name="install_fragment_install_btn_text">Install AnJaRoot</string>
-    <string name="install_fragment_reboot_text">Preparation was successful, boot now into recovery to finish the installation.</string>
-    <string name="install_fragment_reboot_btn_text">Reboot into Recovery</string>
+    <string name="install_fragment_install_recovery_btn_text">Install AnJaRoot via recovery</string>
+    <string name="install_fragment_install_system_btn_text">Install AnJaRoot now</string>
+    <string name="install_fragment_reboot_recovery_text">Preparation was successful, boot now into recovery to finish the installation.</string>
+    <string name="install_fragment_reboot_recovery_btn_text">Reboot into Recovery</string>
+    <string name="install_fragment_reboot_system_text">Installation was successful, reboot your device now to activate AnJaRoot.</string>
+    <string name="install_fragment_reboot_system_btn_text">Reboot system</string>
 
     <!-- InstallFragment.java -->
-    <string name="install_fragment_install_dialog_title">Confirmation</string>
-    <string name="install_fragment_install_dialog_msg">Do you want to install AnJaRoot?</string>
-    <string name="install_fragment_install_dialog_positive">Install</string>
-    <string name="install_fragment_install_dialog_negative">Cancel</string>
-    <string name="install_fragment_reboot_title">Confirmation</string>
-    <string name="install_fragment_reboot_msg">Do you want to reboot into recovery now?</string>
-    <string name="install_fragment_reboot_positive">Reboot now</string>
-    <string name="install_fragment_reboot_negative">No</string>
+    <string name="install_fragment_install_recovery_dialog_title">Confirmation</string>
+    <string name="install_fragment_install_recovery_dialog_msg">Do you want to install AnJaRoot via Recovery?</string>
+    <string name="install_fragment_install_recovery_dialog_positive">Install</string>
+    <string name="install_fragment_install_recovery_dialog_negative">Cancel</string>
+    <string name="install_fragment_install_system_dialog_title">Confirmation</string>
+    <string name="install_fragment_install_system_dialog_msg">Do you want to install AnJaRoot now?</string>
+    <string name="install_fragment_install_system_dialog_positive">Install</string>
+    <string name="install_fragment_install_system_dialog_negative">Cancel</string>
+    <string name="install_fragment_reboot_recovery_title">Confirmation</string>
+    <string name="install_fragment_reboot_recovery_msg">Do you want to reboot into recovery now?</string>
+    <string name="install_fragment_reboot_recovery_positive">Reboot now</string>
+    <string name="install_fragment_reboot_recovery_negative">No</string>
+    <string name="install_fragment_reboot_system_title">Confirmation</string>
+    <string name="install_fragment_reboot_system_msg">Do you want to reboot your device now?</string>
+    <string name="install_fragment_reboot_system_positive">Reboot now</string>
+    <string name="install_fragment_reboot_system_negative">No</string>
 
     <!-- request_activity.xml -->
     <string name="request_activity_name">AnJaRoot Request</string>

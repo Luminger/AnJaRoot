@@ -139,9 +139,18 @@ public class Installer {
 			this.handler = handler;
 		}
 
+		private String getBasepath() {
+			return ctx.getApplicationInfo().dataDir + "/lib/";
+		}
+
 		private String getLibraryLocation() {
-			final String basepath = ctx.getApplicationInfo().dataDir + "/lib/";
-			return basepath + "libanjarootinstaller.so";
+			final String basepath = getBasepath();
+			return basepath + "libanjaroot.so";
+		}
+
+		private String getDaemonLocation() {
+			final String basepath = getBasepath();
+			return basepath + "libanjarootd.so";
 		}
 
 		private String getApkLocation() {
@@ -157,10 +166,10 @@ public class Installer {
 						getInstallerLocation(), getApkLocation());
 				break;
 			case SystemInstall:
-				command = String.format(
-						"%s --install --apkpath='%s' --srclibpath='%s'\n",
-						getInstallerLocation(), getApkLocation(),
-						getLibraryLocation());
+				command = String
+						.format("%s --install --apkpath='%s' --srclibpath='%s' --daemonpath='%s'\n",
+								getInstallerLocation(), getApkLocation(),
+								getLibraryLocation(), getDaemonLocation());
 				break;
 			case SystemUninstall:
 				command = String.format("%s --uninstall\n",
