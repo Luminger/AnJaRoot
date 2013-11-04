@@ -13,32 +13,57 @@
         android:text="@string/install_fragment_install_text" />
 
     <Button
-        android:id="@+id/install_fragment_install_btn"
+        android:id="@+id/install_fragment_install_recovery_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/install_fragment_install_text"
         android:layout_centerHorizontal="true"
-        android:gravity="center_horizontal"
-        android:text="@string/install_fragment_install_btn_text" />
+        android:text="@string/install_fragment_install_recovery_btn_text" />
+
+    <Button
+        android:id="@+id/install_fragment_install_system_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/install_fragment_install_recovery_btn"
+        android:layout_centerHorizontal="true"
+        android:text="@string/install_fragment_install_system_btn_text" />
 
     <TextView
-        android:id="@+id/install_fragment_reboot_text"
+        android:id="@+id/install_fragment_reboot_recovery_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="@dimen/activity_vertical_margin"
         android:gravity="center_horizontal"
-        android:text="@string/install_fragment_reboot_text"
+        android:text="@string/install_fragment_reboot_recovery_text"
         android:visibility="gone" />
 
     <Button
-        android:id="@+id/install_fragment_reboot_btn"
+        android:id="@+id/install_fragment_reboot_recovery_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/install_fragment_reboot_text"
+        android:layout_below="@id/install_fragment_reboot_recovery_text"
         android:layout_centerHorizontal="true"
+        android:text="@string/install_fragment_reboot_recovery_btn_text"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/install_fragment_reboot_system_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
         android:gravity="center_horizontal"
-        android:text="@string/install_fragment_reboot_btn_text"
+        android:text="@string/install_fragment_reboot_system_text"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/install_fragment_reboot_system_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/install_fragment_reboot_system_text"
+        android:layout_centerHorizontal="true"
+        android:text="@string/install_fragment_reboot_system_btn_text"
         android:visibility="gone" />
 
 </RelativeLayout>
