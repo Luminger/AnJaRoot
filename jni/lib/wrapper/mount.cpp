@@ -37,8 +37,8 @@ void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
 
     if(sourcestr && targetstr && filesystemtypestr && datastr)
     {
-        int ret = mount(sourcestr, targetstr, filesystemtypestr, mountflags,
-                datastr);
+        int ret = mount(sourcestr, targetstr, filesystemtypestr,
+                static_cast<int>(mountflags), datastr);
         if(ret != 0)
         {
             std::system_error error(errno, std::system_category());
@@ -72,7 +72,7 @@ void jni_umount(JNIEnv* env, jclass cls, jstring target)
     env->ReleaseStringUTFChars(target, targetstr);
 }
 
-const char* jni_umount2_signature = "(Ljava/lang/String;I)V";
+const char* jni_umount2_signature = "(Ljava/lang/String;J)V";
 void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags)
 {
     const char* targetstr = env->GetStringUTFChars(target, 0);
