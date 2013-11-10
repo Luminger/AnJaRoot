@@ -33,7 +33,7 @@ static const char* OutOfBoundsName = "org/failedprojects/anjaroot/library/except
 void throwExceptionSimple(JNIEnv* env, const char* clsname, const char* msg)
 {
     jclass cls = env->FindClass(clsname);
-    if(cls == NULL)
+    if(cls == nullptr)
     {
         throwClassNotFoundException(env, clsname);
     }
@@ -44,7 +44,7 @@ void throwExceptionSimple(JNIEnv* env, const char* clsname, const char* msg)
 void throwClassNotFoundException(JNIEnv* env, const char* msg)
 {
     jclass cls = env->FindClass(ClassNotFoundName);
-    if(cls == NULL)
+    if(cls == nullptr)
     {
         util::logError("Failed to find %s class, fatal!", ClassNotFoundName);
         abort();
@@ -66,28 +66,28 @@ void throwOutOfBoundsException(JNIEnv* env, const char* msg)
 void throwNativeException(JNIEnv* env, const std::system_error& e)
 {
     jclass cls = env->FindClass(NativeName);
-    if(cls == NULL)
+    if(cls == nullptr)
     {
         throwClassNotFoundException(env, NativeName);
         return;
     }
 
     jmethodID constructor = env->GetMethodID(cls, "<init>", NativeConstructorSignatur);
-    if(constructor == NULL)
+    if(constructor == nullptr)
     {
         throwNoMethodFoundException(env, "<init>");
         return;
     }
 
     jstring msg = env->NewStringUTF(e.what());
-    if(msg == NULL)
+    if(msg == nullptr)
     {
         // this "should" throw on its own...
         return;
     }
 
     jobject obj = env->NewObject(cls, constructor, e.code().value(), msg);
-    if(obj == NULL)
+    if(obj == nullptr)
     {
         // same here, "should" throw on its own...
         return;
