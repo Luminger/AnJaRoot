@@ -23,30 +23,33 @@
 
 #include "credentials.h"
 #include "shared/util.h"
-#include "../helper.h"
 #include "../exceptions.h"
+#include "../syscallfix.h"
 
 const char* jni_getresuid_signature = "()[J";
 jlongArray jni_getresuid(JNIEnv* env, jclass cls)
 {
+    uid_t ruid, euid, suid;
+    int ret = local_getresuid(&ruid, &euid, &suid);
+    if(ret != 0)
+    {
+        util::logError("getresuid failed: errno=%d, err=%s",
+                errno, strerror(errno));
+        std::system_error e(errno, std::system_category());
+        exceptions::throwNativeException(env, e);
+    }
+
+    util::logVerbose("getUserIds: ruid=%d, euid=%d, suid=%d", ruid, euid, suid);
+
     jlongArray retval = env->NewLongArray(3);
     if(retval == nullptr) {
         // OOM exception thrown
         return nullptr;
     }
 
-    try
-    {
-        helper::UserIds uids = helper::getUserIds();
-        jlong buf[3] = {uids.ruid, uids.euid, uids.suid};
-        env->SetLongArrayRegion(retval, 0, 3, buf);
-        return retval;
-    }
-    catch(std::system_error& e)
-    {
-        exceptions::throwNativeException(env, e);
-        return nullptr;
-    }
+    jlong buf[3] = {ruid, euid, suid};
+    env->SetLongArrayRegion(retval, 0, 3, buf);
+    return retval;
 }
 
 const char* jni_setresuid_signature = "(JJJ)V";
@@ -78,13 +81,14 @@ void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid, jlong suid)
         return;
     }
 
-    try
+    util::logVerbose("setUserIds: ruid=%d, euid=%d, suid=%d", ruid, euid, suid);
+
+    int ret = setresuid(ruid, euid, suid);
+    if(ret != 0)
     {
-        helper::UserIds uids(ruid, euid, suid);
-        helper::setUserIds(uids);
-    }
-    catch(std::system_error& e)
-    {
+        util::logError("setresuid failed: errno=%d, err=%s",
+                errno, strerror(errno));
+        std::system_error e(errno, std::system_category());
         exceptions::throwNativeException(env, e);
     }
 }
@@ -92,24 +96,28 @@ void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid, jlong suid)
 const char* jni_getresgid_signature = "()[J";
 jlongArray jni_getresgid(JNIEnv* env, jclass cls)
 {
+    gid_t rgid, egid, sgid;
+    int ret = local_getresgid(&rgid, &egid, &sgid);
+    if(ret != 0)
+    {
+        util::logError("getresgid failed: errno=%d, err=%s",
+                errno, strerror(errno));
+        std::system_error e(errno, std::system_category());
+        exceptions::throwNativeException(env, e);
+    }
+
+    util::logVerbose("getGroupIds: rgid=%d, egid=%d, sgid=%d", rgid, egid,
+            sgid);
+
     jlongArray retval = env->NewLongArray(3);
     if(retval == nullptr) {
         // OOM exception thrown
         return nullptr;
     }
 
-    try
-    {
-        helper::GroupIds gids = helper::getGroupIds();
-        jlong buf[3] = {gids.rgid, gids.egid, gids.sgid};
-        env->SetLongArrayRegion(retval, 0, 3, buf);
-        return retval;
-    }
-    catch(std::system_error& e)
-    {
-        exceptions::throwNativeException(env, e);
-        return nullptr;
-    }
+    jlong buf[3] = {rgid, egid, sgid};
+    env->SetLongArrayRegion(retval, 0, 3, buf);
+    return retval;
 }
 
 const char* jni_setresgid_signature = "(JJJ)V";
@@ -141,13 +149,15 @@ void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
         return;
     }
 
-    try
+    util::logVerbose("setGroupIds: rgid=%d, egid=%d, sgid=%d", rgid, egid,
+            sgid);
+
+    int ret = setresgid(rgid, egid, sgid);
+    if(ret != 0)
     {
-        helper::GroupIds gids(rgid, egid, sgid);
-        helper::setGroupIds(gids);
-    }
-    catch(std::system_error& e)
-    {
+        util::logError("setresgid failed: errno=%d, err=%s",
+                errno, strerror(errno));
+        std::system_error e(errno, std::system_category());
         exceptions::throwNativeException(env, e);
     }
 }
