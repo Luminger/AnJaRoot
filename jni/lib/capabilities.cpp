@@ -24,7 +24,7 @@
 #include "capabilities.h"
 
 #include "shared/util.h"
-#include "../exceptions.h"
+#include "exceptions.h"
 #include "compat.h"
 
 const char* jni_capget_signature = "(I)[J";

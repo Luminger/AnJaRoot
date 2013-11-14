@@ -23,7 +23,7 @@
 
 #include "mount.h"
 #include "shared/util.h"
-#include "../exceptions.h"
+#include "exceptions.h"
 
 const char* jni_mount_signature = "(Ljava/lang/String;Ljava/lang/String;"
     "Ljava/lang/String;JLjava/lang/String;)V";

@@ -23,8 +23,8 @@
 
 #include "credentials.h"
 #include "shared/util.h"
-#include "../exceptions.h"
-#include "../syscallfix.h"
+#include "exceptions.h"
+#include "syscallfix.h"
 
 const char* jni_getresuid_signature = "()[J";
 jlongArray jni_getresuid(JNIEnv* env, jclass cls)

@@ -21,11 +21,11 @@
 
 #include "shared/util.h"
 
-#include "wrapper/capabilities.h"
-#include "wrapper/credentials.h"
-#include "wrapper/compat.h"
-#include "wrapper/mount.h"
-#include "wrapper/version.h"
+#include "capabilities.h"
+#include "credentials.h"
+#include "compat.h"
+#include "mount.h"
+#include "version.h"
 
 // can't be changed as the library is distributed with that package
 static const char* className =
