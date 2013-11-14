@@ -25,17 +25,6 @@
 #include <unistd.h>
 
 namespace helper {
-    struct Capabilities {
-        Capabilities() : effective(0), permitted(0), inheritable(0) {};
-        Capabilities(__u32 effective_, __u32 permitted_, __u32 inheritable_) :
-            effective(effective_), permitted(permitted_),
-            inheritable(inheritable_) {};
-
-        __u32 effective;
-        __u32 permitted;
-        __u32 inheritable;
-    };
-
     struct UserIds {
         UserIds() : ruid(0), euid(0), suid(0) {};
         UserIds(uid_t ruid_, uid_t euid_, uid_t suid_) : ruid(ruid_),
@@ -55,9 +44,6 @@ namespace helper {
         gid_t egid;
         gid_t sgid;
     };
-
-    Capabilities getCapabilities(pid_t pid);
-    void setCapabilities(const Capabilities& caps);
 
     UserIds getUserIds();
     void setUserIds(const UserIds& uids);

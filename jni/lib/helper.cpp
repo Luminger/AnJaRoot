@@ -26,62 +26,6 @@
 
 namespace helper {
 
-Capabilities getCapabilities(pid_t pid)
-{
-    __user_cap_header_struct hdr;
-    __user_cap_data_struct data;
-
-    memset(&hdr, 0, sizeof(hdr));
-    memset(&data, 0, sizeof(data));
-
-    hdr.version = _LINUX_CAPABILITY_VERSION;
-
-    int ret = capget(&hdr, &data);
-    if(ret != 0)
-    {
-        util::logError("capget failed: errno=%d, err=%s",
-                errno, strerror(errno));
-        throw std::system_error(errno, std::system_category());
-    }
-
-    Capabilities caps;
-    caps.effective = data.effective;
-    caps.permitted = data.permitted;
-    caps.inheritable = data.inheritable;
-
-    util::logVerbose("getCapabilities: effective=0x%X, permitted=0x%X, "
-            "inheritable=0x%X", caps.effective, caps.permitted,
-            caps.inheritable);
-
-    return caps;
-}
-
-void setCapabilities(const Capabilities& caps)
-{
-    util::logVerbose("setCapabilities: effective=0x%X, permitted=0x%X, "
-            "inheritable=0x%X", caps.effective, caps.permitted,
-            caps.inheritable);
-
-    __user_cap_header_struct hdr;
-    __user_cap_data_struct data;
-
-    memset(&hdr, 0, sizeof(hdr));
-    memset(&data, 0, sizeof(data));
-
-    hdr.version = _LINUX_CAPABILITY_VERSION;
-    data.permitted = caps.permitted;
-    data.effective = caps.effective;
-    data.inheritable = caps.inheritable;
-
-    int ret = capset(&hdr, &data);
-    if(ret != 0)
-    {
-        util::logError("setcap failed: errno=%d, err=%s",
-                errno, strerror(errno));
-        throw std::system_error(errno, std::system_category());
-    }
-}
-
 UserIds getUserIds()
 {
     UserIds uids;

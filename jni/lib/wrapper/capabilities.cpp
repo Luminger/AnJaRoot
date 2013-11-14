@@ -16,56 +16,63 @@
  * You should have received a copy of the GNU General Public License along with
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
+#include <errno.h>
 #include <limits>
 #include <sys/capability.h>
+#include <unistd.h>
 
 #include "capabilities.h"
 
 #include "shared/util.h"
-#include "../helper.h"
 #include "../exceptions.h"
 #include "compat.h"
 
 const char* jni_capget_signature = "(I)[J";
 jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
 {
+    __user_cap_header_struct hdr;
+    __user_cap_data_struct data;
+
+    memset(&hdr, 0, sizeof(hdr));
+    memset(&data, 0, sizeof(data));
+
+    hdr.version = _LINUX_CAPABILITY_VERSION;
+
+    int ret = capget(&hdr, &data);
+    if(ret != 0)
+    {
+        util::logError("capget failed: errno=%d, err=%s",
+                errno, strerror(errno));
+        std::system_error e(errno, std::system_category());
+        exceptions::throwNativeException(env, e);
+        return nullptr;
+    }
+
+    util::logVerbose("getCapabilities: effective=0x%X, permitted=0x%X, "
+            "inheritable=0x%X", data.effective, data.permitted,
+            data.inheritable);
+
+    __u32 effective = data.effective;
+    __u32 permitted = data.permitted;
+    __u32 inheritable = data.inheritable;
+
+    if(isSetCapCompatEnabled())
+    {
+        int mask = 0xFFFFFFFF & (~(1 << CAP_SETPCAP));
+        effective &= mask;
+        permitted &= mask;
+        inheritable &= mask;
+    }
+
     jlongArray retval = env->NewLongArray(3);
     if(retval == nullptr) {
         // OOM exception thrown
         return nullptr;
     }
 
-    try
-    {
-        helper::Capabilities caps = helper::getCapabilities(pid);
-
-        if(isSetCapCompatEnabled())
-        {
-            if(caps.effective == 0xFFFFFEFF)
-            {
-                caps.effective = 0xFFFFFFFF;
-            }
-
-            if(caps.permitted == 0xFFFFFEFF)
-            {
-                caps.permitted = 0xFFFFFFFF;
-            }
-
-            if(caps.inheritable == 0xFFFFFEFF)
-            {
-                caps.inheritable = 0xFFFFFFFF;
-            }
-        }
-
-        jlong buf[3] = {caps.effective, caps.permitted, caps.inheritable};
-        env->SetLongArrayRegion(retval, 0, 3, buf);
-        return retval;
-    }
-    catch(std::system_error& e)
-    {
-        exceptions::throwNativeException(env, e);
-        return nullptr;
-    }
+    jlong buf[3] = {effective, permitted, inheritable};
+    env->SetLongArrayRegion(retval, 0, 3, buf);
+    return retval;
 }
 
 const char* jni_capset_signature = "(JJJ)V";
@@ -98,6 +105,9 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
         return;
     }
 
+    util::logVerbose("setCapabilities: effective=0x%X, permitted=0x%X, "
+            "inheritable=0x%X", effective, permitted, inheritable);
+
     if(isSetCapCompatEnabled())
     {
         int mask = 0xFFFFFFFF & (~(1 << CAP_SETPCAP));
@@ -106,13 +116,23 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
         inheritable &= mask;
     }
 
-    try
+    __user_cap_header_struct hdr;
+    __user_cap_data_struct data;
+
+    memset(&hdr, 0, sizeof(hdr));
+    memset(&data, 0, sizeof(data));
+
+    hdr.version = _LINUX_CAPABILITY_VERSION;
+    data.permitted = permitted;
+    data.effective = effective;
+    data.inheritable = inheritable;
+
+    int ret = capset(&hdr, &data);
+    if(ret != 0)
     {
-        helper::Capabilities caps(effective, permitted, inheritable);
-        helper::setCapabilities(caps);
-    }
-    catch(std::system_error& e)
-    {
+        util::logError("setcap failed: errno=%d, err=%s",
+                errno, strerror(errno));
+        std::system_error e(errno, std::system_category());
         exceptions::throwNativeException(env, e);
     }
 }
