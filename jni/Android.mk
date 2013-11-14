@@ -26,11 +26,11 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 LOCAL_MODULE := anjaroot
 LOCAL_SRC_FILES :=	lib/wrapper.cpp \
-					lib/wrapper/capabilities.cpp \
-					lib/wrapper/credentials.cpp \
-					lib/wrapper/compat.cpp \
-					lib/wrapper/mount.cpp \
-					lib/wrapper/version.cpp \
+					lib/capabilities.cpp \
+					lib/credentials.cpp \
+					lib/compat.cpp \
+					lib/mount.cpp \
+					lib/version.cpp \
 					lib/exceptions.cpp \
 					lib/syscallfix.cpp \
 					lib/arch-$(TARGET_ARCH)/local_getresuid.S \
