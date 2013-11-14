@@ -31,25 +31,6 @@
 static const char* className =
         "org/failedprojects/anjaroot/library/internal/NativeMethods";
 
-static JNINativeMethod methods[] = {
-    // capabilities.h
-    {"capget", jni_capget_signature, (void *) jni_capget},
-    {"capset", jni_capset_signature, (void *) jni_capset},
-    // compat.h
-    {"setcompatmode", jni_setcompatmode_signature, (void *)jni_setcompatmode},
-    // credentials.h
-    {"getresuid", jni_getresuid_signature, (void *) jni_getresuid},
-    {"setresuid", jni_setresuid_signature, (void *) jni_setresuid},
-    {"getresgid", jni_getresgid_signature, (void *) jni_getresgid},
-    {"setresgid", jni_setresgid_signature, (void *) jni_setresgid},
-    // mount.h
-    {"mount", jni_mount_signature, (void *) jni_mount},
-    {"umount", jni_umount_signature, (void *) jni_umount},
-    {"umount2", jni_umount2_signature, (void *) jni_umount2},
-    // version.h
-    {"getversion", jni_getversion_signature, (void *) jni_getversion},
-};
-
 extern "C"
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
 {
@@ -68,6 +49,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
         return -1;
     }
 
-    env->RegisterNatives(cls, methods, sizeof(methods) / sizeof(methods[0]));
+    env->RegisterNatives(cls, capabilitiesMethods, capabilitiesMethodsLength);
+    env->RegisterNatives(cls, compatMethods, compatMethodsLength);
+    env->RegisterNatives(cls, credentialsMethods, credentialsMethodsLength);
+    env->RegisterNatives(cls, mountMethods, mountMethodsLength);
+    env->RegisterNatives(cls, versionMethods, versionMethodsLength);
+
     return JNI_VERSION_1_6;
 }

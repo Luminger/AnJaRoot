@@ -26,7 +26,6 @@
 #include "exceptions.h"
 #include "syscallfix.h"
 
-const char* jni_getresuid_signature = "()[J";
 jlongArray jni_getresuid(JNIEnv* env, jclass cls)
 {
     uid_t ruid, euid, suid;
@@ -52,7 +51,6 @@ jlongArray jni_getresuid(JNIEnv* env, jclass cls)
     return retval;
 }
 
-const char* jni_setresuid_signature = "(JJJ)V";
 void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid, jlong suid)
 {
     const uid_t minValue = std::numeric_limits<uid_t>::min();
@@ -93,7 +91,6 @@ void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid, jlong suid)
     }
 }
 
-const char* jni_getresgid_signature = "()[J";
 jlongArray jni_getresgid(JNIEnv* env, jclass cls)
 {
     gid_t rgid, egid, sgid;
@@ -120,7 +117,6 @@ jlongArray jni_getresgid(JNIEnv* env, jclass cls)
     return retval;
 }
 
-const char* jni_setresgid_signature = "(JJJ)V";
 void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
 {
     const gid_t minValue = std::numeric_limits<gid_t>::min();
@@ -161,3 +157,13 @@ void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
         exceptions::throwNativeException(env, e);
     }
 }
+
+const JNINativeMethod credentialsMethods[] = {
+    {"getresuid", "()[J", (void *) jni_getresuid},
+    {"setresuid", "(JJJ)V", (void *) jni_setresuid},
+    {"getresgid", "()[J", (void *) jni_getresgid},
+    {"setresgid", "(JJJ)V", (void *) jni_setresgid},
+};
+
+const jint credentialsMethodsLength = sizeof(credentialsMethods) /
+    sizeof(credentialsMethods[0]);

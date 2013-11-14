@@ -27,7 +27,6 @@ bool isSetCapCompatEnabled()
     return setCapEnabled;
 }
 
-const char* jni_setcompatmode_signature = "(I)V";
 void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl)
 {
     // We are at apilvl 1, nothing to do here =)
@@ -40,3 +39,11 @@ void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl)
         setCapEnabled = true;
     }
 }
+
+const JNINativeMethod compatMethods[] = {
+    // compat.h
+    {"setcompatmode", "(I)V", (void *)jni_setcompatmode},
+};
+
+const jint compatMethodsLength = sizeof(compatMethods) /
+    sizeof(compatMethods[0]);

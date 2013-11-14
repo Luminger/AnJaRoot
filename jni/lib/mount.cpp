@@ -25,8 +25,6 @@
 #include "shared/util.h"
 #include "exceptions.h"
 
-const char* jni_mount_signature = "(Ljava/lang/String;Ljava/lang/String;"
-    "Ljava/lang/String;JLjava/lang/String;)V";
 void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
         jstring filesystemtype, jlong mountflags, jstring data)
 {
@@ -52,7 +50,6 @@ void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
     env->ReleaseStringUTFChars(data, datastr);
 }
 
-const char* jni_umount_signature = "(Ljava/lang/String;)V";
 void jni_umount(JNIEnv* env, jclass cls, jstring target)
 {
     const char* targetstr = env->GetStringUTFChars(target, 0);
@@ -72,7 +69,6 @@ void jni_umount(JNIEnv* env, jclass cls, jstring target)
     env->ReleaseStringUTFChars(target, targetstr);
 }
 
-const char* jni_umount2_signature = "(Ljava/lang/String;J)V";
 void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags)
 {
     const char* targetstr = env->GetStringUTFChars(target, 0);
@@ -91,3 +87,12 @@ void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags)
 
     env->ReleaseStringUTFChars(target, targetstr);
 }
+
+const JNINativeMethod mountMethods[] = {
+    {"mount", "(Ljava/lang/String;Ljava/lang/String;"
+        "Ljava/lang/String;JLjava/lang/String;)V", (void *) jni_mount},
+    {"umount", "(Ljava/lang/String;)V", (void *) jni_umount},
+    {"umount2", "(Ljava/lang/String;J)V", (void *) jni_umount2},
+};
+
+const jint mountMethodsLength = sizeof(mountMethods) / sizeof(mountMethods[0]);

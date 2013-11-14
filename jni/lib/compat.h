@@ -24,7 +24,9 @@
 
 extern bool isSetCapCompatEnabled();
 
-extern const char* jni_setcompatmode_signature;
-extern void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl);
+extern const JNINativeMethod compatMethods[];
+extern const jint compatMethodsLength;
+
+void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl);
 
 #endif

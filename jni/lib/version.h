@@ -22,7 +22,9 @@
 
 #include <jni.h>
 
-extern const char* jni_getversion_signature;
-extern jintArray jni_getversion(JNIEnv* env, jclass cls);
+extern const JNINativeMethod versionMethods[];
+extern const jint versionMethodsLength;
+
+jintArray jni_getversion(JNIEnv* env, jclass cls);
 
 #endif

@@ -20,7 +20,6 @@
 #include "version.h"
 #include "shared/version.h"
 
-const char* jni_getversion_signature = "()[I";
 jintArray jni_getversion(JNIEnv* env, jclass cls)
 {
     jintArray retval = env->NewIntArray(4);
@@ -39,3 +38,10 @@ jintArray jni_getversion(JNIEnv* env, jclass cls)
     env->SetIntArrayRegion(retval, 0, 4, buf);
     return retval;
 }
+
+const JNINativeMethod versionMethods[] = {
+    {"getversion", "()[I", (void *) jni_getversion},
+};
+
+const jint versionMethodsLength = sizeof(versionMethods) /
+    sizeof(versionMethods[0]);

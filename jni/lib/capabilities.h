@@ -22,11 +22,12 @@
 
 #include <jni.h>
 
-extern const char* jni_capget_signature;
-extern jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid);
+extern const JNINativeMethod capabilitiesMethods[];
+extern const jint capabilitiesMethodsLength;
 
-extern const char* jni_capset_signature;
-extern void jni_capset(JNIEnv* env, jclass cls, jlong effective,
+jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid);
+
+void jni_capset(JNIEnv* env, jclass cls, jlong effective,
         jlong permitted, jlong inheritable);
 
 #endif

@@ -22,18 +22,17 @@
 
 #include <jni.h>
 
-extern const char* jni_getresuid_signature;
-extern jlongArray jni_getresuid(JNIEnv* env, jclass cls);
+extern const JNINativeMethod credentialsMethods[];
+extern const jint credentialsMethodsLength;
 
-extern const char* jni_setresuid_signature;
-extern void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid,
+jlongArray jni_getresuid(JNIEnv* env, jclass cls);
+
+void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid,
         jlong suid);
 
-extern const char* jni_getresgid_signature;
-extern jlongArray jni_getresgid(JNIEnv* env, jclass cls);
+jlongArray jni_getresgid(JNIEnv* env, jclass cls);
 
-extern const char* jni_setresgid_signature;
-extern void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid,
+void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid,
         jlong sgid);
 
 #endif

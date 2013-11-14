@@ -27,7 +27,6 @@
 #include "exceptions.h"
 #include "compat.h"
 
-const char* jni_capget_signature = "(I)[J";
 jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
 {
     __user_cap_header_struct hdr;
@@ -136,3 +135,11 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
         exceptions::throwNativeException(env, e);
     }
 }
+
+const JNINativeMethod capabilitiesMethods[] = {
+    {"capget", "(I)[J", (void *) jni_capget},
+    {"capset", "(JJJ)V", (void *) jni_capset},
+};
+
+extern const jint capabilitiesMethodsLength = sizeof(capabilitiesMethods) /
+    sizeof(capabilitiesMethods[0]);

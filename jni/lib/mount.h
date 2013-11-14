@@ -22,14 +22,14 @@
 
 #include <jni.h>
 
-extern const char* jni_mount_signature;
-extern void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
+extern const JNINativeMethod mountMethods[];
+extern const jint mountMethodsLength;
+
+void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
         jstring filesystemtype, jlong mountflags, jstring data);
 
-extern const char* jni_umount_signature;
-extern void jni_umount(JNIEnv* env, jclass cls, jstring target);
+void jni_umount(JNIEnv* env, jclass cls, jstring target);
 
-extern const char* jni_umount2_signature;
-extern void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags);
+void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags);
 
 #endif
