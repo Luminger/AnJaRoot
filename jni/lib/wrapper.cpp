@@ -49,11 +49,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
         return -1;
     }
 
-    env->RegisterNatives(cls, capabilitiesMethods, capabilitiesMethodsLength);
-    env->RegisterNatives(cls, compatMethods, compatMethodsLength);
-    env->RegisterNatives(cls, credentialsMethods, credentialsMethodsLength);
-    env->RegisterNatives(cls, mountMethods, mountMethodsLength);
-    env->RegisterNatives(cls, versionMethods, versionMethodsLength);
+    bool success = initializeCapabilities(env, cls);
+    success &= initializeCompat(env, cls);
+    success &= initializeCredentials(env, cls);
+    success &= initializeMount(env, cls);
+    success &= initializeVersion(env, cls);
 
-    return JNI_VERSION_1_6;
+    return success ? JNI_VERSION_1_6 : -1;
 }

@@ -22,8 +22,7 @@
 
 #include <jni.h>
 
-extern const JNINativeMethod versionMethods[];
-extern const jint versionMethodsLength;
+extern bool initializeVersion(JNIEnv* env, jclass nativeMethods);
 
 jintArray jni_getversion(JNIEnv* env, jclass cls);
 

@@ -22,8 +22,7 @@
 
 #include <jni.h>
 
-extern const JNINativeMethod mountMethods[];
-extern const jint mountMethodsLength;
+extern bool initializeMount(JNIEnv* env, jclass nativeMethods);
 
 void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
         jstring filesystemtype, jlong mountflags, jstring data);

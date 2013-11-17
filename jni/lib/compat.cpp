@@ -40,10 +40,14 @@ void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl)
     }
 }
 
-const JNINativeMethod compatMethods[] = {
-    // compat.h
+const JNINativeMethod methods[] = {
     {"setcompatmode", "(I)V", (void *)jni_setcompatmode},
 };
 
-const jint compatMethodsLength = sizeof(compatMethods) /
-    sizeof(compatMethods[0]);
+extern bool initializeCompat(JNIEnv* env, jclass nativeMethods)
+{
+    jint ret = env->RegisterNatives(nativeMethods, methods,
+            sizeof(methods) / sizeof(methods[0]));
+
+    return ret == true;
+}

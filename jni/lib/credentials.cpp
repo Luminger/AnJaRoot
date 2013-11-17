@@ -158,12 +158,17 @@ void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
     }
 }
 
-const JNINativeMethod credentialsMethods[] = {
+const JNINativeMethod methods[] = {
     {"getresuid", "()[J", (void *) jni_getresuid},
     {"setresuid", "(JJJ)V", (void *) jni_setresuid},
     {"getresgid", "()[J", (void *) jni_getresgid},
     {"setresgid", "(JJJ)V", (void *) jni_setresgid},
 };
 
-const jint credentialsMethodsLength = sizeof(credentialsMethods) /
-    sizeof(credentialsMethods[0]);
+extern bool initializeCredentials(JNIEnv* env, jclass nativeMethods)
+{
+    jint ret = env->RegisterNatives(nativeMethods, methods,
+            sizeof(methods) / sizeof(methods[0]));
+
+    return ret == true;
+}

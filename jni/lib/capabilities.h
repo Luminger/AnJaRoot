@@ -22,8 +22,7 @@
 
 #include <jni.h>
 
-extern const JNINativeMethod capabilitiesMethods[];
-extern const jint capabilitiesMethodsLength;
+extern bool initializeCapabilities(JNIEnv* env, jclass nativeMethods);
 
 jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid);
 

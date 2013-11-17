@@ -88,11 +88,17 @@ void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags)
     env->ReleaseStringUTFChars(target, targetstr);
 }
 
-const JNINativeMethod mountMethods[] = {
+const JNINativeMethod methods[] = {
     {"mount", "(Ljava/lang/String;Ljava/lang/String;"
         "Ljava/lang/String;JLjava/lang/String;)V", (void *) jni_mount},
     {"umount", "(Ljava/lang/String;)V", (void *) jni_umount},
     {"umount2", "(Ljava/lang/String;J)V", (void *) jni_umount2},
 };
 
-const jint mountMethodsLength = sizeof(mountMethods) / sizeof(mountMethods[0]);
+extern bool initializeMount(JNIEnv* env, jclass nativeMethods)
+{
+    jint ret = env->RegisterNatives(nativeMethods, methods,
+            sizeof(methods) / sizeof(methods[0]));
+
+    return ret == true;
+}

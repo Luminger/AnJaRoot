@@ -39,9 +39,14 @@ jintArray jni_getversion(JNIEnv* env, jclass cls)
     return retval;
 }
 
-const JNINativeMethod versionMethods[] = {
+const JNINativeMethod methods[] = {
     {"getversion", "()[I", (void *) jni_getversion},
 };
 
-const jint versionMethodsLength = sizeof(versionMethods) /
-    sizeof(versionMethods[0]);
+extern bool initializeVersion(JNIEnv* env, jclass nativeMethods)
+{
+    jint ret = env->RegisterNatives(nativeMethods, methods,
+            sizeof(methods) / sizeof(methods[0]));
+
+    return ret == true;
+}

@@ -136,10 +136,15 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
     }
 }
 
-const JNINativeMethod capabilitiesMethods[] = {
+const JNINativeMethod methods[] = {
     {"capget", "(I)[J", (void *) jni_capget},
     {"capset", "(JJJ)V", (void *) jni_capset},
 };
 
-extern const jint capabilitiesMethodsLength = sizeof(capabilitiesMethods) /
-    sizeof(capabilitiesMethods[0]);
+bool initializeCapabilities(JNIEnv* env, jclass nativeMethods)
+{
+    jint ret = env->RegisterNatives(nativeMethods, methods,
+            sizeof(methods) / sizeof(methods[0]));
+
+    return ret == true;
+}

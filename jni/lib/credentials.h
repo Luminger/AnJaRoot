@@ -22,8 +22,7 @@
 
 #include <jni.h>
 
-extern const JNINativeMethod credentialsMethods[];
-extern const jint credentialsMethodsLength;
+extern bool initializeCredentials(JNIEnv* env, jclass nativeMethods);
 
 jlongArray jni_getresuid(JNIEnv* env, jclass cls);
 
