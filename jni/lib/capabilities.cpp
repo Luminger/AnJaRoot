@@ -25,7 +25,7 @@
 
 #include "shared/util.h"
 #include "exceptions.h"
-#include "compat.h"
+#include "library.h"
 
 jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
 {
@@ -136,15 +136,24 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
     }
 }
 
-const JNINativeMethod methods[] = {
-    {"capget", "(I)[J", (void *) jni_capget},
-    {"capset", "(JJJ)V", (void *) jni_capset},
+static const JNINativeMethod methods[] = {
+    {"_capget", "(I)[J", (void *) jni_capget},
+    {"_capset", "(JJJ)V", (void *) jni_capset},
 };
 
-bool initializeCapabilities(JNIEnv* env, jclass nativeMethods)
-{
-    jint ret = env->RegisterNatives(nativeMethods, methods,
-            sizeof(methods) / sizeof(methods[0]));
+static const char* clsName =
+    "org/failedprojects/anjaroot/library/wrappers/Capabilities";
 
+bool initializeCapabilities(JNIEnv* env)
+{
+    jclass cls = env->FindClass(clsName);
+    if(cls == nullptr)
+    {
+        util::logError("Failed to get %s class reference", clsName);
+        return -1;
+    }
+
+    jint ret = env->RegisterNatives(cls, methods,
+            sizeof(methods) / sizeof(methods[0]));
     return ret == true;
 }

@@ -18,6 +18,8 @@
  */
 
 #include "version.h"
+
+#include "shared/util.h"
 #include "shared/version.h"
 
 jintArray jni_getversion(JNIEnv* env, jclass cls)
@@ -39,13 +41,23 @@ jintArray jni_getversion(JNIEnv* env, jclass cls)
     return retval;
 }
 
-const JNINativeMethod methods[] = {
-    {"getversion", "()[I", (void *) jni_getversion},
+static const JNINativeMethod methods[] = {
+    {"_getversion", "()[I", (void *) jni_getversion},
 };
 
-extern bool initializeVersion(JNIEnv* env, jclass nativeMethods)
+static const char* clsName =
+    "org/failedprojects/anjaroot/library/wrappers/Version";
+
+extern bool initializeVersion(JNIEnv* env)
 {
-    jint ret = env->RegisterNatives(nativeMethods, methods,
+    jclass cls = env->FindClass(clsName);
+    if(cls == nullptr)
+    {
+        util::logError("Failed to get %s class reference", clsName);
+        return -1;
+    }
+
+    jint ret = env->RegisterNatives(cls, methods,
             sizeof(methods) / sizeof(methods[0]));
 
     return ret == true;

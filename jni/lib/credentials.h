@@ -22,7 +22,7 @@
 
 #include <jni.h>
 
-extern bool initializeCredentials(JNIEnv* env, jclass nativeMethods);
+extern bool initializeCredentials(JNIEnv* env);
 
 jlongArray jni_getresuid(JNIEnv* env, jclass cls);
 

@@ -22,9 +22,10 @@
 
 #include <jni.h>
 
-extern bool initializeCompat(JNIEnv* env, jclass nativeMethods);
+extern bool initializeLibrary(JNIEnv* env);
 extern bool isSetCapCompatEnabled();
 
+jintArray jni_getversion(JNIEnv* env, jclass cls);
 void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl);
 
 #endif

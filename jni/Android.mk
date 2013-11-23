@@ -28,9 +28,8 @@ LOCAL_MODULE := anjaroot
 LOCAL_SRC_FILES :=	lib/wrapper.cpp \
 					lib/capabilities.cpp \
 					lib/credentials.cpp \
-					lib/compat.cpp \
+					lib/library.cpp \
 					lib/mount.cpp \
-					lib/version.cpp \
 					lib/exceptions.cpp \
 					lib/syscallfix.cpp \
 					lib/arch-$(TARGET_ARCH)/local_getresuid.S \

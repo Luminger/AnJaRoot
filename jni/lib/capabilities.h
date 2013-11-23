@@ -22,7 +22,7 @@
 
 #include <jni.h>
 
-extern bool initializeCapabilities(JNIEnv* env, jclass nativeMethods);
+extern bool initializeCapabilities(JNIEnv* env);
 
 jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid);
 

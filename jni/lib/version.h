@@ -22,7 +22,7 @@
 
 #include <jni.h>
 
-extern bool initializeVersion(JNIEnv* env, jclass nativeMethods);
+extern bool initializeVersion(JNIEnv* env);
 
 jintArray jni_getversion(JNIEnv* env, jclass cls);
 

@@ -158,16 +158,26 @@ void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
     }
 }
 
-const JNINativeMethod methods[] = {
-    {"getresuid", "()[J", (void *) jni_getresuid},
-    {"setresuid", "(JJJ)V", (void *) jni_setresuid},
-    {"getresgid", "()[J", (void *) jni_getresgid},
-    {"setresgid", "(JJJ)V", (void *) jni_setresgid},
+static const JNINativeMethod methods[] = {
+    {"_getresuid", "()[J", (void *) jni_getresuid},
+    {"_setresuid", "(JJJ)V", (void *) jni_setresuid},
+    {"_getresgid", "()[J", (void *) jni_getresgid},
+    {"_setresgid", "(JJJ)V", (void *) jni_setresgid},
 };
 
-extern bool initializeCredentials(JNIEnv* env, jclass nativeMethods)
+static const char* clsName =
+    "org/failedprojects/anjaroot/library/wrappers/Credentials";
+
+extern bool initializeCredentials(JNIEnv* env)
 {
-    jint ret = env->RegisterNatives(nativeMethods, methods,
+    jclass cls = env->FindClass(clsName);
+    if(cls == nullptr)
+    {
+        util::logError("Failed to get %s class reference", clsName);
+        return -1;
+    }
+
+    jint ret = env->RegisterNatives(cls, methods,
             sizeof(methods) / sizeof(methods[0]));
 
     return ret == true;

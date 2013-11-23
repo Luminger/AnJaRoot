@@ -23,13 +23,9 @@
 
 #include "capabilities.h"
 #include "credentials.h"
-#include "compat.h"
+#include "library.h"
 #include "mount.h"
 #include "version.h"
-
-// can't be changed as the library is distributed with that package
-static const char* className =
-        "org/failedprojects/anjaroot/library/internal/NativeMethods";
 
 extern "C"
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
@@ -42,18 +38,10 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
         return -1;
     }
 
-    jclass cls = env->FindClass(className);
-    if(cls == nullptr)
-    {
-        util::logError("Failed to get %s class reference", className);
-        return -1;
-    }
-
-    bool success = initializeCapabilities(env, cls);
-    success &= initializeCompat(env, cls);
-    success &= initializeCredentials(env, cls);
-    success &= initializeMount(env, cls);
-    success &= initializeVersion(env, cls);
+    bool success = initializeCapabilities(env);
+    success &= initializeLibrary(env);
+    success &= initializeCredentials(env);
+    success &= initializeMount(env);
 
     return success ? JNI_VERSION_1_6 : -1;
 }

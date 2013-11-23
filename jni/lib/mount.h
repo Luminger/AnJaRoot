@@ -22,7 +22,7 @@
 
 #include <jni.h>
 
-extern bool initializeMount(JNIEnv* env, jclass nativeMethods);
+extern bool initializeMount(JNIEnv* env);
 
 void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
         jstring filesystemtype, jlong mountflags, jstring data);

@@ -17,8 +17,10 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
-#include "compat.h"
+#include "library.h"
+
 #include "shared/util.h"
+#include "shared/version.h"
 
 bool setCapEnabled = false;
 
@@ -40,13 +42,43 @@ void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl)
     }
 }
 
-const JNINativeMethod methods[] = {
-    {"setcompatmode", "(I)V", (void *)jni_setcompatmode},
+jintArray jni_getversion(JNIEnv* env, jclass cls)
+{
+    jintArray retval = env->NewIntArray(4);
+    if(retval == nullptr) {
+        // OOM exception thrown
+        return nullptr;
+    }
+
+    jint buf[4] = {
+        version::Major,
+        version::Minor,
+        version::Patch,
+        version::Api,
+    };
+
+    env->SetIntArrayRegion(retval, 0, 4, buf);
+    return retval;
+}
+
+static const JNINativeMethod methods[] = {
+    {"_getversion", "()[I", (void *) jni_getversion},
+    {"_setcompatmode", "(I)V", (void *)jni_setcompatmode},
 };
 
-extern bool initializeCompat(JNIEnv* env, jclass nativeMethods)
+static const char* clsName =
+    "org/failedprojects/anjaroot/library/wrappers/Library";
+
+extern bool initializeLibrary(JNIEnv* env)
 {
-    jint ret = env->RegisterNatives(nativeMethods, methods,
+    jclass cls = env->FindClass(clsName);
+    if(cls == nullptr)
+    {
+        util::logError("Failed to get %s class reference", clsName);
+        return -1;
+    }
+
+    jint ret = env->RegisterNatives(cls, methods,
             sizeof(methods) / sizeof(methods[0]));
 
     return ret == true;

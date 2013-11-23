@@ -88,16 +88,26 @@ void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags)
     env->ReleaseStringUTFChars(target, targetstr);
 }
 
-const JNINativeMethod methods[] = {
-    {"mount", "(Ljava/lang/String;Ljava/lang/String;"
+static const JNINativeMethod methods[] = {
+    {"_mount", "(Ljava/lang/String;Ljava/lang/String;"
         "Ljava/lang/String;JLjava/lang/String;)V", (void *) jni_mount},
-    {"umount", "(Ljava/lang/String;)V", (void *) jni_umount},
-    {"umount2", "(Ljava/lang/String;J)V", (void *) jni_umount2},
+    {"_umount", "(Ljava/lang/String;)V", (void *) jni_umount},
+    {"_umount2", "(Ljava/lang/String;J)V", (void *) jni_umount2},
 };
 
-extern bool initializeMount(JNIEnv* env, jclass nativeMethods)
+static const char* clsName =
+    "org/failedprojects/anjaroot/library/wrappers/Mount";
+
+extern bool initializeMount(JNIEnv* env)
 {
-    jint ret = env->RegisterNatives(nativeMethods, methods,
+    jclass cls = env->FindClass(clsName);
+    if(cls == nullptr)
+    {
+        util::logError("Failed to get %s class reference", clsName);
+        return -1;
+    }
+
+    jint ret = env->RegisterNatives(cls, methods,
             sizeof(methods) / sizeof(methods[0]));
 
     return ret == true;
