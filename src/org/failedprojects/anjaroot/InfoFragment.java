@@ -1,8 +1,8 @@
 package org.failedprojects.anjaroot;
 
-import org.failedprojects.anjaroot.library.AnJaRoot;
-import org.failedprojects.anjaroot.library.containers.Version;
 import org.failedprojects.anjaroot.library.exceptions.LibraryNotLoadedException;
+import org.failedprojects.anjaroot.library.wrappers.Library;
+import org.failedprojects.anjaroot.library.wrappers.Library.Version;
 
 import android.app.Activity;
 import android.content.pm.PackageInfo;
@@ -30,7 +30,7 @@ public class InfoFragment extends Fragment {
 
 		String nativeVersionStr = "N/A";
 		try {
-			Version nativeVersion = AnJaRoot.getNativeVersion();
+			Version nativeVersion = Library.getNativeVersion();
 			nativeVersionStr = nativeVersion.toString();
 		} catch (LibraryNotLoadedException e) {
 		}
