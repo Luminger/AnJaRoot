@@ -31,8 +31,8 @@ bool isSetCapCompatEnabled()
 
 void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl)
 {
-    // We are at apilvl 1, nothing to do here =)
-    util::logVerbose("Library API level: %d", apilvl);
+    util::logVerbose("Library API level: %d", version::Api);
+    util::logVerbose("Library API compat level set to: %d", apilvl);
 
     // apilvl 2 adds compatibility for unset CAP_SETCAP capability
     if(apilvl < 2)
@@ -80,6 +80,10 @@ extern bool initializeLibrary(JNIEnv* env)
 
     jint ret = env->RegisterNatives(cls, methods,
             sizeof(methods) / sizeof(methods[0]));
+    if(ret != 0)
+    {
+        util::logError("Failed to register natives on class %s", clsName);
+    }
 
-    return ret == true;
+    return ret == 0;
 }

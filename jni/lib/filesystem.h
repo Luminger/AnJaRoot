@@ -17,33 +17,14 @@
  * AnJaRoot. If not, see http://www.gnu.org/licenses/.
  */
 
+#ifndef _ANJAROOT_LIB_FILESYSTEM_H_
+#define _ANJAROOT_LIB_FILESYSTEM_H_
+
 #include <jni.h>
 
-#include "shared/util.h"
+extern bool initializeFilesystem(JNIEnv* env);
 
-#include "capabilities.h"
-#include "credentials.h"
-#include "filesystem.h"
-#include "library.h"
-#include "mount.h"
-#include "version.h"
+void jni_symlink(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath);
+void jni_link(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath);
 
-extern "C"
-JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
-{
-    JNIEnv* env;
-    int ret = vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6);
-    if(ret != JNI_OK)
-    {
-        util::logError("Failed to get JNI Environment");
-        return -1;
-    }
-
-    bool success = initializeCapabilities(env);
-    success &= initializeCredentials(env);
-    success &= initializeFilesystem(env);
-    success &= initializeLibrary(env);
-    success &= initializeMount(env);
-
-    return success ? JNI_VERSION_1_6 : -1;
-}
+#endif

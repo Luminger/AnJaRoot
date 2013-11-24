@@ -35,10 +35,16 @@ void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
 
     if(sourcestr && targetstr && filesystemtypestr && datastr)
     {
+        util::logVerbose("mount: source=%s, target=%s, filesystemtype=%s, "
+                "mountflags=0x%X, data=%s", sourcestr, targetstr,
+                filesystemtypestr, mountflags, data);
+
         int ret = mount(sourcestr, targetstr, filesystemtypestr,
                 static_cast<int>(mountflags), datastr);
         if(ret != 0)
         {
+            util::logError("mount failed: errno=%d, err=%s", errno,
+                    strerror(errno));
             std::system_error error(errno, std::system_category());
             exceptions::throwNativeException(env, error);
         }
@@ -59,9 +65,13 @@ void jni_umount(JNIEnv* env, jclass cls, jstring target)
         return;
     }
 
+    util::logVerbose("umount: target=%s", targetstr);
+
     int ret = umount(targetstr);
     if(ret != 0)
     {
+        util::logError("umount failed: errno=%d, err=%s", errno,
+                strerror(errno));
         std::system_error error(errno, std::system_category());
         exceptions::throwNativeException(env, error);
     }
@@ -78,9 +88,13 @@ void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags)
         return;
     }
 
+    util::logVerbose("umount2: target=%s, flags=0x%X", target, flags);
+
     int ret = umount2(targetstr, static_cast<int>(flags));
     if(ret != 0)
     {
+        util::logError("umount2 failed: errno=%d, err=%s", errno,
+                strerror(errno));
         std::system_error error(errno, std::system_category());
         exceptions::throwNativeException(env, error);
     }
@@ -109,6 +123,10 @@ extern bool initializeMount(JNIEnv* env)
 
     jint ret = env->RegisterNatives(cls, methods,
             sizeof(methods) / sizeof(methods[0]));
+    if(ret != 0)
+    {
+        util::logError("Failed to register natives on class %s", clsName);
+    }
 
-    return ret == true;
+    return ret == 0;
 }

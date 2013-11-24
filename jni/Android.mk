@@ -28,6 +28,7 @@ LOCAL_MODULE := anjaroot
 LOCAL_SRC_FILES :=	lib/wrapper.cpp \
 					lib/capabilities.cpp \
 					lib/credentials.cpp \
+					lib/filesystem.cpp \
 					lib/library.cpp \
 					lib/mount.cpp \
 					lib/exceptions.cpp \

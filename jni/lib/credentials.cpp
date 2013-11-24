@@ -179,6 +179,10 @@ extern bool initializeCredentials(JNIEnv* env)
 
     jint ret = env->RegisterNatives(cls, methods,
             sizeof(methods) / sizeof(methods[0]));
+    if(ret != 0)
+    {
+        util::logError("Failed to register natives on class %s", clsName);
+    }
 
-    return ret == true;
+    return ret == 0;
 }
