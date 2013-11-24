@@ -25,7 +25,6 @@
 
 #include "shared/util.h"
 #include "exceptions.h"
-#include "library.h"
 
 jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
 {
@@ -54,14 +53,6 @@ jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
     __u32 effective = data.effective;
     __u32 permitted = data.permitted;
     __u32 inheritable = data.inheritable;
-
-    if(isSetCapCompatEnabled())
-    {
-        int mask = 0xFFFFFFFF & (~(1 << CAP_SETPCAP));
-        effective &= mask;
-        permitted &= mask;
-        inheritable &= mask;
-    }
 
     jlongArray retval = env->NewLongArray(3);
     if(retval == nullptr) {
@@ -106,14 +97,6 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
 
     util::logVerbose("setCapabilities: effective=0x%X, permitted=0x%X, "
             "inheritable=0x%X", effective, permitted, inheritable);
-
-    if(isSetCapCompatEnabled())
-    {
-        int mask = 0xFFFFFFFF & (~(1 << CAP_SETPCAP));
-        effective &= mask;
-        permitted &= mask;
-        inheritable &= mask;
-    }
 
     __user_cap_header_struct hdr;
     __user_cap_data_struct data;

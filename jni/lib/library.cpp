@@ -19,26 +19,23 @@
 
 #include "library.h"
 
+#include "exceptions.h"
 #include "shared/util.h"
 #include "shared/version.h"
 
-bool setCapEnabled = false;
-
-bool isSetCapCompatEnabled()
-{
-    return setCapEnabled;
-}
-
-void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl)
+void jni_setcompatmode(JNIEnv* env, jclass cls, jint apilvl)
 {
     util::logVerbose("Library API level: %d", version::Api);
     util::logVerbose("Library API compat level set to: %d", apilvl);
 
-    // apilvl 2 adds compatibility for unset CAP_SETCAP capability
-    if(apilvl < 2)
+    // Everything below 3 isn't supported anymore
+    if(apilvl < 3)
     {
-        util::logVerbose("Enabling CAP_SETCAP compat mode");
-        setCapEnabled = true;
+        const char* msg = "API level 1 and 2 are not suppoted anymore, sorry!";
+        util::logError(msg);
+
+        std::system_error error(0, std::generic_category(), msg);
+        exceptions::throwNativeException(env, error);
     }
 }
 
