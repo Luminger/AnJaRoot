@@ -22,16 +22,14 @@
 
 #include <jni.h>
 
-extern bool initializeCredentials(JNIEnv* env);
+namespace Credentials {
+    bool initialize(JNIEnv* env);
 
-jlongArray jni_getresuid(JNIEnv* env, jclass cls);
+    jlongArray getresuid(JNIEnv* env, jclass cls);
+    void setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid, jlong suid);
 
-void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid,
-        jlong suid);
-
-jlongArray jni_getresgid(JNIEnv* env, jclass cls);
-
-void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid,
-        jlong sgid);
+    jlongArray getresgid(JNIEnv* env, jclass cls);
+    void setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid);
+}
 
 #endif

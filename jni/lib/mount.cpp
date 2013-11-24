@@ -25,7 +25,7 @@
 #include "shared/util.h"
 #include "exceptions.h"
 
-void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
+void Mount::mount(JNIEnv* env, jclass cls, jstring source, jstring target,
         jstring filesystemtype, jlong mountflags, jstring data)
 {
     const char* sourcestr = env->GetStringUTFChars(source, 0);
@@ -39,7 +39,7 @@ void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
                 "mountflags=0x%X, data=%s", sourcestr, targetstr,
                 filesystemtypestr, mountflags, data);
 
-        int ret = mount(sourcestr, targetstr, filesystemtypestr,
+        int ret = ::mount(sourcestr, targetstr, filesystemtypestr,
                 static_cast<int>(mountflags), datastr);
         if(ret != 0)
         {
@@ -56,7 +56,7 @@ void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
     env->ReleaseStringUTFChars(data, datastr);
 }
 
-void jni_umount(JNIEnv* env, jclass cls, jstring target)
+void Mount::umount(JNIEnv* env, jclass cls, jstring target)
 {
     const char* targetstr = env->GetStringUTFChars(target, 0);
     if(targetstr == nullptr)
@@ -67,7 +67,7 @@ void jni_umount(JNIEnv* env, jclass cls, jstring target)
 
     util::logVerbose("umount: target=%s", targetstr);
 
-    int ret = umount(targetstr);
+    int ret = ::umount(targetstr);
     if(ret != 0)
     {
         util::logError("umount failed: errno=%d, err=%s", errno,
@@ -79,7 +79,7 @@ void jni_umount(JNIEnv* env, jclass cls, jstring target)
     env->ReleaseStringUTFChars(target, targetstr);
 }
 
-void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags)
+void Mount::umount2(JNIEnv* env, jclass cls, jstring target, jlong flags)
 {
     const char* targetstr = env->GetStringUTFChars(target, 0);
     if(targetstr == nullptr)
@@ -90,7 +90,7 @@ void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags)
 
     util::logVerbose("umount2: target=%s, flags=0x%X", target, flags);
 
-    int ret = umount2(targetstr, static_cast<int>(flags));
+    int ret = ::umount2(targetstr, static_cast<int>(flags));
     if(ret != 0)
     {
         util::logError("umount2 failed: errno=%d, err=%s", errno,
@@ -102,18 +102,18 @@ void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags)
     env->ReleaseStringUTFChars(target, targetstr);
 }
 
-static const JNINativeMethod methods[] = {
-    {"_mount", "(Ljava/lang/String;Ljava/lang/String;"
-        "Ljava/lang/String;JLjava/lang/String;)V", (void *) jni_mount},
-    {"_umount", "(Ljava/lang/String;)V", (void *) jni_umount},
-    {"_umount2", "(Ljava/lang/String;J)V", (void *) jni_umount2},
-};
-
-static const char* clsName =
-    "org/failedprojects/anjaroot/library/wrappers/Mount";
-
-extern bool initializeMount(JNIEnv* env)
+bool Mount::initialize(JNIEnv* env)
 {
+    const JNINativeMethod methods[] = {
+        {"_mount", "(Ljava/lang/String;Ljava/lang/String;"
+            "Ljava/lang/String;JLjava/lang/String;)V", (void *) Mount::mount},
+        {"_umount", "(Ljava/lang/String;)V", (void *) Mount::umount},
+        {"_umount2", "(Ljava/lang/String;J)V", (void *) Mount::umount2},
+    };
+
+    const char* clsName =
+        "org/failedprojects/anjaroot/library/wrappers/Mount";
+
     jclass cls = env->FindClass(clsName);
     if(cls == nullptr)
     {

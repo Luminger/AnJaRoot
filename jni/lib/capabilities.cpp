@@ -26,7 +26,7 @@
 #include "shared/util.h"
 #include "exceptions.h"
 
-jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
+jlongArray Capabilities::capget(JNIEnv* env, jobject obj, jint pid)
 {
     __user_cap_header_struct hdr;
     __user_cap_data_struct data;
@@ -36,7 +36,7 @@ jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
 
     hdr.version = _LINUX_CAPABILITY_VERSION;
 
-    int ret = capget(&hdr, &data);
+    int ret = ::capget(&hdr, &data);
     if(ret != 0)
     {
         util::logError("capget failed: errno=%d, err=%s",
@@ -65,9 +65,8 @@ jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid)
     return retval;
 }
 
-const char* jni_capset_signature = "(JJJ)V";
-void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
-        jlong inheritable)
+void Capabilities::capset(JNIEnv* env, jclass cls, jlong effective,
+        jlong permitted, jlong inheritable)
 {
     const __u32 minValue = std::numeric_limits<__u32>::min();
     const __u32 maxValue = std::numeric_limits<__u32>::max();
@@ -109,7 +108,7 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
     data.effective = effective;
     data.inheritable = inheritable;
 
-    int ret = capset(&hdr, &data);
+    int ret = ::capset(&hdr, &data);
     if(ret != 0)
     {
         util::logError("setcap failed: errno=%d, err=%s",
@@ -119,16 +118,16 @@ void jni_capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
     }
 }
 
-static const JNINativeMethod methods[] = {
-    {"_capget", "(I)[J", (void *) jni_capget},
-    {"_capset", "(JJJ)V", (void *) jni_capset},
-};
-
-static const char* clsName =
-    "org/failedprojects/anjaroot/library/wrappers/Capabilities";
-
-bool initializeCapabilities(JNIEnv* env)
+bool Capabilities::initialize(JNIEnv* env)
 {
+    const JNINativeMethod methods[] = {
+        {"_capget", "(I)[J", (void *) Capabilities::capget},
+        {"_capset", "(JJJ)V", (void *) Capabilities::capset},
+    };
+
+    const char* clsName =
+        "org/failedprojects/anjaroot/library/wrappers/Capabilities";
+
     jclass cls = env->FindClass(clsName);
     if(cls == nullptr)
     {

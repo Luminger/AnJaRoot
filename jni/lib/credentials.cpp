@@ -26,7 +26,7 @@
 #include "exceptions.h"
 #include "syscallfix.h"
 
-jlongArray jni_getresuid(JNIEnv* env, jclass cls)
+jlongArray Credentials::getresuid(JNIEnv* env, jclass cls)
 {
     uid_t ruid, euid, suid;
     int ret = local_getresuid(&ruid, &euid, &suid);
@@ -51,7 +51,8 @@ jlongArray jni_getresuid(JNIEnv* env, jclass cls)
     return retval;
 }
 
-void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid, jlong suid)
+void Credentials::setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid,
+        jlong suid)
 {
     const uid_t minValue = std::numeric_limits<uid_t>::min();
     const uid_t maxValue = std::numeric_limits<uid_t>::max();
@@ -81,7 +82,7 @@ void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid, jlong suid)
 
     util::logVerbose("setUserIds: ruid=%d, euid=%d, suid=%d", ruid, euid, suid);
 
-    int ret = setresuid(ruid, euid, suid);
+    int ret = ::setresuid(ruid, euid, suid);
     if(ret != 0)
     {
         util::logError("setresuid failed: errno=%d, err=%s",
@@ -91,7 +92,7 @@ void jni_setresuid(JNIEnv* env, jclass cls, jlong ruid, jlong euid, jlong suid)
     }
 }
 
-jlongArray jni_getresgid(JNIEnv* env, jclass cls)
+jlongArray Credentials::getresgid(JNIEnv* env, jclass cls)
 {
     gid_t rgid, egid, sgid;
     int ret = local_getresgid(&rgid, &egid, &sgid);
@@ -117,7 +118,8 @@ jlongArray jni_getresgid(JNIEnv* env, jclass cls)
     return retval;
 }
 
-void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
+void Credentials::setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid,
+        jlong sgid)
 {
     const gid_t minValue = std::numeric_limits<gid_t>::min();
     const gid_t maxValue = std::numeric_limits<gid_t>::max();
@@ -148,7 +150,7 @@ void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
     util::logVerbose("setGroupIds: rgid=%d, egid=%d, sgid=%d", rgid, egid,
             sgid);
 
-    int ret = setresgid(rgid, egid, sgid);
+    int ret = ::setresgid(rgid, egid, sgid);
     if(ret != 0)
     {
         util::logError("setresgid failed: errno=%d, err=%s",
@@ -158,18 +160,17 @@ void jni_setresgid(JNIEnv* env, jclass cls, jlong rgid, jlong egid, jlong sgid)
     }
 }
 
-static const JNINativeMethod methods[] = {
-    {"_getresuid", "()[J", (void *) jni_getresuid},
-    {"_setresuid", "(JJJ)V", (void *) jni_setresuid},
-    {"_getresgid", "()[J", (void *) jni_getresgid},
-    {"_setresgid", "(JJJ)V", (void *) jni_setresgid},
-};
-
-static const char* clsName =
-    "org/failedprojects/anjaroot/library/wrappers/Credentials";
-
-extern bool initializeCredentials(JNIEnv* env)
+bool Credentials::initialize(JNIEnv* env)
 {
+    const JNINativeMethod methods[] = {
+        {"_getresuid", "()[J", (void *) Credentials::getresuid},
+        {"_setresuid", "(JJJ)V", (void *) Credentials::setresuid},
+        {"_getresgid", "()[J", (void *) Credentials::getresgid},
+        {"_setresgid", "(JJJ)V", (void *) Credentials::setresgid},
+    };
+
+    const char* clsName =
+        "org/failedprojects/anjaroot/library/wrappers/Credentials";
     jclass cls = env->FindClass(clsName);
     if(cls == nullptr)
     {

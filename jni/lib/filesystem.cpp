@@ -24,7 +24,8 @@
 #include "shared/util.h"
 #include "exceptions.h"
 
-void jni_symlink(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath)
+void Filesystem::symlink(JNIEnv* env, jclass cls, jstring oldpath,
+        jstring newpath)
 {
     const char* oldpathstr = env->GetStringUTFChars(oldpath, 0);
     const char* newpathstr = env->GetStringUTFChars(newpath, 0);
@@ -34,7 +35,7 @@ void jni_symlink(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath)
         util::logVerbose("symlink: oldpath=%s, newpath=%s", oldpathstr,
                 newpathstr);
 
-        int ret = symlink(oldpathstr, newpathstr);
+        int ret = ::symlink(oldpathstr, newpathstr);
         if(ret != 0)
         {
             util::logError("symlink failed: errno=%d, err=%s", errno,
@@ -48,7 +49,7 @@ void jni_symlink(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath)
     env->ReleaseStringUTFChars(newpath, newpathstr);
 }
 
-void jni_link(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath)
+void Filesystem::link(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath)
 {
     const char* oldpathstr = env->GetStringUTFChars(oldpath, 0);
     const char* newpathstr = env->GetStringUTFChars(newpath, 0);
@@ -58,7 +59,7 @@ void jni_link(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath)
         util::logVerbose("link: oldpath=%s, newpath=%s", oldpathstr,
                 newpathstr);
 
-        int ret = link(oldpathstr, newpathstr);
+        int ret = ::link(oldpathstr, newpathstr);
         if(ret != 0)
         {
             util::logError("link failed: errno=%d, err=%s", errno,
@@ -72,19 +73,20 @@ void jni_link(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath)
     env->ReleaseStringUTFChars(newpath, newpathstr);
 }
 
-// TODO add readlink, stat family, chmod, chown, chattr
-// MAYDO add access, utime
-static const JNINativeMethod methods[] = {
-    {"_symlink", "(Ljava/lang/String;Ljava/lang/String;)V",
-        (void *) jni_symlink},
-    {"_link", "(Ljava/lang/String;Ljava/lang/String;)V", (void *) jni_link},
-};
-
-static const char* clsName =
-    "org/failedprojects/anjaroot/library/wrappers/Filesystem";
-
-extern bool initializeFilesystem(JNIEnv* env)
+bool Filesystem::initialize(JNIEnv* env)
 {
+    // TODO add readlink, stat family, chmod, chown, chattr
+    // MAYDO add access, utime
+    const JNINativeMethod methods[] = {
+        {"_symlink", "(Ljava/lang/String;Ljava/lang/String;)V",
+            (void *) Filesystem::symlink},
+        {"_link", "(Ljava/lang/String;Ljava/lang/String;)V",
+            (void *) Filesystem::link},
+    };
+
+    const char* clsName =
+        "org/failedprojects/anjaroot/library/wrappers/Filesystem";
+
     jclass cls = env->FindClass(clsName);
     if(cls == nullptr)
     {

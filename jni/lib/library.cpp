@@ -23,7 +23,7 @@
 #include "shared/util.h"
 #include "shared/version.h"
 
-void jni_setcompatmode(JNIEnv* env, jclass cls, jint apilvl)
+void Library::setcompatmode(JNIEnv* env, jclass cls, jint apilvl)
 {
     util::logVerbose("Library API level: %d", version::Api);
     util::logVerbose("Library API compat level set to: %d", apilvl);
@@ -39,7 +39,7 @@ void jni_setcompatmode(JNIEnv* env, jclass cls, jint apilvl)
     }
 }
 
-jintArray jni_getversion(JNIEnv* env, jclass cls)
+jintArray Library::getversion(JNIEnv* env, jclass cls)
 {
     jintArray retval = env->NewIntArray(4);
     if(retval == nullptr) {
@@ -58,16 +58,16 @@ jintArray jni_getversion(JNIEnv* env, jclass cls)
     return retval;
 }
 
-static const JNINativeMethod methods[] = {
-    {"_getversion", "()[I", (void *) jni_getversion},
-    {"_setcompatmode", "(I)V", (void *)jni_setcompatmode},
-};
-
-static const char* clsName =
-    "org/failedprojects/anjaroot/library/wrappers/Library";
-
-extern bool initializeLibrary(JNIEnv* env)
+bool Library::initialize(JNIEnv* env)
 {
+    const JNINativeMethod methods[] = {
+        {"_getversion", "()[I", (void *) Library::getversion},
+        {"_setcompatmode", "(I)V", (void *) Library::setcompatmode},
+    };
+
+    const char* clsName =
+        "org/failedprojects/anjaroot/library/wrappers/Library";
+
     jclass cls = env->FindClass(clsName);
     if(cls == nullptr)
     {

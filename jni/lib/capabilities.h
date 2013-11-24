@@ -22,11 +22,12 @@
 
 #include <jni.h>
 
-extern bool initializeCapabilities(JNIEnv* env);
+namespace Capabilities {
+    bool initialize(JNIEnv* env);
 
-jlongArray jni_capget(JNIEnv* env, jobject obj, jint pid);
-
-void jni_capset(JNIEnv* env, jclass cls, jlong effective,
-        jlong permitted, jlong inheritable);
+    jlongArray capget(JNIEnv* env, jobject obj, jint pid);
+    void capset(JNIEnv* env, jclass cls, jlong effective, jlong permitted,
+            jlong inheritable);
+}
 
 #endif

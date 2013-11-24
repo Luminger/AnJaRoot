@@ -22,9 +22,11 @@
 
 #include <jni.h>
 
-extern bool initializeLibrary(JNIEnv* env);
+namespace Library {
+    bool initialize(JNIEnv* env);
 
-jintArray jni_getversion(JNIEnv* env, jclass cls);
-void jni_setcompatmode(JNIEnv*, jclass cls, jint apilvl);
+    jintArray getversion(JNIEnv* env, jclass cls);
+    void setcompatmode(JNIEnv*, jclass cls, jint apilvl);
+}
 
 #endif

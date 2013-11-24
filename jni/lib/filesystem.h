@@ -22,9 +22,11 @@
 
 #include <jni.h>
 
-extern bool initializeFilesystem(JNIEnv* env);
+namespace Filesystem {
+    bool initialize(JNIEnv* env);
 
-void jni_symlink(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath);
-void jni_link(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath);
+    void symlink(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath);
+    void link(JNIEnv* env, jclass cls, jstring oldpath, jstring newpath);
+}
 
 #endif

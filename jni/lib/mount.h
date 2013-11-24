@@ -22,13 +22,13 @@
 
 #include <jni.h>
 
-extern bool initializeMount(JNIEnv* env);
+namespace Mount {
+    bool initialize(JNIEnv* env);
 
-void jni_mount(JNIEnv* env, jclass cls, jstring source, jstring target,
-        jstring filesystemtype, jlong mountflags, jstring data);
-
-void jni_umount(JNIEnv* env, jclass cls, jstring target);
-
-void jni_umount2(JNIEnv* env, jclass cls, jstring target, jlong flags);
+    void mount(JNIEnv* env, jclass cls, jstring source, jstring target,
+            jstring filesystemtype, jlong mountflags, jstring data);
+    void umount(JNIEnv* env, jclass cls, jstring target);
+    void umount2(JNIEnv* env, jclass cls, jstring target, jlong flags);
+}
 
 #endif

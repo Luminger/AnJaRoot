@@ -39,11 +39,11 @@ JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* reserved)
         return -1;
     }
 
-    bool success = initializeCapabilities(env);
-    success &= initializeCredentials(env);
-    success &= initializeFilesystem(env);
-    success &= initializeLibrary(env);
-    success &= initializeMount(env);
+    bool success = Capabilities::initialize(env);
+    success &= Credentials::initialize(env);
+    success &= Filesystem::initialize(env);
+    success &= Library::initialize(env);
+    success &= Mount::initialize(env);
 
     return success ? JNI_VERSION_1_6 : -1;
 }
