@@ -33,6 +33,7 @@ LOCAL_SRC_FILES :=	lib/wrapper.cpp \
 					lib/mount.cpp \
 					lib/exceptions.cpp \
 					lib/syscallfix.cpp \
+					lib/local_mntent.c \
 					lib/arch-$(TARGET_ARCH)/local_getresuid.S \
 				   	lib/arch-$(TARGET_ARCH)/local_getresgid.S \
 					shared/util.cpp \
