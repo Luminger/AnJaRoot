@@ -1,1 +1,6 @@
 /build
+/src/main/.buildNative.stamp
+/src/main/assets/AnJaRoot.zip
+/src/main/libs/
+/src/main/native/
+/src/main/obj/
