@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.failedprojects.anjaroot.library"
+    android:versionCode="@integer/versionCodeManifest"
+    android:versionName="1.1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="9"
+        android:targetSdkVersion="18" />
+
+</manifest>
